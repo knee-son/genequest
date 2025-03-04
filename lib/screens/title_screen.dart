@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'game_screen.dart'; // Import the GameScreen
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-   const MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +39,17 @@ class TitleScreen extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // Add navigation to next screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GameScreen()),
+                );
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
-              child: const Text('PLAY'),
+              child: const Text('wassap'),
             ),
           ],
         ),
