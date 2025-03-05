@@ -3,11 +3,11 @@ import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
+import 'package:flame/sprite.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Preload all assets
   await Flame.images.loadAll([
     'chromatid.png',
     'platform_1.png',
@@ -144,11 +144,14 @@ class GenequestGame extends FlameGame {
 
   @override
   Future<void> onLoad() async {
-    // Load the avatar sprite
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite);
+    await Flame.images.loadAll([
+      'chromatid.png',
+      'platform_1.png',
+      'button_forward.png',
+    ]);
 
-    // Add the avatar to the game
+    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
+    avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
     add(avatar);
   }
 
