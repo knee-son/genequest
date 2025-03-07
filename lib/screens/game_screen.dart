@@ -33,16 +33,28 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double containerHeight = MediaQuery.of(context).size.height * 0.2; // Dynamically calculate height
     return Scaffold(
       body: Stack(
         children: [
           // Game canvas
-          GameWidget(game: GenequestGame()),
+
+          LayoutBuilder(
+            builder: (context, constraints) {
+
+
+              // Pass the containerHeight to your game logic
+              return GameWidget(
+                game: GenequestGame(containerHeight: containerHeight),
+              );
+            },
+          ),
 
           // Buttons at the bottom of the screen with a border
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
+              height: containerHeight,
               decoration: BoxDecoration(
                 color: Colors.grey[200], // Background color for the border area
                 border: Border(
@@ -134,12 +146,14 @@ class GameScreen extends StatelessWidget {
 class GenequestGame extends FlameGame {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
+  final double containerHeight;
 
-  GenequestGame() {
+  GenequestGame({required this.containerHeight}) {
     instance = this;
   }
 
-  @override
+
+    @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
 
   @override
@@ -152,6 +166,10 @@ class GenequestGame extends FlameGame {
 
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
+
+
+    final screenHeight = size.y; // Total screen height
+    avatar.groundY = screenHeight - containerHeight - avatar.size.y;
     add(avatar);
   }
 
@@ -190,7 +208,7 @@ class Avatar extends SpriteComponent {
   double velocityX = 0; // Horizontal velocity
   double velocityY = 0; // Vertical velocity
   final double gravity = 500; // Downward acceleration
-  final double groundY = 200; // Adjusted ground level to sit above the button border
+  double groundY = 0; // Adjusted ground level to sit above the button border
   bool isInAir = false; // Tracks whether the avatar is airborne
 
   Avatar(Sprite sprite)
