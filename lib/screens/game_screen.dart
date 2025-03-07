@@ -38,11 +38,8 @@ class GameScreen extends StatelessWidget {
       body: Stack(
         children: [
           // Game canvas
-
           LayoutBuilder(
             builder: (context, constraints) {
-
-
               // Pass the containerHeight to your game logic
               return GameWidget(
                 game: GenequestGame(containerHeight: containerHeight),
@@ -135,11 +132,154 @@ class GameScreen extends StatelessWidget {
               ),
             ),
           ),
+          // Start and Reset buttons on the left center
+          Align(
+            alignment: Alignment.centerLeft, // Align buttons to the left center
+            child: Padding(
+              padding: const EdgeInsets.only(left: 10), // Adjust padding if needed
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Wrap around the buttons only
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      // Start button logic
+                      print('Start button pressed');
+                    },
+                    child: Image.asset(
+                      'assets/images/button_start.png', // Replace with your Start button asset
+                      width: 100,
+                      height: 50,
+                    ),
+                  ),
+                  const SizedBox(height: 10), // Space between Start and Reset buttons
+                  GestureDetector(
+                    onTap: () {
+                      // Reset button logic
+                      GenequestGame.instance?.reset(); // Call the reset method
+                    },
+                    child: Image.asset(
+                      'assets/images/button_reset.png', // Replace with your Reset button asset
+                      width: 100,
+                      height: 50,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Menu asset on the upper-right corner
+          Align(
+            alignment: Alignment.topLeft, // Align to the upper-left corner
+            child: Padding(
+              padding: const EdgeInsets.all(10), // Add padding for better placement
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // Wrap content only
+                children: [
+                  // Menu button
+                  GestureDetector(
+                    onTap: () {
+                      // Menu button logic
+                      Navigator.pop(context);
+                    },
+                    child: Image.asset(
+                      'assets/images/button_menu.png', // Replace with your Menu button asset
+                      width: 100,
+                      height: 50,
+                    ),
+                  ),
+                  const SizedBox(width: 10), // Add space between the buttons
+                  // Pause button
+                  GestureDetector(
+                    onTap: () {
+                      // Display the pause menu
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return PauseMenu();
+                        },
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/button_pause.png', // Replace with your pause button asset
+                      width: 50,
+                      height: 50,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // Wrap content only
+                children: List.generate(3, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    // Space between hearts
+                    child: Image.asset(
+                      'assets/images/heart_full.png',
+                      // Reuse the same heart image asset
+                      width: 40,
+                      height: 40,
+                    ),
+                  );
+                }),
+              ),
+            ),
+          )
         ],
       ),
     );
   }
 }
+class PauseMenu extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    GenequestGame.instance?.pause();
+        return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Game Paused",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                if (GenequestGame.instance?.isPaused == true) {
+                  GenequestGame.instance?.resume(); // Resume the game
+                }
+                Navigator.pop(context); // Close the pause menu
+              },
+              child: Text("Resume"),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Close pause menu
+                Navigator.pop(context); // Navigate back to TitleScreen
+              },
+              child: Text("Exit to Title"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
 
 // ------------------- GAME LOGIC -------------------
 
@@ -147,6 +287,7 @@ class GenequestGame extends FlameGame {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
+  bool isPaused = false;
 
   GenequestGame({required this.containerHeight}) {
     instance = this;
@@ -173,6 +314,14 @@ class GenequestGame extends FlameGame {
     add(avatar);
   }
 
+  void pause() {
+    isPaused = true; // Set the game to paused
+  }
+
+  void resume() {
+    isPaused = false;
+  }
+
   // Method to trigger a jump
   void startJump() {
     if (!avatar.isInAir) {
@@ -197,8 +346,20 @@ class GenequestGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    avatar.applyGravity(dt); // Apply gravity
-    avatar.updatePosition(dt); // Update avatar position
+    if (!isPaused) {
+      avatar.applyGravity(dt); // Apply gravity
+      avatar.updatePosition(dt); // Update avatar position
+    }
+  }
+
+  void reset() {
+    // Reset avatar position
+    avatar.position = Vector2(200, 300); // Initial position
+    avatar.velocityX = 0; // Stop horizontal movement
+    avatar.velocityY = 0; // Stop vertical movement
+    avatar.isInAir = false; // Ensure avatar is grounded
+
+    // If you have additional game state variables (e.g., score, level), reset them here
   }
 }
 
