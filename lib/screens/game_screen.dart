@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
+import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -293,7 +295,6 @@ class GenequestGame extends FlameGame {
     instance = this;
   }
 
-
     @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
 
@@ -304,7 +305,11 @@ class GenequestGame extends FlameGame {
       'platform_1.png',
       'button_forward.png',
     ]);
-
+    final level = await flameTiled.TiledComponent.load(
+      'Level.tmx',
+      Vector2.all(20),
+    );
+    add(level);
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
 
