@@ -52,85 +52,88 @@ class GameScreen extends StatelessWidget {
           // Buttons at the bottom of the screen with a border
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              height: containerHeight,
-              decoration: BoxDecoration(
-                color: Colors.grey[200], // Background color for the border area
-                border: Border(
-                  top: BorderSide(color: Colors.black, width: 2), // Top border
+            child: Visibility(
+              visible: true,
+              child: Container(
+                height: containerHeight,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200], // Background color for the border area
+                  border: Border(
+                    top: BorderSide(color: Colors.black, width: 2), // Top border
+                  ),
                 ),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              width: double.infinity, // Full width of the screen
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between buttons
-                children: [
-                  // Left-aligned buttons
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10), // Padding for the left buttons
-                    child: Row(
-                      children: [
-                        // Back button
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatarBack(); // Start moving back
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          onTapCancel: () {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          child: Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.rotationY(3.14159), // Flip the image horizontally
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                width: double.infinity, // Full width of the screen
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between buttons
+                  children: [
+                    // Left-aligned buttons
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10), // Padding for the left buttons
+                      child: Row(
+                        children: [
+                          // Back button
+                          GestureDetector(
+                            onTapDown: (details) {
+                              GenequestGame.instance?.startMovingAvatarBack(); // Start moving back
+                            },
+                            onTapUp: (details) {
+                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                            },
+                            onTapCancel: () {
+                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                            },
+                            child: Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.rotationY(3.14159), // Flip the image horizontally
+                              child: Image.asset(
+                                'assets/images/button_forward.png',
+                                width: 60,
+                                height: 60,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 20), // Space between buttons
+                          // Forward button
+                          GestureDetector(
+                            onTapDown: (details) {
+                              GenequestGame.instance?.startMovingAvatar(); // Start moving forward
+                            },
+                            onTapUp: (details) {
+                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                            },
+                            onTapCancel: () {
+                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                            },
                             child: Image.asset(
                               'assets/images/button_forward.png',
                               width: 60,
                               height: 60,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 20), // Space between buttons
-                        // Forward button
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatar(); // Start moving forward
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          onTapCancel: () {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
+                        ],
+                      ),
+                    ),
+                    // Right-aligned "Up" button
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10), // Add padding to the right
+                      child: GestureDetector(
+                        onTapDown: (details) {
+                          GenequestGame.instance?.startJump(); // Trigger jump on press
+                        },
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationZ(-1.5708), // Rotate the image to point up
                           child: Image.asset(
                             'assets/images/button_forward.png',
                             width: 60,
                             height: 60,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  // Right-aligned "Up" button
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10), // Add padding to the right
-                    child: GestureDetector(
-                      onTapDown: (details) {
-                        GenequestGame.instance?.startJump(); // Trigger jump on press
-                      },
-                      child: Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationZ(-1.5708), // Rotate the image to point up
-                        child: Image.asset(
-                          'assets/images/button_forward.png',
-                          width: 60,
-                          height: 60,
-                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -309,14 +312,36 @@ class GenequestGame extends FlameGame {
       'Level.tmx',
       Vector2.all(20),
     );
-    add(level);
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
 
+    // Initialize the world
+    final world = World();
+    world.add(level);
+
+    final double containerHeight = this.containerHeight;
 
     final screenHeight = size.y; // Total screen height
+
+    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
+    avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
     avatar.groundY = screenHeight - containerHeight - avatar.size.y;
-    add(avatar);
+    avatar.position = Vector2(100, screenHeight - containerHeight - avatar.size.y);
+    world.add(avatar);
+    add(world);
+
+    final camera = CameraComponent.withFixedResolution(
+      width: 1280 / 2,
+      height: 330,
+      world: world,
+    );
+
+    final mapSize = level.size; // The size of your map (in pixels)
+    final bottomRight = mapSize - Vector2(camera.viewport.size.x / 2, (camera.viewport.size.y + containerHeight) / 2);
+  // Make the camera follow the avatar
+      camera.follow(avatar);
+    camera.viewfinder.position = bottomRight;
+
+  // Add the camera to the game
+      add(camera);
   }
 
   void pause() {
