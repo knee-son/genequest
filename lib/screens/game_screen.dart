@@ -292,6 +292,7 @@ class GenequestGame extends FlameGame {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
+  late Vector2 mapSize;
   bool isPaused = false;
 
   GenequestGame({required this.containerHeight}) {
@@ -308,40 +309,59 @@ class GenequestGame extends FlameGame {
       'platform_1.png',
       'button_forward.png',
     ]);
+
+    // Load the level
     final level = await flameTiled.TiledComponent.load(
       'Level.tmx',
-      Vector2.all(20),
+      Vector2.all(64),
     );
 
-    // Initialize the world
+    // Initialize the world and add the level
     final world = World();
     world.add(level);
 
-    final double containerHeight = this.containerHeight;
-
-    final screenHeight = size.y; // Total screen height
-
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
-    avatar.groundY = screenHeight - containerHeight - avatar.size.y;
-    avatar.position = Vector2(100, screenHeight - containerHeight - avatar.size.y);
-    world.add(avatar);
     add(world);
 
+    // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: 1280 / 2,
-      height: 330,
+      width: 1280,
+      height: 720,
       world: world,
     );
 
-    final mapSize = level.size; // The size of your map (in pixels)
-    final bottomRight = mapSize - Vector2(camera.viewport.size.x / 2, (camera.viewport.size.y + containerHeight) / 2);
-  // Make the camera follow the avatar
-      camera.follow(avatar);
-    camera.viewfinder.position = bottomRight;
+    // Get the map size (in pixels)
+    mapSize = level.size; // level.size is the total size of the map in pixels
 
-  // Add the camera to the game
-      add(camera);
+    // Calculate container height for UI
+    final double containerHeight = this.containerHeight;
+
+    // Create the avatar and set its spawn point dynamically
+    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
+    avatar = Avatar(chromatidSprite);
+
+    // Calculate the spawn point based on the map height (ground level)
+    avatar.position = Vector2(
+      100, // X-coordinate (can be adjusted for desired horizontal spawn)
+      mapSize.y - avatar.size.y, // Y-coordinate to place the avatar at the ground level
+    );
+
+    // Set groundY for the avatar if needed
+    avatar.groundY = mapSize.y - avatar.size.y;
+
+    // Add the avatar to the world
+    world.add(avatar);
+
+    // Make the camera follow the avatar
+    camera.follow(avatar);
+
+    // Adjust the camera's initial position (optional)
+    camera.viewfinder.position = Vector2(
+      0,
+      mapSize.y - camera.viewport.size.y / 2, // Start near the bottom of the map
+    );
+
+    // Add the camera to the game
+    add(camera);
   }
 
   void pause() {
@@ -384,7 +404,9 @@ class GenequestGame extends FlameGame {
 
   void reset() {
     // Reset avatar position
-    avatar.position = Vector2(200, 300); // Initial position
+    avatar.position = Vector2(
+        100, // X-coordinate (can be adjusted for desired horizontal spawn)
+        mapSize.y - avatar.size.y); // Initial position
     avatar.velocityX = 0; // Stop horizontal movement
     avatar.velocityY = 0; // Stop vertical movement
     avatar.isInAir = false; // Ensure avatar is grounded
