@@ -288,7 +288,7 @@ class PauseMenu extends StatelessWidget {
 
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame {
+class GenequestGame extends FlameGame with KeyboardEvents {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
@@ -299,8 +299,10 @@ class GenequestGame extends FlameGame {
     instance = this;
   }
 
-    @override
+  @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
+
+
 
   @override
   Future<void> onLoad() async {
@@ -324,8 +326,8 @@ class GenequestGame extends FlameGame {
 
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: 1280,
-      height: 720,
+      width: 1980,
+      height: 1080,
       world: world,
     );
 
@@ -360,6 +362,9 @@ class GenequestGame extends FlameGame {
       mapSize.y - camera.viewport.size.y / 2, // Start near the bottom of the map
     );
 
+    // Add keyboard listener
+    add(KeyboardListenerComponent());
+
     // Add the camera to the game
     add(camera);
   }
@@ -391,6 +396,33 @@ class GenequestGame extends FlameGame {
 
   void stopMovingAvatar() {
     avatar.velocityX = 0; // Stop horizontal movement
+  }
+
+  @override
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+      startJump();
+    }
+
+
+    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) && keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+      stopMovingAvatar();
+    } else {
+      if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        startMovingAvatarBack();
+      } else if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        startMovingAvatar();
+      }
+    }
+
+    if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      stopMovingAvatar();
+    } else if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      stopMovingAvatar();
+    }
+
+
+    return super.onKeyEvent(event, keysPressed);
   }
 
   @override
