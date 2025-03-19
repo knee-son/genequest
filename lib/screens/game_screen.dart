@@ -1,3 +1,4 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
@@ -6,7 +7,6 @@ import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +35,8 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double containerHeight = MediaQuery.of(context).size.height * 0.2; // Dynamically calculate height
+    final double containerHeight = MediaQuery.of(context).size.height *
+        0.2; // Dynamically calculate height
     return Scaffold(
       body: Stack(
         children: [
@@ -57,35 +58,44 @@ class GameScreen extends StatelessWidget {
               child: Container(
                 height: containerHeight,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200], // Background color for the border area
+                  color: Colors.grey[200],
+                  // Background color for the border area
                   border: Border(
-                    top: BorderSide(color: Colors.black, width: 2), // Top border
+                    top:
+                        BorderSide(color: Colors.black, width: 2), // Top border
                   ),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                width: double.infinity, // Full width of the screen
+                width: double.infinity,
+                // Full width of the screen
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between buttons
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Space between buttons
                   children: [
                     // Left-aligned buttons
                     Padding(
-                      padding: const EdgeInsets.only(left: 10), // Padding for the left buttons
+                      padding: const EdgeInsets.only(left: 10),
+                      // Padding for the left buttons
                       child: Row(
                         children: [
                           // Back button
                           GestureDetector(
                             onTapDown: (details) {
-                              GenequestGame.instance?.startMovingAvatarBack(); // Start moving back
+                              GenequestGame.instance
+                                  ?.startMovingAvatarBack(); // Start moving back
                             },
                             onTapUp: (details) {
-                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
                             },
                             onTapCancel: () {
-                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
                             },
                             child: Transform(
                               alignment: Alignment.center,
-                              transform: Matrix4.rotationY(3.14159), // Flip the image horizontally
+                              transform: Matrix4.rotationY(3.14159),
+                              // Flip the image horizontally
                               child: Image.asset(
                                 'assets/images/button_forward.png',
                                 width: 60,
@@ -97,13 +107,16 @@ class GameScreen extends StatelessWidget {
                           // Forward button
                           GestureDetector(
                             onTapDown: (details) {
-                              GenequestGame.instance?.startMovingAvatar(); // Start moving forward
+                              GenequestGame.instance
+                                  ?.startMovingAvatar(); // Start moving forward
                             },
                             onTapUp: (details) {
-                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
                             },
                             onTapCancel: () {
-                              GenequestGame.instance?.stopMovingAvatar(); // Stop moving
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
                             },
                             child: Image.asset(
                               'assets/images/button_forward.png',
@@ -116,14 +129,17 @@ class GameScreen extends StatelessWidget {
                     ),
                     // Right-aligned "Up" button
                     Padding(
-                      padding: const EdgeInsets.only(right: 10), // Add padding to the right
+                      padding: const EdgeInsets.only(right: 10),
+                      // Add padding to the right
                       child: GestureDetector(
                         onTapDown: (details) {
-                          GenequestGame.instance?.startJump(); // Trigger jump on press
+                          GenequestGame.instance
+                              ?.startJump(); // Trigger jump on press
                         },
                         child: Transform(
                           alignment: Alignment.center,
-                          transform: Matrix4.rotationZ(-1.5708), // Rotate the image to point up
+                          transform: Matrix4.rotationZ(-1.5708),
+                          // Rotate the image to point up
                           child: Image.asset(
                             'assets/images/button_forward.png',
                             width: 60,
@@ -141,7 +157,8 @@ class GameScreen extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft, // Align buttons to the left center
             child: Padding(
-              padding: const EdgeInsets.only(left: 10), // Adjust padding if needed
+              padding: const EdgeInsets.only(left: 10),
+              // Adjust padding if needed
               child: Column(
                 mainAxisSize: MainAxisSize.min, // Wrap around the buttons only
                 children: [
@@ -151,19 +168,22 @@ class GameScreen extends StatelessWidget {
                       print('Start button pressed');
                     },
                     child: Image.asset(
-                      'assets/images/button_start.png', // Replace with your Start button asset
+                      'assets/images/button_start.png',
+                      // Replace with your Start button asset
                       width: 100,
                       height: 50,
                     ),
                   ),
-                  const SizedBox(height: 10), // Space between Start and Reset buttons
+                  const SizedBox(height: 10),
+                  // Space between Start and Reset buttons
                   GestureDetector(
                     onTap: () {
                       // Reset button logic
                       GenequestGame.instance?.reset(); // Call the reset method
                     },
                     child: Image.asset(
-                      'assets/images/button_reset.png', // Replace with your Reset button asset
+                      'assets/images/button_reset.png',
+                      // Replace with your Reset button asset
                       width: 100,
                       height: 50,
                     ),
@@ -177,7 +197,8 @@ class GameScreen extends StatelessWidget {
           Align(
             alignment: Alignment.topLeft, // Align to the upper-left corner
             child: Padding(
-              padding: const EdgeInsets.all(10), // Add padding for better placement
+              padding: const EdgeInsets.all(10),
+              // Add padding for better placement
               child: Row(
                 mainAxisSize: MainAxisSize.min, // Wrap content only
                 children: [
@@ -188,7 +209,8 @@ class GameScreen extends StatelessWidget {
                       Navigator.pop(context);
                     },
                     child: Image.asset(
-                      'assets/images/button_menu.png', // Replace with your Menu button asset
+                      'assets/images/button_menu.png',
+                      // Replace with your Menu button asset
                       width: 100,
                       height: 50,
                     ),
@@ -207,7 +229,8 @@ class GameScreen extends StatelessWidget {
                       );
                     },
                     child: Image.asset(
-                      'assets/images/button_pause.png', // Replace with your pause button asset
+                      'assets/images/button_pause.png',
+                      // Replace with your pause button asset
                       width: 50,
                       height: 50,
                     ),
@@ -216,7 +239,6 @@ class GameScreen extends StatelessWidget {
               ),
             ),
           ),
-
 
           Align(
             alignment: Alignment.topRight,
@@ -244,11 +266,12 @@ class GameScreen extends StatelessWidget {
     );
   }
 }
+
 class PauseMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GenequestGame.instance?.pause();
-        return Dialog(
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -284,17 +307,17 @@ class PauseMenu extends StatelessWidget {
   }
 }
 
-
-
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
+class GenequestGame extends FlameGame
+    with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
   late Vector2 mapSize;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
+  List<CollisionBlock> collisionBlocks = [];
 
   GenequestGame({required this.containerHeight}) {
     instance = this;
@@ -305,8 +328,6 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
 
   @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
-
-
 
   @override
   Future<void> onLoad() async {
@@ -322,7 +343,8 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
       Vector2.all(64),
     );
 
-    final spawnPointLayer = level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+    final spawnPointLayer =
+        level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     avatar = Avatar(chromatidSprite);
@@ -330,23 +352,43 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
 
     // Find the spawn object in the SpawnPoint layer
     if (spawnPointLayer != null) {
-      print("EYO SPAWN");
       for (final spawn in spawnPointLayer.objects) {
         if (spawn.name == 'Spawn') {
           spawnPosition = Vector2(spawn.x, spawn.y);
-          print('EYO Spawn point found at $spawnPosition'); // Debugging log
-
           // Adjust spawn position to align the avatar's bottom with the top of the spawn point
           spawnPosition.y -= avatar.size.y;
-      // Set groundY to the top of the spawn point
+          final floor = CollisionBlock(
+            position: Vector2(spawn.x, spawn.y),
+            size: Vector2(spawn.width, spawn.height),
+            isFloor: true, // This is a floor, not a wall
+          );
+          collisionBlocks.add(floor);
+          add(floor);
+          // Set groundY to the top of the spawn point
           break;
         }
       }
-    } else {
-      print('EYO SpawnPoint layer not found!');
     }
 
+    final collisionsLayer =
+        level.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
+    if (collisionsLayer != null) {
+      for (final collision in collisionsLayer.objects) {
+        switch (collision.name) {
+          case 'Floor':
+            final floor = CollisionBlock(
+              position: Vector2(collision.x, collision.y),
+              size: Vector2(collision.width, collision.height),
+              isFloor: true, // This is a floor, not a wall
+            );
+            collisionBlocks.add(floor);
+            add(floor);
+            break;
+          default:
+        }
+      }
+    }
 
     // Initialize the world and add the level
     final world = World();
@@ -367,10 +409,9 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
     // Calculate container height for UI
     final double containerHeight = this.containerHeight;
 
-
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
-    avatar.groundY = spawnPosition.y;
+    // avatar.groundY = spawnPosition.y;
 
     // Add the avatar to the world
     world.add(avatar);
@@ -381,7 +422,8 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
     // Adjust the camera's initial position (optional)
     camera.viewfinder.position = Vector2(
       0,
-      mapSize.y - camera.viewport.size.y / 2, // Start near the bottom of the map
+      mapSize.y -
+          camera.viewport.size.y / 2, // Start near the bottom of the map
     );
 
     // Add keyboard listener
@@ -403,17 +445,17 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
   void startJump() {
     if (!avatar.isInAir) {
       avatar.velocityY = -300; // Give an upward velocity
-      avatar.isInAir = true;  // Set the avatar as mid-air
+      avatar.isInAir = true; // Set the avatar as mid-air
     }
   }
 
   // Movement methods
   void startMovingAvatar() {
-    avatar.velocityX = 100; // Positive horizontal velocity
+    avatar.velocityX = 300; // Positive horizontal velocity
   }
 
   void startMovingAvatarBack() {
-    avatar.velocityX = -100; // Negative horizontal velocity
+    avatar.velocityX = -300; // Negative horizontal velocity
   }
 
   void stopMovingAvatar() {
@@ -421,28 +463,32 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
   }
 
   @override
-  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+  KeyEventResult onKeyEvent(
+      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
       startJump();
     }
 
-
-    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) && keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
+        keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
       stopMovingAvatar();
     } else {
-      if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.arrowLeft) {
         startMovingAvatarBack();
-      } else if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      } else if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.arrowRight) {
         startMovingAvatar();
       }
     }
 
-    if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    if (event is KeyUpEvent &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
       stopMovingAvatar();
-    } else if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.arrowRight) {
+    } else if (event is KeyUpEvent &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
       stopMovingAvatar();
     }
-
 
     return super.onKeyEvent(event, keysPressed);
   }
@@ -458,9 +504,7 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
 
   void reset() {
     // Reset avatar position
-    avatar.position = Vector2(
-        100, // X-coordinate (can be adjusted for desired horizontal spawn)
-        mapSize.y - avatar.size.y); // Initial position
+    avatar.position = spawnPosition;
     avatar.velocityX = 0; // Stop horizontal movement
     avatar.velocityY = 0; // Stop vertical movement
     avatar.isInAir = false; // Ensure avatar is grounded
@@ -469,43 +513,81 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
   }
 }
 
+class CollisionBlock extends PositionComponent with CollisionCallbacks {
+  bool isFloor;
+
+  CollisionBlock({
+    required Vector2 position,
+    required Vector2 size,
+    required this.isFloor,
+  }) : super(position: position, size: size);
+
+  @override
+  bool get debugMode => true;
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    // Add a colored rectangle to visualize the block
+    final rectangle = RectangleComponent(
+      position: position,
+      size: size,
+      paint: Paint()..color = const Color(0x88FF0000), // Semi-transparent red
+    );
+    add(rectangle);
+
+    // Add the hitbox as usual
+    add(RectangleHitbox());
+  }
+}
+
 // ------------------- AVATAR LOGIC -------------------
 
-class Avatar extends SpriteComponent {
+class Avatar extends SpriteComponent with CollisionCallbacks {
   double velocityX = 0; // Horizontal velocity
   double velocityY = 0; // Vertical velocity
   final double gravity = 500; // Downward acceleration
-  double groundY = 0; // Adjusted ground level to sit above the button border
   bool isInAir = false; // Tracks whether the avatar is airborne
 
   Avatar(Sprite sprite)
       : super(
-    sprite: sprite,
-    size: Vector2(100, 100), // Avatar size
-    position: Vector2(200, 300), // Starting position above the border
-  );
+          sprite: sprite,
+          size: Vector2(100, 100), // Avatar size
+          position: Vector2(200, 300), // Starting position above the border
+        );
 
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    add(RectangleHitbox());
+  }
   void applyGravity(double dt) {
     // Apply gravity only while airborne
     if (isInAir) {
       velocityY += gravity * dt; // Gravity pulls the avatar down
       position.y += velocityY * dt;
     }
-
-    // Snap to ground only if falling and has reached or surpassed groundY
-    if (velocityY > 0 && position.y >= groundY) {
-      velocityY = 0; // Stop vertical movement
-      position.y = groundY; // Align to ground level
-      isInAir = false; // Mark as grounded
-    }
   }
 
 
 
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if (other is CollisionBlock && other.isFloor && velocityY > 0) {
+      // Check if avatar is landing on top of the floor
+      if (position.y + size.y <= other.position.y + 1 &&
+          position.x + size.x > other.position.x &&
+          position.x < other.position.x + other.size.x) {
+        velocityY = 0; // Stop vertical movement
+        position.y = other.position.y - size.y; // Align bottom of avatar with floor's top
+        isInAir = false; // Mark as grounded
+      }
+    }
+  }
+
   // Update the avatar's position based on velocities
   void updatePosition(double dt) {
-
     position.x += velocityX * dt;
-    position.y += velocityY * dt;// Debugging print
+    position.y += velocityY * dt; // Debugging print
   }
 }
