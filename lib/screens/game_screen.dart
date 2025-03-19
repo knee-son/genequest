@@ -288,16 +288,20 @@ class PauseMenu extends StatelessWidget {
 
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame with KeyboardEvents {
+class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
   late Vector2 mapSize;
   bool isPaused = false;
+  Vector2 spawnPosition = Vector2.zero();
 
   GenequestGame({required this.containerHeight}) {
     instance = this;
   }
+
+  @override
+  bool get debugMode => true;
 
   @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
@@ -318,6 +322,32 @@ class GenequestGame extends FlameGame with KeyboardEvents {
       Vector2.all(64),
     );
 
+    final spawnPointLayer = level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+    // Create the avatar and set its spawn point dynamically
+    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
+    avatar = Avatar(chromatidSprite);
+    spawnPosition = Vector2.zero(); // Default spawn position (fallback)
+
+    // Find the spawn object in the SpawnPoint layer
+    if (spawnPointLayer != null) {
+      print("EYO SPAWN");
+      for (final spawn in spawnPointLayer.objects) {
+        if (spawn.name == 'Spawn') {
+          spawnPosition = Vector2(spawn.x, spawn.y);
+          print('EYO Spawn point found at $spawnPosition'); // Debugging log
+
+          // Adjust spawn position to align the avatar's bottom with the top of the spawn point
+          spawnPosition.y -= avatar.size.y;
+      // Set groundY to the top of the spawn point
+          break;
+        }
+      }
+    } else {
+      print('EYO SpawnPoint layer not found!');
+    }
+
+
+
     // Initialize the world and add the level
     final world = World();
     world.add(level);
@@ -337,18 +367,10 @@ class GenequestGame extends FlameGame with KeyboardEvents {
     // Calculate container height for UI
     final double containerHeight = this.containerHeight;
 
-    // Create the avatar and set its spawn point dynamically
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite);
 
     // Calculate the spawn point based on the map height (ground level)
-    avatar.position = Vector2(
-      100, // X-coordinate (can be adjusted for desired horizontal spawn)
-      mapSize.y - avatar.size.y, // Y-coordinate to place the avatar at the ground level
-    );
-
-    // Set groundY for the avatar if needed
-    avatar.groundY = mapSize.y - avatar.size.y;
+    avatar.position = spawnPosition;
+    avatar.groundY = spawnPosition.y;
 
     // Add the avatar to the world
     world.add(avatar);
@@ -463,19 +485,22 @@ class Avatar extends SpriteComponent {
     position: Vector2(200, 300), // Starting position above the border
   );
 
-  // Apply gravity to the avatar
   void applyGravity(double dt) {
-    // Only apply gravity if in the air
+    // Apply gravity only while airborne
     if (isInAir) {
-      velocityY += gravity * dt;
+      velocityY += gravity * dt; // Gravity pulls the avatar down
+      position.y += velocityY * dt;
     }
-    // If the avatar has fallen to the ground, stop gravity and reset position
-    if (position.y > groundY) {
-      velocityY = 0;
-      isInAir = false;
-      position.y = groundY; // Lock to the ground
+
+    // Snap to ground only if falling and has reached or surpassed groundY
+    if (velocityY > 0 && position.y >= groundY) {
+      velocityY = 0; // Stop vertical movement
+      position.y = groundY; // Align to ground level
+      isInAir = false; // Mark as grounded
     }
   }
+
+
 
   // Update the avatar's position based on velocities
   void updatePosition(double dt) {
