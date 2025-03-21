@@ -1,3 +1,4 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/game.dart';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
+import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +35,8 @@ class GameScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double containerHeight = MediaQuery.of(context).size.height * 0.2; // Dynamically calculate height
+    final double containerHeight = MediaQuery.of(context).size.height *
+        0.2; // Dynamically calculate height
     return Scaffold(
       body: Stack(
         children: [
@@ -50,85 +53,103 @@ class GameScreen extends StatelessWidget {
           // Buttons at the bottom of the screen with a border
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              height: containerHeight,
-              decoration: BoxDecoration(
-                color: Colors.grey[200], // Background color for the border area
-                border: Border(
-                  top: BorderSide(color: Colors.black, width: 2), // Top border
+            child: Visibility(
+              visible: true,
+              child: Container(
+                height: containerHeight,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  // Background color for the border area
+                  border: Border(
+                    top:
+                        BorderSide(color: Colors.black, width: 2), // Top border
+                  ),
                 ),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              width: double.infinity, // Full width of the screen
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between buttons
-                children: [
-                  // Left-aligned buttons
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10), // Padding for the left buttons
-                    child: Row(
-                      children: [
-                        // Back button
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatarBack(); // Start moving back
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          onTapCancel: () {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          child: Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.rotationY(3.14159), // Flip the image horizontally
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                width: double.infinity,
+                // Full width of the screen
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Space between buttons
+                  children: [
+                    // Left-aligned buttons
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      // Padding for the left buttons
+                      child: Row(
+                        children: [
+                          // Back button
+                          GestureDetector(
+                            onTapDown: (details) {
+                              GenequestGame.instance
+                                  ?.startMovingAvatarBack(); // Start moving back
+                            },
+                            onTapUp: (details) {
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
+                            },
+                            onTapCancel: () {
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
+                            },
+                            child: Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.rotationY(3.14159),
+                              // Flip the image horizontally
+                              child: Image.asset(
+                                'assets/images/button_forward.png',
+                                width: 60,
+                                height: 60,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 20), // Space between buttons
+                          // Forward button
+                          GestureDetector(
+                            onTapDown: (details) {
+                              GenequestGame.instance
+                                  ?.startMovingAvatar(); // Start moving forward
+                            },
+                            onTapUp: (details) {
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
+                            },
+                            onTapCancel: () {
+                              GenequestGame.instance
+                                  ?.stopMovingAvatar(); // Stop moving
+                            },
                             child: Image.asset(
                               'assets/images/button_forward.png',
                               width: 60,
                               height: 60,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 20), // Space between buttons
-                        // Forward button
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatar(); // Start moving forward
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
-                          onTapCancel: () {
-                            GenequestGame.instance?.stopMovingAvatar(); // Stop moving
-                          },
+                        ],
+                      ),
+                    ),
+                    // Right-aligned "Up" button
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      // Add padding to the right
+                      child: GestureDetector(
+                        onTapDown: (details) {
+                          GenequestGame.instance
+                              ?.startJump(); // Trigger jump on press
+                        },
+                        child: Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationZ(-1.5708),
+                          // Rotate the image to point up
                           child: Image.asset(
                             'assets/images/button_forward.png',
                             width: 60,
                             height: 60,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  // Right-aligned "Up" button
-                  Padding(
-                    padding: const EdgeInsets.only(right: 10), // Add padding to the right
-                    child: GestureDetector(
-                      onTapDown: (details) {
-                        GenequestGame.instance?.startJump(); // Trigger jump on press
-                      },
-                      child: Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationZ(-1.5708), // Rotate the image to point up
-                        child: Image.asset(
-                          'assets/images/button_forward.png',
-                          width: 60,
-                          height: 60,
-                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -136,7 +157,8 @@ class GameScreen extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft, // Align buttons to the left center
             child: Padding(
-              padding: const EdgeInsets.only(left: 10), // Adjust padding if needed
+              padding: const EdgeInsets.only(left: 10),
+              // Adjust padding if needed
               child: Column(
                 mainAxisSize: MainAxisSize.min, // Wrap around the buttons only
                 children: [
@@ -146,19 +168,22 @@ class GameScreen extends StatelessWidget {
                       print('Start button pressed');
                     },
                     child: Image.asset(
-                      'assets/images/button_start.png', // Replace with your Start button asset
+                      'assets/images/button_start.png',
+                      // Replace with your Start button asset
                       width: 100,
                       height: 50,
                     ),
                   ),
-                  const SizedBox(height: 10), // Space between Start and Reset buttons
+                  const SizedBox(height: 10),
+                  // Space between Start and Reset buttons
                   GestureDetector(
                     onTap: () {
                       // Reset button logic
                       GenequestGame.instance?.reset(); // Call the reset method
                     },
                     child: Image.asset(
-                      'assets/images/button_reset.png', // Replace with your Reset button asset
+                      'assets/images/button_reset.png',
+                      // Replace with your Reset button asset
                       width: 100,
                       height: 50,
                     ),
@@ -172,7 +197,8 @@ class GameScreen extends StatelessWidget {
           Align(
             alignment: Alignment.topLeft, // Align to the upper-left corner
             child: Padding(
-              padding: const EdgeInsets.all(10), // Add padding for better placement
+              padding: const EdgeInsets.all(10),
+              // Add padding for better placement
               child: Row(
                 mainAxisSize: MainAxisSize.min, // Wrap content only
                 children: [
@@ -183,7 +209,8 @@ class GameScreen extends StatelessWidget {
                       Navigator.pop(context);
                     },
                     child: Image.asset(
-                      'assets/images/button_menu.png', // Replace with your Menu button asset
+                      'assets/images/button_menu.png',
+                      // Replace with your Menu button asset
                       width: 100,
                       height: 50,
                     ),
@@ -202,7 +229,8 @@ class GameScreen extends StatelessWidget {
                       );
                     },
                     child: Image.asset(
-                      'assets/images/button_pause.png', // Replace with your pause button asset
+                      'assets/images/button_pause.png',
+                      // Replace with your pause button asset
                       width: 50,
                       height: 50,
                     ),
@@ -211,7 +239,6 @@ class GameScreen extends StatelessWidget {
               ),
             ),
           ),
-
 
           Align(
             alignment: Alignment.topRight,
@@ -239,11 +266,12 @@ class GameScreen extends StatelessWidget {
     );
   }
 }
+
 class PauseMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     GenequestGame.instance?.pause();
-        return Dialog(
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -279,22 +307,25 @@ class PauseMenu extends StatelessWidget {
   }
 }
 
-
-
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame {
+class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
+  late Vector2 mapSize;
   bool isPaused = false;
+  Vector2 spawnPosition = Vector2.zero();
+  List<CollisionBlock> collisionBlocks = [];
 
   GenequestGame({required this.containerHeight}) {
     instance = this;
   }
 
+  @override
+  bool get debugMode => true;
 
-    @override
+  @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
 
   @override
@@ -305,98 +336,343 @@ class GenequestGame extends FlameGame {
       'button_forward.png',
     ]);
 
+    // Load the level
+    final level = await flameTiled.TiledComponent.load(
+      'Level.tmx',
+      Vector2.all(64),
+    );
+
+    final spawnPointLayer =
+    level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+
+    // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite); // Pass the sprite to Avatar
+    avatar = Avatar(chromatidSprite);
+    spawnPosition = Vector2.zero(); // Default spawn position (fallback)
 
+    // Find the spawn object in the SpawnPoint layer
+    if (spawnPointLayer != null) {
+      for (final spawn in spawnPointLayer.objects) {
+        if (spawn.name == 'Spawn') {
+          spawnPosition = Vector2(spawn.x, spawn.y);
+          spawnPosition.y -= avatar.size.y; // Adjust to align avatar
 
-    final screenHeight = size.y; // Total screen height
-    avatar.groundY = screenHeight - containerHeight - avatar.size.y;
-    add(avatar);
+          final floor = CollisionBlock(
+            position: Vector2(spawn.x, spawn.y),
+            size: Vector2(spawn.width, spawn.height),
+            isFloor: true, // This is a floor
+            isWall: false
+          )..priority = 1; // Render above the map
+
+          add(floor);
+          collisionBlocks.add(floor);
+          break;
+        }
+      }
+    }
+
+    final collisionsLayer =
+    level.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
+
+    if (collisionsLayer != null) {
+      for (final collision in collisionsLayer.objects) {
+        switch (collision.name) {
+          case 'Floor':
+            final floor = CollisionBlock(
+              position: Vector2(collision.x, collision.y),
+              size: Vector2(collision.width, collision.height),
+              isFloor: true,
+              isWall: false
+            )..priority = 1; // Render above the map
+
+            add(floor);
+            collisionBlocks.add(floor);
+            break;
+          case 'Wall':
+            final wall = CollisionBlock(
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: false,
+                isWall: true
+            )..priority = 1; // Render above the map
+            add(wall);
+            collisionBlocks.add(wall);
+            break;
+          default:
+          // Handle other cases if needed
+            break;
+        }
+      }
+    }
+
+    // Initialize the world
+    final world = World();
+
+    // Add collision blocks first to ensure they render above the tilemap
+    for (final block in collisionBlocks) {
+      world.add(block);
+    }
+
+    // Add the level (tilemap) after collision blocks
+    world.add(level);
+
+    add(world);
+
+    // Create the camera
+    final camera = CameraComponent.withFixedResolution(
+      width: 1980,
+      height: 1080,
+      world: world,
+    );
+
+    mapSize = level.size;
+
+    avatar.position = spawnPosition;
+
+    // Add the avatar to the world
+    world.add(avatar);
+
+    // Make the camera follow the avatar
+    camera.follow(avatar);
+
+    // Add keyboard listener
+    add(KeyboardListenerComponent());
+
+    // Add the camera to the game
+    add(camera);
   }
 
   void pause() {
-    isPaused = true; // Set the game to paused
+    isPaused = true;
   }
 
   void resume() {
     isPaused = false;
   }
 
-  // Method to trigger a jump
   void startJump() {
-    if (!avatar.isInAir) {
-      avatar.velocityY = -300; // Give an upward velocity
-      avatar.isInAir = true;  // Set the avatar as mid-air
-    }
+      if (avatar.jumpCount < 2){
+        avatar.velocityY = -300; // Upward velocity
+        avatar.isInAir = true; // Set mid-air state
+        avatar.jumpCount += 1;
+      }
   }
 
-  // Movement methods
   void startMovingAvatar() {
-    avatar.velocityX = 100; // Positive horizontal velocity
+    avatar.horizontalMoveAxis = 1;
+    avatar.velocityX = 300; // Move right
   }
 
   void startMovingAvatarBack() {
-    avatar.velocityX = -100; // Negative horizontal velocity
+    avatar.horizontalMoveAxis = -1;
+    avatar.velocityX = -300; // Move left
   }
 
   void stopMovingAvatar() {
-    avatar.velocityX = 0; // Stop horizontal movement
+    avatar.horizontalMoveAxis = 0;
+    avatar.velocityX = 0; // Stop movement
+  }
+
+  @override
+  KeyEventResult onKeyEvent(
+      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space
+    || event.logicalKey == LogicalKeyboardKey.arrowUp
+    ) {
+      startJump();
+    }
+
+    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
+        keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+      stopMovingAvatar();
+    } else {
+      if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        startMovingAvatarBack();
+      } else if (event is KeyDownEvent &&
+          event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        startMovingAvatar();
+      }
+    }
+
+    if (event is KeyUpEvent &&
+        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      stopMovingAvatar();
+    } else if (event is KeyUpEvent &&
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      stopMovingAvatar();
+    }
+
+    return super.onKeyEvent(event, keysPressed);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
     if (!isPaused) {
-      avatar.applyGravity(dt); // Apply gravity
-      avatar.updatePosition(dt); // Update avatar position
+      avatar.applyGravity(dt);
+      avatar.updatePosition(dt);
+    }
+    if (!avatar.isColliding){
+      avatar.isInAir = true;
     }
   }
 
   void reset() {
-    // Reset avatar position
-    avatar.position = Vector2(200, 300); // Initial position
-    avatar.velocityX = 0; // Stop horizontal movement
-    avatar.velocityY = 0; // Stop vertical movement
-    avatar.isInAir = false; // Ensure avatar is grounded
+    avatar.position = spawnPosition;
+    avatar.velocityX = 0;
+    avatar.velocityY = 0;
+    avatar.isInAir = false;
+  }
+}
 
-    // If you have additional game state variables (e.g., score, level), reset them here
+
+class CollisionBlock extends PositionComponent with CollisionCallbacks {
+  bool isFloor;
+  bool isWall;
+
+  CollisionBlock({
+    required Vector2 position,
+    required Vector2 size,
+    required this.isFloor,
+    required this.isWall
+  }) : super(position: position, size: size);
+
+  @override
+  bool get debugMode => true;
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    // Add a colored rectangle to visualize the block
+    final rectangle = RectangleComponent(
+      position: position,
+      size: size,
+      paint: Paint()..color = const Color(0x88FF0000), // Semi-transparent red
+    );
+    add(rectangle);
+
+    // Add the hitbox as usual
+    add(RectangleHitbox());
   }
 }
 
 // ------------------- AVATAR LOGIC -------------------
 
-class Avatar extends SpriteComponent {
+class Avatar extends SpriteComponent with CollisionCallbacks {
   double velocityX = 0; // Horizontal velocity
   double velocityY = 0; // Vertical velocity
-  final double gravity = 500; // Downward acceleration
-  double groundY = 0; // Adjusted ground level to sit above the button border
+  final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
+  int jumpCount = 0;
+  int horizontalMoveAxis = 0;
 
   Avatar(Sprite sprite)
       : super(
-    sprite: sprite,
-    size: Vector2(100, 100), // Avatar size
-    position: Vector2(200, 300), // Starting position above the border
-  );
+          sprite: sprite,
+          size: Vector2(100, 100), // Avatar size
+          position: Vector2(200, 300), // Starting position above the border
+        );
 
-  // Apply gravity to the avatar
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    add(RectangleHitbox());
+  }
   void applyGravity(double dt) {
-    // Only apply gravity if in the air
+    // Apply gravity only while airborne
     if (isInAir) {
-      velocityY += gravity * dt;
+      velocityY += gravity * dt; // Gravity pulls the avatar down
     }
-    // If the avatar has fallen to the ground, stop gravity and reset position
-    if (position.y > groundY) {
+    else {
       velocityY = 0;
-      isInAir = false;
-      position.y = groundY; // Lock to the ground
     }
+    position.y += velocityY * dt;
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+
+  // Reset jump count when landing
+    if (other is CollisionBlock) {
+      final double avatarBottom = position.y + size.y;
+      final double avatarTop = position.y;
+      final double avatarRight = position.x + size.x;
+      final double avatarLeft = position.x;
+      if (other.isFloor){
+
+        final double floorTop = other.position.y;
+        final double floorRight = other.position.x + other.size.x;
+        final double floorLeft = other.position.x;
+        final double floorBottom = other.position.y + other.size.y;
+
+        if (velocityY > 0) { // Falling
+          if (avatarBottom <= floorTop + velocityY && avatarBottom > floorTop) {
+            // Landing on the floor
+            position.y = floorTop - size.y; // Align bottom of the avatar with the top of the platform
+            velocityY = 0; // Stop downward motion
+            isInAir = false; // Mark as grounded
+
+
+          }
+        } else if (velocityY < 0) { // Jumping upwards
+          if (avatarTop <= floorBottom && avatarBottom > floorTop &&
+              avatarRight > floorLeft && avatarLeft < floorRight) {
+            // Prevent passing through the bottom of the platform
+            velocityY = 0; // Stop upward motion
+            isInAir = true; // Ensure avatar remains in the air
+          }
+        } else {
+          isInAir = false;
+          jumpCount = 0;
+        }
+      }
+
+      // if (other.isWall) {
+      //   final double wallTop = other.position.y;
+      //   final double wallRight = other.position.x + other.size.x;
+      //   final double wallLeft = other.position.x;
+      //   final double wallBottom = other.position.y + other.size.y;
+      //
+      //   // Handle horizontal collisions
+      //   if (horizontalMoveAxis == 1 && avatarRight > wallLeft) { // Moving to the right
+      //     velocityX = 0; // Stop rightward movement
+      //     position.x = (wallLeft - size.x) - 10; // Align the avatar's right side with the wall's left edge
+      //   }
+      //   else if (horizontalMoveAxis == -1 && avatarLeft < wallRight) { // Moving to the left
+      //     velocityX = 0; // Stop leftward movement
+      //     position.x = wallRight + 10; // Align the avatar's left side with the wall's right edge
+      //   }
+      //   // Handle vertical collisions
+      //   if (velocityY > 0) { // Falling or landing
+      //     if (avatarBottom <= wallTop + velocityY && avatarBottom > wallTop) {
+      //       position.y = wallTop - size.y; // Align bottom of avatar with top of the wall
+      //       velocityY = 0; // Stop downward motion
+      //       isInAir = false; // Mark as grounded
+      //       jumpCount = 0; // Reset jump count
+      //     }
+      //   } else if (velocityY < 0) { // Jumping upwards
+      //     if (avatarTop <= wallBottom && avatarBottom > wallTop &&
+      //         avatarRight > wallLeft && avatarLeft < wallRight) {
+      //       velocityY = 0; // Stop upward motion
+      //       position.y = wallBottom; // Align top of avatar with bottom of the wall
+      //       isInAir = true; // Ensure avatar remains in the air
+      //     }
+      //   }else {
+      //     isInAir = false;
+      //     jumpCount = 0;
+      //   }
+      // }
+
+      // handle horizontal collisions
+
+    }
+
   }
 
   // Update the avatar's position based on velocities
   void updatePosition(double dt) {
-
     position.x += velocityX * dt;
-    position.y += velocityY * dt;// Debugging print
+    position.y += velocityY * dt; // Debugging print
   }
 }

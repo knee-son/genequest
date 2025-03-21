@@ -36,6 +36,8 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   flame: ^1.23.0
+  flame_tiled: ^2.0.0
+
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +64,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/tiles/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
