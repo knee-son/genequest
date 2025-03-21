@@ -552,7 +552,9 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   double velocityY = 0; // Vertical velocity
   final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
-  int jumpCount = 0;  // Tracks the number of jumps
+  int jumpCount = 0; // Tracks the number of jumps
+
+  bool leftFlag = true;
 
   Avatar(Sprite sprite)
       : super(
@@ -566,12 +568,12 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     super.onLoad();
     add(RectangleHitbox());
   }
+
   void applyGravity(double dt) {
     // Apply gravity only while airborne
     if (isInAir) {
       velocityY += gravity * dt; // Gravity pulls the avatar down
-    }
-    else {
+    } else {
       velocityY = 0;
     }
     // position.y += velocityY * dt;
@@ -579,42 +581,61 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    // print("COLLIDING $other");
+
+    final double avatarTop = position.y;
     final double avatarBottom = position.y + size.y;
     final double avatarRight = position.x + size.x;
     final double avatarLeft = position.x;
     final double floorTop = other.position.y;
+    final double floorBottom = other.position.y + size.y;
     final double floorRight = other.position.x + other.size.x;
     final double floorLeft = other.position.x;
 
-
-    jumpCount = 0; // Reset jump count when landing
-
-    // check if avatar collides beside the other component
-    // if (other is CollisionBlock) {
-
-    // }
-
-    // check if avatar is landing on top of the floor
-    if (other is CollisionBlock && other.isFloor && velocityY > 0) {
-
-      // Check if avatar is landing on top of the floor
-        if (
-        avatarRight == floorLeft + velocityX || avatarLeft == floorRight + velocityX
-        ) {
-          velocityX = 0; // Stop horizontal movement
-        }
-      if (
-          avatarBottom <= floorTop + velocityY
-      ) {
-        position.y = floorTop - size.y; // Align bottom of avatar with floor's top
-        isInAir = false; // Mark as grounded
+    if (other is CollisionBlock) {
+      // Check if avatar is landed on top of the floor
+      if (other.isFloor && velocityY > 0) {
         jumpCount = 0; // Reset jump count when landing
+
+        if (floorTop <= avatarBottom &&
+            avatarBottom <= floorTop + velocityY / 5) {
+          position.y = floorTop - size.y;
+          isInAir = false; // Mark as grounded
+          jumpCount = 0; // Reset jump count when landing
+        } else {
+          isInAir = true;
+        }
       }
-      else {
-        isInAir = true;
+
+      // check if avatar collides beside the other component
+      if (other.isFloor && position.y != floorTop - size.y) {
+        final allowance = (floorRight - floorLeft) * .05;
+        if (avatarRight >= floorLeft && avatarLeft <= floorRight - allowance) {
+          if (!leftFlag) {
+            print("hitting right! ($avatarRight, $floorLeft)");
+            leftFlag = !leftFlag;
+          }
+          // this is fucking stupid but might work
+          if (floorLeft > 0) {
+            position.x = floorLeft - size.x;
+          }
+        } else if (avatarLeft <= floorRight &&
+            avatarRight >= floorLeft + allowance) {
+          if (leftFlag) {
+            print("hitting left! ($avatarLeft, $floorRight)");
+            leftFlag = !leftFlag;
+          }
+          position.x = floorRight;
+        }
+
+        // check if avatar collides below the floor
+        else if (other.isFloor &&
+            avatarTop < floorBottom &&
+            avatarBottom > floorTop &&
+            velocityY < 0) {
+          velocityY = -velocityY;
+        }
       }
-      // print("left edge:  ($avatarRight, $floorLeft)");
-      // print("right edge: ($avatarLeft, $floorRight)");
     }
   }
 
