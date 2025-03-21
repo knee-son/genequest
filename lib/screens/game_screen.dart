@@ -361,6 +361,7 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
             position: Vector2(spawn.x, spawn.y),
             size: Vector2(spawn.width, spawn.height),
             isFloor: true, // This is a floor
+            isWall: false
           )..priority = 1; // Render above the map
 
           add(floor);
@@ -381,10 +382,21 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
               position: Vector2(collision.x, collision.y),
               size: Vector2(collision.width, collision.height),
               isFloor: true,
+              isWall: false
             )..priority = 1; // Render above the map
 
             add(floor);
             collisionBlocks.add(floor);
+            break;
+          case 'Wall':
+            final wall = CollisionBlock(
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: false,
+                isWall: true
+            )..priority = 1; // Render above the map
+            add(wall);
+            collisionBlocks.add(wall);
             break;
           default:
           // Handle other cases if needed
@@ -439,29 +451,34 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
   }
 
   void startJump() {
-    if (avatar.jumpCount < 2) {
-      avatar.velocityY = -300; // Upward velocity
-      avatar.isInAir = true; // Set mid-air state
-      avatar.jumpCount++;
-    }
+      if (avatar.jumpCount < 2){
+        avatar.velocityY = -300; // Upward velocity
+        avatar.isInAir = true; // Set mid-air state
+        avatar.jumpCount += 1;
+      }
   }
 
   void startMovingAvatar() {
+    avatar.horizontalMoveAxis = 1;
     avatar.velocityX = 300; // Move right
   }
 
   void startMovingAvatarBack() {
+    avatar.horizontalMoveAxis = -1;
     avatar.velocityX = -300; // Move left
   }
 
   void stopMovingAvatar() {
+    avatar.horizontalMoveAxis = 0;
     avatar.velocityX = 0; // Stop movement
   }
 
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space
+    || event.logicalKey == LogicalKeyboardKey.arrowUp
+    ) {
       startJump();
     }
 
@@ -496,7 +513,9 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
       avatar.applyGravity(dt);
       avatar.updatePosition(dt);
     }
-    avatar.isInAir = true;
+    if (!avatar.isColliding){
+      avatar.isInAir = true;
+    }
   }
 
   void reset() {
@@ -504,18 +523,19 @@ class GenequestGame extends FlameGame with KeyboardEvents, HasCollisionDetection
     avatar.velocityX = 0;
     avatar.velocityY = 0;
     avatar.isInAir = false;
-    avatar.jumpCount = 0;
   }
 }
 
 
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
   bool isFloor;
+  bool isWall;
 
   CollisionBlock({
     required Vector2 position,
     required Vector2 size,
     required this.isFloor,
+    required this.isWall
   }) : super(position: position, size: size);
 
   @override
@@ -544,7 +564,8 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   double velocityY = 0; // Vertical velocity
   final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
-  int jumpCount = 0;  // Tracks the number of jumps
+  int jumpCount = 0;
+  int horizontalMoveAxis = 0;
 
   Avatar(Sprite sprite)
       : super(
@@ -566,48 +587,87 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     else {
       velocityY = 0;
     }
-    // position.y += velocityY * dt;
+    position.y += velocityY * dt;
   }
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    final double avatarBottom = position.y + size.y;
-    final double avatarRight = position.x + size.x;
-    final double avatarLeft = position.x;
-    final double floorTop = other.position.y;
-    final double floorRight = other.position.x + other.size.x;
-    final double floorLeft = other.position.x;
+
+  // Reset jump count when landing
+    if (other is CollisionBlock) {
+      final double avatarBottom = position.y + size.y;
+      final double avatarTop = position.y;
+      final double avatarRight = position.x + size.x;
+      final double avatarLeft = position.x;
+      if (other.isFloor){
+
+        final double floorTop = other.position.y;
+        final double floorRight = other.position.x + other.size.x;
+        final double floorLeft = other.position.x;
+        final double floorBottom = other.position.y + other.size.y;
+
+        if (velocityY > 0) { // Falling
+          if (avatarBottom <= floorTop + velocityY && avatarBottom > floorTop) {
+            // Landing on the floor
+            position.y = floorTop - size.y; // Align bottom of the avatar with the top of the platform
+            velocityY = 0; // Stop downward motion
+            isInAir = false; // Mark as grounded
 
 
-    jumpCount = 0; // Reset jump count when landing
-
-    // check if avatar collides beside the other component
-    // if (other is CollisionBlock) {
-
-    // }
-
-    // check if avatar is landing on top of the floor
-    if (other is CollisionBlock && other.isFloor && velocityY > 0) {
-
-      // Check if avatar is landing on top of the floor
-        if (
-        avatarRight == floorLeft + velocityX || avatarLeft == floorRight + velocityX
-        ) {
-          velocityX = 0; // Stop horizontal movement
+          }
+        } else if (velocityY < 0) { // Jumping upwards
+          if (avatarTop <= floorBottom && avatarBottom > floorTop &&
+              avatarRight > floorLeft && avatarLeft < floorRight) {
+            // Prevent passing through the bottom of the platform
+            velocityY = 0; // Stop upward motion
+            isInAir = true; // Ensure avatar remains in the air
+          }
+        } else {
+          isInAir = false;
+          jumpCount = 0;
         }
-      if (
-          avatarBottom <= floorTop + velocityY
-      ) {
-        position.y = floorTop - size.y; // Align bottom of avatar with floor's top
-        isInAir = false; // Mark as grounded
-        jumpCount = 0; // Reset jump count when landing
       }
-      else {
-        isInAir = true;
-      }
-      // print("left edge:  ($avatarRight, $floorLeft)");
-      // print("right edge: ($avatarLeft, $floorRight)");
+
+      // if (other.isWall) {
+      //   final double wallTop = other.position.y;
+      //   final double wallRight = other.position.x + other.size.x;
+      //   final double wallLeft = other.position.x;
+      //   final double wallBottom = other.position.y + other.size.y;
+      //
+      //   // Handle horizontal collisions
+      //   if (horizontalMoveAxis == 1 && avatarRight > wallLeft) { // Moving to the right
+      //     velocityX = 0; // Stop rightward movement
+      //     position.x = (wallLeft - size.x) - 10; // Align the avatar's right side with the wall's left edge
+      //   }
+      //   else if (horizontalMoveAxis == -1 && avatarLeft < wallRight) { // Moving to the left
+      //     velocityX = 0; // Stop leftward movement
+      //     position.x = wallRight + 10; // Align the avatar's left side with the wall's right edge
+      //   }
+      //   // Handle vertical collisions
+      //   if (velocityY > 0) { // Falling or landing
+      //     if (avatarBottom <= wallTop + velocityY && avatarBottom > wallTop) {
+      //       position.y = wallTop - size.y; // Align bottom of avatar with top of the wall
+      //       velocityY = 0; // Stop downward motion
+      //       isInAir = false; // Mark as grounded
+      //       jumpCount = 0; // Reset jump count
+      //     }
+      //   } else if (velocityY < 0) { // Jumping upwards
+      //     if (avatarTop <= wallBottom && avatarBottom > wallTop &&
+      //         avatarRight > wallLeft && avatarLeft < wallRight) {
+      //       velocityY = 0; // Stop upward motion
+      //       position.y = wallBottom; // Align top of avatar with bottom of the wall
+      //       isInAir = true; // Ensure avatar remains in the air
+      //     }
+      //   }else {
+      //     isInAir = false;
+      //     jumpCount = 0;
+      //   }
+      // }
+
+      // handle horizontal collisions
+
     }
+
   }
 
   // Update the avatar's position based on velocities
