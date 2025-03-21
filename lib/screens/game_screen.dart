@@ -363,6 +363,9 @@ class GenequestGame extends FlameGame
             isFloor: true, // This is a floor, not a wall
           );
           collisionBlocks.add(floor);
+          Future.delayed(Duration.zero, () {
+            add(floor);
+          });
           add(floor);
           // Set groundY to the top of the spawn point
           break;
@@ -384,7 +387,6 @@ class GenequestGame extends FlameGame
             );
             collisionBlocks.add(floor);
             add(floor);
-            break;
           default:
         }
       }
@@ -443,9 +445,10 @@ class GenequestGame extends FlameGame
 
   // Method to trigger a jump
   void startJump() {
-    if (!avatar.isInAir) {
+    if (avatar.jumpCount < 2) {
       avatar.velocityY = -300; // Give an upward velocity
       avatar.isInAir = true; // Set the avatar as mid-air
+      avatar.jumpCount++; // Increment the jump count
     }
   }
 
@@ -500,6 +503,7 @@ class GenequestGame extends FlameGame
       avatar.applyGravity(dt); // Apply gravity
       avatar.updatePosition(dt); // Update avatar position
     }
+    avatar.isInAir = true;
   }
 
   void reset() {
@@ -508,7 +512,7 @@ class GenequestGame extends FlameGame
     avatar.velocityX = 0; // Stop horizontal movement
     avatar.velocityY = 0; // Stop vertical movement
     avatar.isInAir = false; // Ensure avatar is grounded
-
+    avatar.jumpCount = 0; // Reset jump count
     // If you have additional game state variables (e.g., score, level), reset them here
   }
 }
@@ -546,8 +550,9 @@ class CollisionBlock extends PositionComponent with CollisionCallbacks {
 class Avatar extends SpriteComponent with CollisionCallbacks {
   double velocityX = 0; // Horizontal velocity
   double velocityY = 0; // Vertical velocity
-  final double gravity = 500; // Downward acceleration
+  final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
+  int jumpCount = 0;  // Tracks the number of jumps
 
   Avatar(Sprite sprite)
       : super(
@@ -565,23 +570,51 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     // Apply gravity only while airborne
     if (isInAir) {
       velocityY += gravity * dt; // Gravity pulls the avatar down
-      position.y += velocityY * dt;
     }
+    else {
+      velocityY = 0;
+    }
+    // position.y += velocityY * dt;
   }
-
-
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    final double avatarBottom = position.y + size.y;
+    final double avatarRight = position.x + size.x;
+    final double avatarLeft = position.x;
+    final double floorTop = other.position.y;
+    final double floorRight = other.position.x + other.size.x;
+    final double floorLeft = other.position.x;
+
+
+    jumpCount = 0; // Reset jump count when landing
+
+    // check if avatar collides beside the other component
+    // if (other is CollisionBlock) {
+
+    // }
+
+    // check if avatar is landing on top of the floor
     if (other is CollisionBlock && other.isFloor && velocityY > 0) {
+
       // Check if avatar is landing on top of the floor
-      if (position.y + size.y <= other.position.y + 1 &&
-          position.x + size.x > other.position.x &&
-          position.x < other.position.x + other.size.x) {
-        velocityY = 0; // Stop vertical movement
-        position.y = other.position.y - size.y; // Align bottom of avatar with floor's top
+        if (
+        avatarRight == floorLeft + velocityX || avatarLeft == floorRight + velocityX
+        ) {
+          velocityX = 0; // Stop horizontal movement
+        }
+      if (
+          avatarBottom <= floorTop + velocityY
+      ) {
+        position.y = floorTop - size.y; // Align bottom of avatar with floor's top
         isInAir = false; // Mark as grounded
+        jumpCount = 0; // Reset jump count when landing
       }
+      else {
+        isInAir = true;
+      }
+      // print("left edge:  ($avatarRight, $floorLeft)");
+      // print("right edge: ($avatarLeft, $floorRight)");
     }
   }
 
