@@ -165,7 +165,7 @@ class GameScreen extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       // Start button logic
-                      print('Start button pressed');
+                      // print('Start button pressed');
                     },
                     child: Image.asset(
                       'assets/images/button_start.png',
@@ -503,7 +503,7 @@ class GenequestGame extends FlameGame
       avatar.applyGravity(dt); // Apply gravity
       avatar.updatePosition(dt); // Update avatar position
     }
-    avatar.isInAir = true;
+    // avatar.isInAir = true;
   }
 
   void reset() {
@@ -581,8 +581,6 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    // print("COLLIDING $other");
-
     final double avatarTop = position.y;
     final double avatarBottom = position.y + size.y;
     final double avatarRight = position.x + size.x;
@@ -597,32 +595,31 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
       if (other.isFloor && velocityY > 0) {
         jumpCount = 0; // Reset jump count when landing
 
+        // what's with adding velocityY?
+        // horizontal clipping zone is dependent on the fall speed
+        // and the *0.05 is an arbitrary factor how much the zone
+        // scales the faster the fall is
         if (floorTop <= avatarBottom &&
-            avatarBottom <= floorTop + velocityY / 5) {
+            avatarBottom <= floorTop + velocityY * 0.05) {
           position.y = floorTop - size.y;
           isInAir = false; // Mark as grounded
           jumpCount = 0; // Reset jump count when landing
-        } else {
-          isInAir = true;
         }
       }
+      // print(
+      // 'checking for left colission now ($avatarLeft, ${floorRight - (velocityX) * .3})');
 
       // check if avatar collides beside the other component
       if (other.isFloor && position.y != floorTop - size.y) {
-        final allowance = (floorRight - floorLeft) * .05;
-        if (avatarRight >= floorLeft && avatarLeft <= floorRight - allowance) {
+        final allowance = (velocityX) * .1;
+        if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
           if (!leftFlag) {
-            print("hitting right! ($avatarRight, $floorLeft)");
             leftFlag = !leftFlag;
           }
-          // this is fucking stupid but might work
-          if (floorLeft > 0) {
-            position.x = floorLeft - size.x;
-          }
+          position.x = floorLeft - size.x;
         } else if (avatarLeft <= floorRight &&
-            avatarRight >= floorLeft + allowance) {
+            avatarLeft >= floorRight + allowance) {
           if (leftFlag) {
-            print("hitting left! ($avatarLeft, $floorRight)");
             leftFlag = !leftFlag;
           }
           position.x = floorRight;
@@ -630,13 +627,21 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
 
         // check if avatar collides below the floor
         else if (other.isFloor &&
-            avatarTop < floorBottom &&
-            avatarBottom > floorTop &&
+            avatarTop <= floorBottom &&
+            avatarTop >= floorBottom + velocityY * .2 &&
             velocityY < 0) {
+          print('hitting roof!');
           velocityY = -velocityY;
         }
       }
     }
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    super.onCollisionEnd(other);
+    // surely hovering on air, duh
+    isInAir = true;
   }
 
   // Update the avatar's position based on velocities
