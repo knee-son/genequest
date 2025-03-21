@@ -576,7 +576,6 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     } else {
       velocityY = 0;
     }
-    // position.y += velocityY * dt;
   }
 
   @override
@@ -606,18 +605,16 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           jumpCount = 0; // Reset jump count when landing
         }
       }
-      // print(
-      // 'checking for left colission now ($avatarLeft, ${floorRight - (velocityX) * .3})');
 
       // check if avatar collides beside the other component
       if (other.isFloor && position.y != floorTop - size.y) {
         final allowance = (velocityX) * .1;
-        if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
+        if (floorLeft <= avatarRight && avatarRight <= floorLeft + allowance) {
           if (!leftFlag) {
             leftFlag = !leftFlag;
           }
           position.x = floorLeft - size.x;
-        } else if (avatarLeft <= floorRight &&
+        } else if (floorRight >= avatarLeft &&
             avatarLeft >= floorRight + allowance) {
           if (leftFlag) {
             leftFlag = !leftFlag;
@@ -627,10 +624,9 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
 
         // check if avatar collides below the floor
         else if (other.isFloor &&
-            avatarTop <= floorBottom &&
-            avatarTop >= floorBottom + velocityY * .2 &&
+            floorBottom >= avatarTop &&
+            floorBottom + velocityY * .2 <= avatarTop &&
             velocityY < 0) {
-          print('hitting roof!');
           velocityY = -velocityY;
         }
       }
