@@ -345,6 +345,7 @@ class GenequestGame extends FlameGame
 
     final spawnPointLayer =
         level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     avatar = Avatar(chromatidSprite);
@@ -355,19 +356,17 @@ class GenequestGame extends FlameGame
       for (final spawn in spawnPointLayer.objects) {
         if (spawn.name == 'Spawn') {
           spawnPosition = Vector2(spawn.x, spawn.y);
-          // Adjust spawn position to align the avatar's bottom with the top of the spawn point
-          spawnPosition.y -= avatar.size.y;
+          spawnPosition.y -= avatar.size.y; // Adjust to align avatar
+
           final floor = CollisionBlock(
-            position: Vector2(spawn.x, spawn.y),
-            size: Vector2(spawn.width, spawn.height),
-            isFloor: true, // This is a floor, not a wall
-          );
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
+              position: Vector2(spawn.x, spawn.y),
+              size: Vector2(spawn.width, spawn.height),
+              isFloor: true, // This is a floor
+              isWall: false)
+            ..priority = 1; // Render above the map
+
           add(floor);
-          // Set groundY to the top of the spawn point
+          collisionBlocks.add(floor);
           break;
         }
       }
@@ -381,19 +380,41 @@ class GenequestGame extends FlameGame
         switch (collision.name) {
           case 'Floor':
             final floor = CollisionBlock(
-              position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width, collision.height),
-              isFloor: true, // This is a floor, not a wall
-            );
-            collisionBlocks.add(floor);
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: true,
+                isWall: false)
+              ..priority = 1; // Render above the map
+
             add(floor);
+            collisionBlocks.add(floor);
+            break;
+          case 'Wall':
+            final wall = CollisionBlock(
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: false,
+                isWall: true)
+              ..priority = 1; // Render above the map
+            add(wall);
+            collisionBlocks.add(wall);
+            break;
           default:
+            // Handle other cases if needed
+            break;
         }
       }
     }
 
-    // Initialize the world and add the level
+    // Initialize the world
     final world = World();
+
+    // Add collision blocks first to ensure they render above the tilemap
+    for (final block in collisionBlocks) {
+      world.add(block);
+    }
+
+    // Add the level (tilemap) after collision blocks
     world.add(level);
 
     add(world);
@@ -405,28 +426,15 @@ class GenequestGame extends FlameGame
       world: world,
     );
 
-    // Get the map size (in pixels)
-    mapSize = level.size; // level.size is the total size of the map in pixels
+    mapSize = level.size;
 
-    // Calculate container height for UI
-    final double containerHeight = this.containerHeight;
-
-    // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
-    // avatar.groundY = spawnPosition.y;
 
     // Add the avatar to the world
     world.add(avatar);
 
     // Make the camera follow the avatar
     camera.follow(avatar);
-
-    // Adjust the camera's initial position (optional)
-    camera.viewfinder.position = Vector2(
-      0,
-      mapSize.y -
-          camera.viewport.size.y / 2, // Start near the bottom of the map
-    );
 
     // Add keyboard listener
     add(KeyboardListenerComponent());
@@ -436,39 +444,41 @@ class GenequestGame extends FlameGame
   }
 
   void pause() {
-    isPaused = true; // Set the game to paused
+    isPaused = true;
   }
 
   void resume() {
     isPaused = false;
   }
 
-  // Method to trigger a jump
   void startJump() {
     if (avatar.jumpCount < 2) {
-      avatar.velocityY = -300; // Give an upward velocity
-      avatar.isInAir = true; // Set the avatar as mid-air
-      avatar.jumpCount++; // Increment the jump count
+      avatar.velocityY = -300; // Upward velocity
+      avatar.isInAir = true; // Set mid-air state
+      avatar.jumpCount += 1;
     }
   }
 
-  // Movement methods
   void startMovingAvatar() {
-    avatar.velocityX = 300; // Positive horizontal velocity
+    avatar.horizontalMoveAxis = 1;
+    avatar.velocityX = 300; // Move right
   }
 
   void startMovingAvatarBack() {
-    avatar.velocityX = -300; // Negative horizontal velocity
+    avatar.horizontalMoveAxis = -1;
+    avatar.velocityX = -300; // Move left
   }
 
   void stopMovingAvatar() {
-    avatar.velocityX = 0; // Stop horizontal movement
+    avatar.horizontalMoveAxis = 0;
+    avatar.velocityX = 0; // Stop movement
   }
 
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
       startJump();
     }
 
@@ -500,31 +510,30 @@ class GenequestGame extends FlameGame
   void update(double dt) {
     super.update(dt);
     if (!isPaused) {
-      avatar.applyGravity(dt); // Apply gravity
-      avatar.updatePosition(dt); // Update avatar position
+      avatar.applyGravity(dt);
+      avatar.updatePosition(dt);
     }
     // avatar.isInAir = true;
   }
 
   void reset() {
-    // Reset avatar position
     avatar.position = spawnPosition;
-    avatar.velocityX = 0; // Stop horizontal movement
-    avatar.velocityY = 0; // Stop vertical movement
-    avatar.isInAir = false; // Ensure avatar is grounded
-    avatar.jumpCount = 0; // Reset jump count
-    // If you have additional game state variables (e.g., score, level), reset them here
+    avatar.velocityX = 0;
+    avatar.velocityY = 0;
+    avatar.isInAir = false;
   }
 }
 
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
   bool isFloor;
+  bool isWall;
 
-  CollisionBlock({
-    required Vector2 position,
-    required Vector2 size,
-    required this.isFloor,
-  }) : super(position: position, size: size);
+  CollisionBlock(
+      {required Vector2 position,
+      required Vector2 size,
+      required this.isFloor,
+      required this.isWall})
+      : super(position: position, size: size);
 
   @override
   bool get debugMode => true;
