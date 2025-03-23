@@ -344,6 +344,7 @@ class GenequestGame extends FlameGame
 
     final spawnPointLayer =
         level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     avatar = Avatar(sprite: chromatidSprite, context: context);
@@ -355,20 +356,20 @@ class GenequestGame extends FlameGame
       for (final spawn in spawnPointLayer.objects) {
         if (spawn.name == 'Spawn') {
           spawnPosition = Vector2(spawn.x, spawn.y);
-          // Adjust spawn position to align the avatar's bottom with the top of the spawn point
-          spawnPosition.y -= avatar.size.y;
+          spawnPosition.y -= avatar.size.y; // Adjust to align avatar
+
           final floor = CollisionBlock(
             position: Vector2(spawn.x, spawn.y),
             size: Vector2(spawn.width, spawn.height),
             isFloor: true, // This is a floor, not a wall
             isEnemy: false
-          );
+          )..priority = 1; // Render above the map;
           collisionBlocks.add(floor);
           Future.delayed(Duration.zero, () {
             add(floor);
           });
           add(floor);
-          // Set groundY to the top of the spawn point
+          collisionBlocks.add(floor);
           break;
         }
       }
@@ -386,7 +387,8 @@ class GenequestGame extends FlameGame
               size: Vector2(collision.width, collision.height),
               isFloor: true, // This is a floor, not a wall
               isEnemy: false
-            );
+            )
+              ..priority = 1;;
             collisionBlocks.add(floor);
             add(floor);
           case 'Enemy':
@@ -395,16 +397,25 @@ class GenequestGame extends FlameGame
               size: Vector2(collision.width, collision.height),
               isFloor: false, // This is a floor, not a wall
               isEnemy: true
-            );
+            ) ..priority = 1;;
             collisionBlocks.add(enemy);
             add(enemy);
           default:
+            // Handle other cases if needed
+            break;
         }
       }
     }
 
-    // Initialize the world and add the level
+    // Initialize the world
     final world = World();
+
+    // Add collision blocks first to ensure they render above the tilemap
+    for (final block in collisionBlocks) {
+      world.add(block);
+    }
+
+    // Add the level (tilemap) after collision blocks
     world.add(level);
 
     add(world);
@@ -417,25 +428,16 @@ class GenequestGame extends FlameGame
       world: world,
     );
 
-    // Get the map size (in pixels)
-    mapSize = level.size; // level.size is the total size of the map in pixels
+    mapSize = level.size;
 
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
-    // avatar.groundY = spawnPosition.y;
 
     // Add the avatar to the world
     world.add(avatar);
 
     // Make the camera follow the avatar
     camera.follow(avatar);
-
-    // Adjust the camera's initial position (optional)
-    camera.viewfinder.position = Vector2(
-      0,
-      mapSize.y -
-          camera.viewport.size.y / 2, // Start near the bottom of the map
-    );
 
     // Add keyboard listener
     add(KeyboardListenerComponent());
@@ -449,39 +451,41 @@ class GenequestGame extends FlameGame
   }
 
   void pause() {
-    isPaused = true; // Set the game to paused
+    isPaused = true;
   }
 
   void resume() {
     isPaused = false;
   }
 
-  // Method to trigger a jump
   void startJump() {
     if (avatar.jumpCount < 2) {
-      avatar.velocityY = -300; // Give an upward velocity
-      avatar.isInAir = true; // Set the avatar as mid-air
-      avatar.jumpCount++; // Increment the jump count
+      avatar.velocityY = -300; // Upward velocity
+      avatar.isInAir = true; // Set mid-air state
+      avatar.jumpCount += 1;
     }
   }
 
-  // Movement methods
   void startMovingAvatar() {
-    avatar.velocityX = 300; // Positive horizontal velocity
+    avatar.horizontalMoveAxis = 1;
+    avatar.velocityX = 300; // Move right
   }
 
   void startMovingAvatarBack() {
-    avatar.velocityX = -300; // Negative horizontal velocity
+    avatar.horizontalMoveAxis = -1;
+    avatar.velocityX = -300; // Move left
   }
 
   void stopMovingAvatar() {
-    avatar.velocityX = 0; // Stop horizontal movement
+    avatar.horizontalMoveAxis = 0;
+    avatar.velocityX = 0; // Stop movement
   }
 
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
       startJump();
     }
 
@@ -513,14 +517,13 @@ class GenequestGame extends FlameGame
   void update(double dt) {
     super.update(dt);
     if (!isPaused) {
-      avatar.applyGravity(dt); // Apply gravity
-      avatar.updatePosition(dt); // Update avatar position
+      avatar.applyGravity(dt);
+      avatar.updatePosition(dt);
     }
     // avatar.isInAir = true;
   }
 
   void reset() {
-    // Reset avatar position
     avatar.position = spawnPosition;
     avatar.velocityX = 0; // Stop horizontal movement
     avatar.velocityY = 0; // Stop vertical movement
@@ -573,6 +576,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   int health = 6;
   bool isImmune = false; // Tracks whether the player is immune to damage
   final BuildContext context;
+  int horizontalMoveAxis = 0;
 
   bool leftFlag = true;
 
@@ -596,7 +600,6 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     } else {
       velocityY = 0;
     }
-    // position.y += velocityY * dt;
   }
 
   @override
@@ -642,7 +645,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         );
       }
     }
-    
+
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
       if ((other.isFloor || other.isEnemy) && velocityY > 0) {
@@ -668,7 +671,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
           if (!leftFlag) leftFlag = !leftFlag;
           position.x = floorLeft - size.x;
-        } else if (avatarLeft <= floorRight &&
+        } else if (floorRight >= avatarLeft &&
             avatarLeft >= floorRight + allowance) {
           if (leftFlag) leftFlag = !leftFlag;
           position.x = floorRight;
