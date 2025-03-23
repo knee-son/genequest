@@ -7,6 +7,9 @@ import 'package:flame/flame.dart';
 import 'package:flame/sprite.dart';
 import 'package:flutter/services.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
+import 'dart:async' as async;
+
+import 'package:genequest_app/screens/title_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +17,9 @@ void main() async {
     'chromatid.png',
     'platform_1.png',
     'button_forward.png',
+    'heart_full.png',
+    'heart_half.png',
+    'heart_empty.png',
   ]);
 
   runApp(const GameApp());
@@ -33,157 +39,167 @@ class GameApp extends StatelessWidget {
 class GameScreen extends StatelessWidget {
   const GameScreen({super.key});
 
+  // HealthBar widget dynamically linked with healthNotifier
+  Widget healthBar(BuildContext context) {
+    final gameInstance = GenequestGame.instance;
+    if (gameInstance == null) {
+      return const SizedBox(); // Return an empty widget if the game is not initialized
+    }
+    return ValueListenableBuilder<int>(
+      valueListenable: gameInstance.healthNotifier,
+      builder: (context, health, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            int heartHealth = health - (index * 2);
+            String asset;
+            if (heartHealth >= 2) {
+              asset = 'assets/images/heart_full.png'; // Full heart
+            } else if (heartHealth == 1) {
+              asset = 'assets/images/heart_half.png'; // Half heart
+            } else {
+              asset = 'assets/images/heart_empty.png'; // Empty heart
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Image.asset(asset, width: 40, height: 40),
+            );
+          }),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final double containerHeight = MediaQuery.of(context).size.height *
-        0.2; // Dynamically calculate height
+    final double containerHeight = MediaQuery.of(context).size.height * 0.2;
+
     return Scaffold(
       body: Stack(
         children: [
           // Game canvas
           LayoutBuilder(
             builder: (context, constraints) {
-              // Pass the containerHeight to your game logic
               return GameWidget(
-                game: GenequestGame(containerHeight: containerHeight),
+                game: GenequestGame(containerHeight: containerHeight, context: context),
+                overlayBuilderMap: {
+                  'HealthBar': (_, game) => Align(
+                    alignment: Alignment.topRight, // Move health bar to the upper right
+                    child: Padding(
+                      padding: const EdgeInsets.all(10), // Add spacing for aesthetics
+                      child: healthBar(context),
+                    ),
+                  ),
+                },
               );
             },
           ),
 
-          // Buttons at the bottom of the screen with a border
+          // Bottom menu for movement buttons
           Align(
             alignment: Alignment.bottomCenter,
-            child: Visibility(
-              visible: true,
-              child: Container(
-                height: containerHeight,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  // Background color for the border area
-                  border: Border(
-                    top:
-                        BorderSide(color: Colors.black, width: 2), // Top border
-                  ),
+            child: Container(
+              height: containerHeight,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                border: Border(
+                  top: BorderSide(color: Colors.black, width: 2),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                width: double.infinity,
-                // Full width of the screen
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  // Space between buttons
-                  children: [
-                    // Left-aligned buttons
-                    Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      // Padding for the left buttons
-                      child: Row(
-                        children: [
-                          // Back button
-                          GestureDetector(
-                            onTapDown: (details) {
-                              GenequestGame.instance
-                                  ?.startMovingAvatarBack(); // Start moving back
-                            },
-                            onTapUp: (details) {
-                              GenequestGame.instance
-                                  ?.stopMovingAvatar(); // Stop moving
-                            },
-                            onTapCancel: () {
-                              GenequestGame.instance
-                                  ?.stopMovingAvatar(); // Stop moving
-                            },
-                            child: Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.rotationY(3.14159),
-                              // Flip the image horizontally
-                              child: Image.asset(
-                                'assets/images/button_forward.png',
-                                width: 60,
-                                height: 60,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 20), // Space between buttons
-                          // Forward button
-                          GestureDetector(
-                            onTapDown: (details) {
-                              GenequestGame.instance
-                                  ?.startMovingAvatar(); // Start moving forward
-                            },
-                            onTapUp: (details) {
-                              GenequestGame.instance
-                                  ?.stopMovingAvatar(); // Stop moving
-                            },
-                            onTapCancel: () {
-                              GenequestGame.instance
-                                  ?.stopMovingAvatar(); // Stop moving
-                            },
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              width: double.infinity,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Left movement buttons (Back, Forward)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 10),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTapDown: (details) {
+                            GenequestGame.instance?.startMovingAvatarBack();
+                          },
+                          onTapUp: (details) {
+                            GenequestGame.instance?.stopMovingAvatar();
+                          },
+                          child: Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.rotationY(3.14159),
                             child: Image.asset(
                               'assets/images/button_forward.png',
                               width: 60,
                               height: 60,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    // Right-aligned "Up" button
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      // Add padding to the right
-                      child: GestureDetector(
-                        onTapDown: (details) {
-                          GenequestGame.instance
-                              ?.startJump(); // Trigger jump on press
-                        },
-                        child: Transform(
-                          alignment: Alignment.center,
-                          transform: Matrix4.rotationZ(-1.5708),
-                          // Rotate the image to point up
+                        ),
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          onTapDown: (details) {
+                            GenequestGame.instance?.startMovingAvatar();
+                          },
+                          onTapUp: (details) {
+                            GenequestGame.instance?.stopMovingAvatar();
+                          },
                           child: Image.asset(
                             'assets/images/button_forward.png',
                             width: 60,
                             height: 60,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+
+                  // Right movement button (Jump)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      onTapDown: (details) {
+                        GenequestGame.instance?.startJump();
+                      },
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.rotationZ(-1.5708),
+                        child: Image.asset(
+                          'assets/images/button_forward.png',
+                          width: 60,
+                          height: 60,
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          // Start and Reset buttons on the left center
+
+          // Left-center alignment for Start and Reset buttons
           Align(
-            alignment: Alignment.centerLeft, // Align buttons to the left center
+            alignment: Alignment.centerLeft,
             child: Padding(
               padding: const EdgeInsets.only(left: 10),
-              // Adjust padding if needed
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Wrap around the buttons only
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
                     onTap: () {
                       // Start button logic
-                      // print('Start button pressed');
+                      debugPrint('Start button pressed');
                     },
                     child: Image.asset(
                       'assets/images/button_start.png',
-                      // Replace with your Start button asset
                       width: 100,
                       height: 50,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  // Space between Start and Reset buttons
+                  const SizedBox(height: 10), // Space between buttons
                   GestureDetector(
                     onTap: () {
-                      // Reset button logic
-                      GenequestGame.instance?.reset(); // Call the reset method
+                      GenequestGame.instance?.reset(); // Reset game logic
                     },
                     child: Image.asset(
                       'assets/images/button_reset.png',
-                      // Replace with your Reset button asset
                       width: 100,
                       height: 50,
                     ),
@@ -193,44 +209,39 @@ class GameScreen extends StatelessWidget {
             ),
           ),
 
-          // Menu asset on the upper-right corner
+          // Top-left alignment for Menu and Pause buttons
           Align(
-            alignment: Alignment.topLeft, // Align to the upper-left corner
+            alignment: Alignment.topLeft,
             child: Padding(
               padding: const EdgeInsets.all(10),
-              // Add padding for better placement
               child: Row(
-                mainAxisSize: MainAxisSize.min, // Wrap content only
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Menu button
                   GestureDetector(
                     onTap: () {
-                      // Menu button logic
                       Navigator.pop(context);
                     },
                     child: Image.asset(
                       'assets/images/button_menu.png',
-                      // Replace with your Menu button asset
                       width: 100,
                       height: 50,
                     ),
                   ),
-                  const SizedBox(width: 10), // Add space between the buttons
+                  const SizedBox(width: 10),
                   // Pause button
                   GestureDetector(
                     onTap: () {
-                      // Display the pause menu
                       showDialog(
                         context: context,
                         barrierDismissible: false,
-                        builder: (BuildContext context) {
-                          return PauseMenu();
+                        builder: (context) {
+                          return PauseMenu(); // Pause menu dialog
                         },
                       );
                     },
                     child: Image.asset(
                       'assets/images/button_pause.png',
-                      // Replace with your pause button asset
                       width: 50,
                       height: 50,
                     ),
@@ -239,33 +250,13 @@ class GameScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min, // Wrap content only
-                children: List.generate(3, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    // Space between hearts
-                    child: Image.asset(
-                      'assets/images/heart_full.png',
-                      // Reuse the same heart image asset
-                      width: 40,
-                      height: 40,
-                    ),
-                  );
-                }),
-              ),
-            ),
-          )
         ],
       ),
     );
   }
 }
+
+
 
 class PauseMenu extends StatelessWidget {
   @override
@@ -314,14 +305,19 @@ class GenequestGame extends FlameGame
   static GenequestGame? instance; // Singleton for UI interaction
   late Avatar avatar;
   final double containerHeight;
+  late BuildContext context;
   late Vector2 mapSize;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
   List<CollisionBlock> collisionBlocks = [];
+  ValueNotifier<int> healthNotifier = ValueNotifier(6);
 
-  GenequestGame({required this.containerHeight}) {
+
+  GenequestGame({required this.containerHeight, required this.context}) {
     instance = this;
+    context = context;
   }
+
 
   @override
   bool get debugMode => true;
@@ -335,8 +331,11 @@ class GenequestGame extends FlameGame
       'chromatid.png',
       'platform_1.png',
       'button_forward.png',
+      'heart_full.png',
+      'heart_half.png',
+      'heart_empty.png',
     ]);
-
+    overlays.add('HealthBar');
     // Load the level
     final level = await flameTiled.TiledComponent.load(
       'Level.tmx',
@@ -347,7 +346,8 @@ class GenequestGame extends FlameGame
         level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(chromatidSprite);
+    avatar = Avatar(sprite: chromatidSprite, context: context);
+
     spawnPosition = Vector2.zero(); // Default spawn position (fallback)
 
     // Find the spawn object in the SpawnPoint layer
@@ -361,6 +361,7 @@ class GenequestGame extends FlameGame
             position: Vector2(spawn.x, spawn.y),
             size: Vector2(spawn.width, spawn.height),
             isFloor: true, // This is a floor, not a wall
+            isEnemy: false
           );
           collisionBlocks.add(floor);
           Future.delayed(Duration.zero, () {
@@ -384,9 +385,19 @@ class GenequestGame extends FlameGame
               position: Vector2(collision.x, collision.y),
               size: Vector2(collision.width, collision.height),
               isFloor: true, // This is a floor, not a wall
+              isEnemy: false
             );
             collisionBlocks.add(floor);
             add(floor);
+          case 'Enemy':
+            final enemy = CollisionBlock(
+              position: Vector2(collision.x, collision.y),
+              size: Vector2(collision.width, collision.height),
+              isFloor: false, // This is a floor, not a wall
+              isEnemy: true
+            );
+            collisionBlocks.add(enemy);
+            add(enemy);
           default:
         }
       }
@@ -397,19 +408,17 @@ class GenequestGame extends FlameGame
     world.add(level);
 
     add(world);
-
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: 1980,
+      width: 1920,
       height: 1080,
       world: world,
     );
 
     // Get the map size (in pixels)
     mapSize = level.size; // level.size is the total size of the map in pixels
-
-    // Calculate container height for UI
-    final double containerHeight = this.containerHeight;
 
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
@@ -433,6 +442,10 @@ class GenequestGame extends FlameGame
 
     // Add the camera to the game
     add(camera);
+  }
+
+  void updateHealth(int newHealth) {
+    healthNotifier.value = newHealth;
   }
 
   void pause() {
@@ -513,17 +526,21 @@ class GenequestGame extends FlameGame
     avatar.velocityY = 0; // Stop vertical movement
     avatar.isInAir = false; // Ensure avatar is grounded
     avatar.jumpCount = 0; // Reset jump count
+    avatar.health = 6;
+    GenequestGame.instance?.updateHealth(avatar.health);
     // If you have additional game state variables (e.g., score, level), reset them here
   }
 }
 
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
   bool isFloor;
+  bool isEnemy;
 
   CollisionBlock({
     required Vector2 position,
     required Vector2 size,
     required this.isFloor,
+    required this.isEnemy
   }) : super(position: position, size: size);
 
   @override
@@ -553,10 +570,13 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
   int jumpCount = 0; // Tracks the number of jumps
+  int health = 6;
+  bool isImmune = false; // Tracks whether the player is immune to damage
+  final BuildContext context;
 
   bool leftFlag = true;
 
-  Avatar(Sprite sprite)
+  Avatar({required Sprite sprite, required this.context})
       : super(
           sprite: sprite,
           size: Vector2(100, 100), // Avatar size
@@ -590,52 +610,85 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     final double floorRight = other.position.x + other.size.x;
     final double floorLeft = other.position.x;
 
+
+    void applyDamageWithImmunity() {
+      if (health - 1 > 0 && !isImmune) {
+        health -= 1; // Reduce health
+        GenequestGame.instance?.updateHealth(health); // Update health bar
+        isImmune = true; // Grant immunity
+        paint.color = const Color(0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
+
+        // Start blinking effect
+        int blinkCount = 0;
+        async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
+          // Toggle visibility or opacity every 200ms
+          if (blinkCount >= 5) { // Blink for 1 second (5 cycles)
+            timer.cancel(); // Stop blinking
+            isImmune = false; // End immunity
+            paint.color = const Color(0xFFFFFFFF); // Restore full opacity
+          } else {
+            // Alternate opacity between semi-transparent and fully transparent
+            paint.color = paint.color.opacity == 0.0
+                ? const Color(0x88FFFFFF) // Semi-transparent
+                : const Color(0x00FFFFFF); // Fully transparent
+            blinkCount++;
+          }
+        });
+      } else {
+        // replace with game over screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => TitleScreen()), // Replace with your title screen widget
+        );
+      }
+    }
+    
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
-      if (other.isFloor && velocityY > 0) {
+      if ((other.isFloor || other.isEnemy) && velocityY > 0) {
         jumpCount = 0; // Reset jump count when landing
-
-        // what's with adding velocityY?
-        // horizontal clipping zone is dependent on the fall speed
-        // and the *0.05 is an arbitrary factor how much the zone
-        // scales the faster the fall is
+        if (other.isEnemy && !isImmune) {
+          applyDamageWithImmunity(); // Handle damage and grant immunity
+        }
         if (floorTop <= avatarBottom &&
             avatarBottom <= floorTop + velocityY * 0.05) {
-          position.y = floorTop - size.y;
+          position.y = floorTop - size.y; // Align avatar to floor
           isInAir = false; // Mark as grounded
-          jumpCount = 0; // Reset jump count when landing
+          jumpCount = 0; // Reset jump count
         }
       }
-      // print(
-      // 'checking for left colission now ($avatarLeft, ${floorRight - (velocityX) * .3})');
-
-      // check if avatar collides beside the other component
-      if (other.isFloor && position.y != floorTop - size.y) {
-        final allowance = (velocityX) * .1;
+      else  if (velocityY == 0){
+        if (other.isEnemy && !isImmune) {
+          applyDamageWithImmunity(); // Handle damage and grant immunity
+        }
+      }
+      // Horizontal collisions
+      if ((other.isFloor || other.isEnemy) && position.y != floorTop - size.y) {
+        final allowance = (velocityX) * 0.1;
         if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
-          if (!leftFlag) {
-            leftFlag = !leftFlag;
-          }
+          if (!leftFlag) leftFlag = !leftFlag;
           position.x = floorLeft - size.x;
         } else if (avatarLeft <= floorRight &&
             avatarLeft >= floorRight + allowance) {
-          if (leftFlag) {
-            leftFlag = !leftFlag;
-          }
+          if (leftFlag) leftFlag = !leftFlag;
           position.x = floorRight;
         }
 
-        // check if avatar collides below the floor
-        else if (other.isFloor &&
-            avatarTop <= floorBottom &&
-            avatarTop >= floorBottom + velocityY * .2 &&
-            velocityY < 0) {
-          print('hitting roof!');
-          velocityY = -velocityY;
+        if (other.isEnemy && !isImmune) {
+          applyDamageWithImmunity(); // Handle damage and grant immunity
         }
+      }
+
+      // Check if avatar collides below the floor
+      if (other.isFloor &&
+          avatarTop <= floorBottom &&
+          avatarTop >= floorBottom + velocityY * 0.2 &&
+          velocityY < 0) {
+        velocityY = -velocityY; // Reverse vertical velocity
       }
     }
   }
+
 
   @override
   void onCollisionEnd(PositionComponent other) {
