@@ -423,8 +423,8 @@ class GenequestGame extends FlameGame
     final screenHeight = MediaQuery.of(context).size.height;
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: 1920,
-      height: 1080,
+      width: screenWidth,
+      height: screenHeight,
       world: world,
     );
 
