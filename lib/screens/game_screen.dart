@@ -562,6 +562,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   final double gravity = 300; // Downward acceleration
   bool isInAir = false; // Tracks whether the avatar is airborne
   int jumpCount = 0; // Tracks the number of jumps
+  int horizontalMoveAxis = 0;
 
   bool leftFlag = true;
 
