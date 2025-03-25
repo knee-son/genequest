@@ -81,15 +81,18 @@ class GameScreen extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return GameWidget(
-                game: GenequestGame(containerHeight: containerHeight, context: context),
+                game: GenequestGame(
+                    containerHeight: containerHeight, context: context),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
-                    alignment: Alignment.topRight, // Move health bar to the upper right
-                    child: Padding(
-                      padding: const EdgeInsets.all(10), // Add spacing for aesthetics
-                      child: healthBar(context),
-                    ),
-                  ),
+                        alignment: Alignment
+                            .topRight, // Move health bar to the upper right
+                        child: Padding(
+                          padding: const EdgeInsets.all(
+                              10), // Add spacing for aesthetics
+                          child: healthBar(context),
+                        ),
+                      ),
                 },
               );
             },
@@ -256,8 +259,6 @@ class GameScreen extends StatelessWidget {
   }
 }
 
-
-
 class PauseMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -312,12 +313,10 @@ class GenequestGame extends FlameGame
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
 
-
   GenequestGame({required this.containerHeight, required this.context}) {
     instance = this;
     context = context;
   }
-
 
   @override
   bool get debugMode => true;
@@ -359,11 +358,11 @@ class GenequestGame extends FlameGame
           spawnPosition.y -= avatar.size.y; // Adjust to align avatar
 
           final floor = CollisionBlock(
-            position: Vector2(spawn.x, spawn.y),
-            size: Vector2(spawn.width, spawn.height),
-            isFloor: true, // This is a floor, not a wall
-            isEnemy: false
-          )..priority = 1; // Render above the map;
+              position: Vector2(spawn.x, spawn.y),
+              size: Vector2(spawn.width, spawn.height),
+              isFloor: true, // This is a floor, not a wall
+              isEnemy: false)
+            ..priority = 1; // Render above the map;
           collisionBlocks.add(floor);
           Future.delayed(Duration.zero, () {
             add(floor);
@@ -383,21 +382,22 @@ class GenequestGame extends FlameGame
         switch (collision.name) {
           case 'Floor':
             final floor = CollisionBlock(
-              position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width, collision.height),
-              isFloor: true, // This is a floor, not a wall
-              isEnemy: false
-            )
-              ..priority = 1;;
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: true, // This is a floor, not a wall
+                isEnemy: false)
+              ..priority = 1;
+            ;
             collisionBlocks.add(floor);
             add(floor);
           case 'Enemy':
             final enemy = CollisionBlock(
-              position: Vector2(collision.x, collision.y),
-              size: Vector2(collision.width, collision.height),
-              isFloor: false, // This is a floor, not a wall
-              isEnemy: true
-            ) ..priority = 1;;
+                position: Vector2(collision.x, collision.y),
+                size: Vector2(collision.width, collision.height),
+                isFloor: false, // This is a floor, not a wall
+                isEnemy: true)
+              ..priority = 1;
+            ;
             collisionBlocks.add(enemy);
             add(enemy);
           default:
@@ -539,12 +539,12 @@ class CollisionBlock extends PositionComponent with CollisionCallbacks {
   bool isFloor;
   bool isEnemy;
 
-  CollisionBlock({
-    required Vector2 position,
-    required Vector2 size,
-    required this.isFloor,
-    required this.isEnemy
-  }) : super(position: position, size: size);
+  CollisionBlock(
+      {required Vector2 position,
+      required Vector2 size,
+      required this.isFloor,
+      required this.isEnemy})
+      : super(position: position, size: size);
 
   @override
   bool get debugMode => true;
@@ -583,7 +583,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   Avatar({required Sprite sprite, required this.context})
       : super(
           sprite: sprite,
-          size: Vector2(100, 100), // Avatar size
+          size: Vector2(60, 100), // Avatar size
           position: Vector2(200, 300), // Starting position above the border
         );
 
@@ -613,19 +613,20 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     final double floorRight = other.position.x + other.size.x;
     final double floorLeft = other.position.x;
 
-
     void applyDamageWithImmunity() {
       if (health - 1 > 0 && !isImmune) {
         health -= 1; // Reduce health
         GenequestGame.instance?.updateHealth(health); // Update health bar
         isImmune = true; // Grant immunity
-        paint.color = const Color(0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
+        paint.color = const Color(
+            0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
 
         // Start blinking effect
         int blinkCount = 0;
         async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
           // Toggle visibility or opacity every 200ms
-          if (blinkCount >= 5) { // Blink for 1 second (5 cycles)
+          if (blinkCount >= 5) {
+            // Blink for 1 second (5 cycles)
             timer.cancel(); // Stop blinking
             isImmune = false; // End immunity
             paint.color = const Color(0xFFFFFFFF); // Restore full opacity
@@ -641,7 +642,9 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         // replace with game over screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => TitleScreen()), // Replace with your title screen widget
+          MaterialPageRoute(
+              builder: (context) =>
+                  TitleScreen()), // Replace with your title screen widget
         );
       }
     }
@@ -659,8 +662,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           isInAir = false; // Mark as grounded
           jumpCount = 0; // Reset jump count
         }
-      }
-      else  if (velocityY == 0){
+      } else if (velocityY == 0) {
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
         }
@@ -691,7 +693,6 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
       }
     }
   }
-
 
   @override
   void onCollisionEnd(PositionComponent other) {
