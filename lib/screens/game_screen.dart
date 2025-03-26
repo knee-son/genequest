@@ -30,14 +30,17 @@ class GameApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: GameScreen(),
+    // Pass the level name here
+    return MaterialApp(
+      home: GameScreen(""), // Example: Pass "Peaceful" as the level name
     );
   }
 }
 
 class GameScreen extends StatelessWidget {
-  const GameScreen({super.key});
+  final String levelName; // Declare a final field for the level name
+
+  const GameScreen(this.levelName, {super.key});
 
   // HealthBar widget dynamically linked with healthNotifier
   Widget healthBar(BuildContext context) {
@@ -81,7 +84,7 @@ class GameScreen extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return GameWidget(
-                game: GenequestGame(containerHeight: containerHeight, context: context),
+                game: GenequestGame(containerHeight: containerHeight, context: context, levelName: levelName),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
                     alignment: Alignment.topRight, // Move health bar to the upper right
@@ -220,7 +223,12 @@ class GameScreen extends StatelessWidget {
                   // Menu button
                   GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TitleScreen(),
+                        ),
+                      );
                     },
                     child: Image.asset(
                       'assets/images/button_menu.png',
@@ -303,6 +311,7 @@ class PauseMenu extends StatelessWidget {
 class GenequestGame extends FlameGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
+  String levelName;
   late Avatar avatar;
   final double containerHeight;
   late BuildContext context;
@@ -311,11 +320,14 @@ class GenequestGame extends FlameGame
   Vector2 spawnPosition = Vector2.zero();
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
+  late flameTiled.TiledComponent level;
 
 
-  GenequestGame({required this.containerHeight, required this.context}) {
+
+  GenequestGame({required this.containerHeight, required this.context, required this.levelName}) {
     instance = this;
     context = context;
+    levelName = levelName;
   }
 
 
@@ -336,9 +348,10 @@ class GenequestGame extends FlameGame
       'heart_empty.png',
     ]);
     overlays.add('HealthBar');
+
     // Load the level
-    final level = await flameTiled.TiledComponent.load(
-      'Level.tmx',
+    level = await flameTiled.TiledComponent.load(
+      levelName,
       Vector2.all(64),
     );
 
@@ -423,8 +436,8 @@ class GenequestGame extends FlameGame
     final screenHeight = MediaQuery.of(context).size.height;
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: screenWidth,
-      height: screenHeight,
+      width: screenWidth * 1.5,
+      height: screenHeight * 1.5,
       world: world,
     );
 
@@ -649,7 +662,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
       if ((other.isFloor || other.isEnemy) && velocityY > 0) {
-        jumpCount = 0; // Reset jump count when landing
+
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
         }
