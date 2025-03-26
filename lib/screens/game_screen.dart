@@ -4,9 +4,10 @@ import 'package:flame/components.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/sprite.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/services.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
+import 'package:flame/geometry.dart';
 import 'dart:async' as async;
 
 import 'package:genequest_app/screens/title_screen.dart';
@@ -578,7 +579,10 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   final BuildContext context;
   int horizontalMoveAxis = 0;
 
-  bool leftFlag = true;
+  final effect = RotateEffect.by(
+    tau, // Rotate a full circle (2π radians)
+    InfiniteEffectController(EffectController(duration: 2)), // Loops forever
+  );
 
   Avatar({required Sprite sprite, required this.context})
       : super(
@@ -632,7 +636,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
             paint.color = const Color(0xFFFFFFFF); // Restore full opacity
           } else {
             // Alternate opacity between semi-transparent and fully transparent
-            paint.color = paint.color.opacity == 0.0
+            paint.color = paint.color.a == 0.0
                 ? const Color(0x88FFFFFF) // Semi-transparent
                 : const Color(0x00FFFFFF); // Fully transparent
             blinkCount++;
@@ -671,11 +675,9 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
       if ((other.isFloor || other.isEnemy) && position.y != floorTop - size.y) {
         final allowance = (velocityX) * 0.1;
         if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
-          if (!leftFlag) leftFlag = !leftFlag;
           position.x = floorLeft - size.x;
         } else if (floorRight >= avatarLeft &&
             avatarLeft >= floorRight + allowance) {
-          if (leftFlag) leftFlag = !leftFlag;
           position.x = floorRight;
         }
 
