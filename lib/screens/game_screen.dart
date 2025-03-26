@@ -5,17 +5,20 @@ import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/effects.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/services.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
 import 'package:flame/geometry.dart';
 import 'dart:async' as async;
-
 import 'package:genequest_app/screens/title_screen.dart';
+
+import 'level_selector_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Flame.images.loadAll([
     'chromatid.png',
+    'sister_chromatid.png',
     'platform_1.png',
     'button_forward.png',
     'heart_full.png',
@@ -317,11 +320,13 @@ class GenequestGame extends FlameGame
   static GenequestGame? instance; // Singleton for UI interaction
   String levelName;
   late Avatar avatar;
+  late Goal goal;
   final double containerHeight;
   late BuildContext context;
   late Vector2 mapSize;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
+  Vector2 goalPosition = Vector2.zero();
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
   late flameTiled.TiledComponent level;
@@ -345,6 +350,7 @@ class GenequestGame extends FlameGame
   Future<void> onLoad() async {
     await Flame.images.loadAll([
       'chromatid.png',
+      'sister_chromatid.png',
       'platform_1.png',
       'button_forward.png',
       'heart_full.png',
@@ -364,9 +370,9 @@ class GenequestGame extends FlameGame
 
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    avatar = Avatar(sprite: chromatidSprite, context: context);
-
-    spawnPosition = Vector2.zero(); // Default spawn position (fallback)
+    final sisterChromatid = Sprite(Flame.images.fromCache('sister_chromatid.png'));
+    avatar = Avatar(sprite: chromatidSprite, context: context, levelName: levelName);
+    goal = Goal(sprite: sisterChromatid, context: context);
 
     // Find the spawn object in the SpawnPoint layer
     if (spawnPointLayer != null) {
@@ -374,12 +380,31 @@ class GenequestGame extends FlameGame
         if (spawn.name == 'Spawn') {
           spawnPosition = Vector2(spawn.x, spawn.y);
           spawnPosition.y -= avatar.size.y; // Adjust to align avatar
+          final floor = CollisionBlock(
+              position: Vector2(spawn.x, spawn.y),
+              size: Vector2(spawn.width, spawn.height),
+              isFloor: true, // This is a floor, not a wall
+              isEnemy: false,
+              isFinish: false)
+            ..priority = 1; // Render above the map;
+          collisionBlocks.add(floor);
+          Future.delayed(Duration.zero, () {
+            add(floor);
+          });
+          add(floor);
+          collisionBlocks.add(floor);
+        }
+        // spawn sister chromatid
+        else if (spawn.name == 'Finish') {
+          goalPosition = Vector2(spawn.x, spawn.y);
+          goalPosition.y -= goal.size.y; // Adjust to align avatar
 
           final floor = CollisionBlock(
               position: Vector2(spawn.x, spawn.y),
               size: Vector2(spawn.width, spawn.height),
               isFloor: true, // This is a floor, not a wall
-              isEnemy: false)
+              isEnemy: false,
+              isFinish: true)
             ..priority = 1; // Render above the map;
           collisionBlocks.add(floor);
           Future.delayed(Duration.zero, () {
@@ -403,9 +428,9 @@ class GenequestGame extends FlameGame
                 position: Vector2(collision.x, collision.y),
                 size: Vector2(collision.width, collision.height),
                 isFloor: true, // This is a floor, not a wall
-                isEnemy: false)
+                isEnemy: false,
+                isFinish: false)
               ..priority = 1;
-            ;
             collisionBlocks.add(floor);
             add(floor);
           case 'Enemy':
@@ -413,11 +438,11 @@ class GenequestGame extends FlameGame
                 position: Vector2(collision.x, collision.y),
                 size: Vector2(collision.width, collision.height),
                 isFloor: false, // This is a floor, not a wall
-                isEnemy: true)
+                isEnemy: true,
+                isFinish: false)
               ..priority = 1;
-            ;
-            collisionBlocks.add(enemy);
-            add(enemy);
+              collisionBlocks.add(enemy);
+              add(enemy);
           default:
             // Handle other cases if needed
             break;
@@ -450,9 +475,11 @@ class GenequestGame extends FlameGame
 
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
+    goal.position = goalPosition;
 
     // Add the avatar to the world
     world.add(avatar);
+    world.add(goal);
 
     // Make the camera follow the avatar
     camera.follow(avatar);
@@ -480,6 +507,8 @@ class GenequestGame extends FlameGame
     if (avatar.jumpCount < 2) {
       avatar.velocityY = -300; // Upward velocity
       avatar.isInAir = true; // Set mid-air state
+      // play jump sound
+      FlameAudio.play('jump.wav');
       avatar.jumpCount += 1;
     }
   }
@@ -553,15 +582,33 @@ class GenequestGame extends FlameGame
   }
 }
 
+class Goal extends SpriteComponent with CollisionCallbacks {
+  final BuildContext context;
+  Goal({required Sprite sprite, required this.context})
+      : super(
+    sprite: sprite,
+    size: Vector2(60, 100), // Avatar size
+    position: Vector2(200, 300), // Starting position above the border
+  );
+
+  @override
+  Future<void> onLoad() async {
+    super.onLoad();
+    add(RectangleHitbox());
+  }
+}
+
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
   bool isFloor;
   bool isEnemy;
+  bool isFinish;
 
   CollisionBlock(
       {required Vector2 position,
       required Vector2 size,
       required this.isFloor,
-      required this.isEnemy})
+      required this.isEnemy,
+      required this.isFinish})
       : super(position: position, size: size);
 
   @override
@@ -595,18 +642,20 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   bool isImmune = false; // Tracks whether the player is immune to damage
   final BuildContext context;
   int horizontalMoveAxis = 0;
+  String levelName;
 
   final effect = RotateEffect.by(
     tau, // Rotate a full circle (2π radians)
     InfiniteEffectController(EffectController(duration: 2)), // Loops forever
   );
 
-  Avatar({required Sprite sprite, required this.context})
+  Avatar({required Sprite sprite, required this.context, required this.levelName})
       : super(
-          sprite: sprite,
-          size: Vector2(60, 100), // Avatar size
-          position: Vector2(200, 300), // Starting position above the border
-        );
+    sprite: sprite,
+    size: Vector2(60, 100), // Avatar size
+    position: Vector2(200, 300), // Starting position above the border
+  );
+
 
   @override
   Future<void> onLoad() async {
@@ -641,12 +690,12 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         isImmune = true; // Grant immunity
         paint.color = const Color(
             0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
-
         // Start blinking effect
         int blinkCount = 0;
         async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
           // Toggle visibility or opacity every 200ms
           if (blinkCount >= 5) {
+            FlameAudio.play('oof.mp3');
             // Blink for 1 second (5 cycles)
             timer.cancel(); // Stop blinking
             isImmune = false; // End immunity
@@ -672,7 +721,14 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
 
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
-      if ((other.isFloor || other.isEnemy) && velocityY > 0) {
+      if (other.isFinish){
+        FlameAudio.play('tada.mp3');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LevelSelectorScreen(levelName)),
+        );
+      }
+      else if ((other.isFloor || other.isEnemy) && velocityY > 0) {
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
         }
@@ -709,6 +765,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           velocityY < 0) {
         velocityY = -velocityY; // Reverse vertical velocity
       }
+
     }
   }
 

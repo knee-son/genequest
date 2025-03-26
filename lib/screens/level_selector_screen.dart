@@ -18,11 +18,12 @@ void main() async {
     'assets/images/expert_level.png',
     'assets/images/select_a_level_text.png',
   ]);
-  runApp(const LevelSelectorScreen());
+  runApp(const LevelSelectorScreen(""));
 }
 
 class LevelSelectorScreen extends StatelessWidget {
-  const LevelSelectorScreen({super.key});
+  final String currentLevel;
+  const LevelSelectorScreen(this.currentLevel, {super.key});
 
   @override
   Widget build(BuildContext context) {
