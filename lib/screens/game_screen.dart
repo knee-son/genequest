@@ -508,7 +508,7 @@ class GenequestGame extends FlameGame
       avatar.velocityY = -300; // Upward velocity
       avatar.isInAir = true; // Set mid-air state
       // play jump sound
-      FlameAudio.play('717769__1bob__jump-boing.wav');
+      FlameAudio.play('jump.wav');
       avatar.jumpCount += 1;
     }
   }
@@ -695,7 +695,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
           // Toggle visibility or opacity every 200ms
           if (blinkCount >= 5) {
-            FlameAudio.play('519072__evretro__8-bit-damage-impact-break-sounds.wav');
+            FlameAudio.play('oof.mp3');
             // Blink for 1 second (5 cycles)
             timer.cancel(); // Stop blinking
             isImmune = false; // End immunity
