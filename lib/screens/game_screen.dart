@@ -41,6 +41,8 @@ class GameApp extends StatelessWidget {
   }
 }
 
+bool isNavigatingToTitleScreen = false;
+
 class GameScreen extends StatelessWidget {
   final String levelName; // Declare a final field for the level name
 
@@ -709,13 +711,8 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           }
         });
       } else {
-        // replace with game over screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  TitleScreen()), // Replace with your title screen widget
-        );
+        // replace with GAME OVER SCREEN
+        navigateToTitleScreen(context);
       }
     }
 
@@ -766,6 +763,19 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         velocityY = -velocityY; // Reverse vertical velocity
       }
 
+    }
+  }
+
+  void navigateToTitleScreen(BuildContext context) {
+    if (!isNavigatingToTitleScreen) {
+      isNavigatingToTitleScreen = true;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TitleScreen(),
+        ),
+            (route) => false,
+      );
     }
   }
 
