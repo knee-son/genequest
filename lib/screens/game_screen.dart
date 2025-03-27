@@ -42,6 +42,7 @@ class GameApp extends StatelessWidget {
 }
 
 bool isNavigatingToTitleScreen = false;
+bool isDialogShowing = false;
 
 class GameScreen extends StatelessWidget {
   final String levelName; // Declare a final field for the level name
@@ -255,7 +256,7 @@ class GameScreen extends StatelessWidget {
                         context: context,
                         barrierDismissible: false,
                         builder: (context) {
-                          return PauseMenu(); // Pause menu dialog
+                          return PauseMenu(title: "Game Paused", action: "Paused",); // Pause menu dialog
                         },
                       );
                     },
@@ -276,8 +277,16 @@ class GameScreen extends StatelessWidget {
 }
 
 class PauseMenu extends StatelessWidget {
+
+  final String title;
+  //Action has two states "Paused" and "Gameover"
+  final String action;
+
+  PauseMenu({required this.title, required this.action});
+
   @override
   Widget build(BuildContext context) {
+    print("-------------------- Opened PAUSEMENU");
     GenequestGame.instance?.pause();
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -287,24 +296,35 @@ class PauseMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Game Paused",
+              title,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                if (GenequestGame.instance?.isPaused == true) {
-                  GenequestGame.instance?.resume(); // Resume the game
-                }
-                Navigator.pop(context); // Close the pause menu
-              },
-              child: Text("Resume"),
-            ),
+            if (action == "Paused") ...[
+              ElevatedButton(
+                onPressed: () {
+                  isDialogShowing = false;
+                  if (GenequestGame.instance?.isPaused == true) {
+                    GenequestGame.instance?.resume(); // Resume the game
+                  }
+                  Navigator.pop(context); // Close the pause menu
+                },
+                child: Text("Resume"),
+              ),
+            ],
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
+                // isDialogShowing = false;
                 Navigator.pop(context); // Close pause menu
-                Navigator.pop(context); // Navigate back to TitleScreen
+                // Navigator.pop(context); // Navigate back to TitleScreen
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TitleScreen(),
+                  ),
+                      (route) => false, // This will remove all the previous routes
+                );
               },
               child: Text("Exit to Title"),
             ),
@@ -712,7 +732,16 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         });
       } else {
         // replace with GAME OVER SCREEN
-        navigateToTitleScreen(context);
+        if (!isDialogShowing) {
+          isDialogShowing = true;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return PauseMenu(title: "Game Over", action: "Gameover"); // Pause menu dialog
+            },
+          );
+        }
       }
     }
 
@@ -766,18 +795,19 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     }
   }
 
-  void navigateToTitleScreen(BuildContext context) {
-    if (!isNavigatingToTitleScreen) {
-      isNavigatingToTitleScreen = true;
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => TitleScreen(),
-        ),
-            (route) => false,
-      );
-    }
-  }
+  // [Unused] But may be useful for future reference
+  // void navigateToTitleScreen(BuildContext context) {
+  //   if (!isNavigatingToTitleScreen) {
+  //     isNavigatingToTitleScreen = true;
+  //     Navigator.pushAndRemoveUntil(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (context) => TitleScreen(),
+  //       ),
+  //           (route) => false,
+  //     );
+  //   }
+  // }
 
   @override
   void onCollisionEnd(PositionComponent other) {
