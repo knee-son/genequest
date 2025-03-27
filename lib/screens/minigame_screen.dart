@@ -54,9 +54,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
         listEquality(_droppedBlockFirst, _droppedBlockSecond.reversed.toList())) {
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen("Level0.tmx")),
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen(widget.levelName)),
       );
     }
   }
@@ -107,7 +107,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                           if (_blockColor != null)
                             Draggable(
                               data: _blockColor,
-                              feedback: widget.levelName == "Level1.tmx"
+                              feedback: widget.levelName.contains("Level1.tmx")
                                   ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
