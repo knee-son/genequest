@@ -19,7 +19,7 @@ import 'package:genequest_app/screens/level_selector_screen.dart';
 class GenequestGame extends FlameGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
-  String levelName;
+  final int levelNum;
   late Avatar avatar;
   late Goal goal;
   final double containerHeight;
@@ -30,15 +30,15 @@ class GenequestGame extends FlameGame
   Vector2 goalPosition = Vector2.zero();
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
-  late flameTiled.TiledComponent level;
+  late flameTiled.TiledComponent levelMap;
 
   GenequestGame(
       {required this.containerHeight,
       required this.context,
-      required this.levelName}) {
+      required this.levelNum}) {
     instance = this;
     context = context;
-    levelName = levelName;
+    levelNum = levelNum;
   }
 
   @override
@@ -61,13 +61,13 @@ class GenequestGame extends FlameGame
     overlays.add('HealthBar');
 
     // Load the level
-    level = await flameTiled.TiledComponent.load(
+    levelMap = await flameTiled.TiledComponent.load(
       levelName,
       Vector2.all(64),
     );
 
     final spawnPointLayer =
-        level.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
 
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
@@ -443,8 +443,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         FlameAudio.play('tada.mp3');
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => LevelSelectorScreen(levelName)),
+          MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
         );
       } else if ((other.isFloor || other.isEnemy) && velocityY > 0) {
         if (other.isEnemy && !isImmune) {

@@ -29,7 +29,7 @@ class GameApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Pass the level name here
     return MaterialApp(
-      home: GameScreen(""), // Example: Pass "Peaceful" as the level name
+      home: GameScreen(0),
     );
   }
 }
@@ -38,14 +38,13 @@ bool isNavigatingToTitleScreen = false;
 bool isDialogShowing = false;
 
 class GameScreen extends StatelessWidget {
-  final String levelName; // Declare a final field for the level name
+  // final String levelName; // Declare a final field for the level name
+  final int levelNum; // change to int
 
-  const GameScreen(this.levelName, {super.key});
+  const GameScreen(this.levelNum, {super.key});
 
   // HealthBar widget dynamically linked with healthNotifier
   Widget healthBar(BuildContext context) {
-    print(this.levelName);
-
     final gameInstance = GenequestGame.instance;
     if (gameInstance == null) {
       return const SizedBox(); // Return an empty widget if the game is not initialized
@@ -89,7 +88,7 @@ class GameScreen extends StatelessWidget {
                 game: GenequestGame(
                     containerHeight: containerHeight,
                     context: context,
-                    levelName: levelName),
+                    levelNum: levelNum),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
                         alignment: Alignment

@@ -1,7 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
-import 'package:flutter/services.dart';
 
 import 'game_screen.dart';
 import '../globals.dart';
@@ -17,12 +16,11 @@ void main() async {
     'assets/images/expert_level.png',
     'assets/images/select_a_level_text.png',
   ]);
-  runApp(const LevelSelectorScreen(""));
+  runApp(const LevelSelectorScreen());
 }
 
 class LevelSelectorScreen extends StatelessWidget {
-  final String currentLevel;
-  const LevelSelectorScreen(this.currentLevel, {super.key});
+  const LevelSelectorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +58,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Peaceful",
                         iconPath: "assets/images/peaceful_level.png",
-                        levelPath: "Level0.tmx",
+                        level: 0,
                         backgroundColor: Colors.lightBlueAccent,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
@@ -71,7 +69,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Easy",
                         iconPath: "assets/images/easy_level.png",
-                        levelPath: "Level1.tmx",
+                        level: 1,
                         backgroundColor: Colors.green,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
@@ -79,9 +77,9 @@ class LevelSelectorScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       LevelButton(
-                        title: "Med",
+                        title: "Medium",
                         iconPath: "assets/images/medium_level.png",
-                        levelPath: "Level2.tmx",
+                        level: 2,
                         backgroundColor: Colors.orange,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 2,
@@ -90,7 +88,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Hard",
                         iconPath: "assets/images/hard_level.png",
-                        levelPath: "Level0.tmx",
+                        level: 3,
                         backgroundColor: Colors.red,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 3,
@@ -99,7 +97,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Expert",
                         iconPath: "assets/images/expert_level.png",
-                        levelPath: "Level0.tmx",
+                        level: 4,
                         backgroundColor: Colors.purple,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 4,
@@ -119,7 +117,7 @@ class LevelSelectorScreen extends StatelessWidget {
 class LevelButton extends StatelessWidget {
   final String title;
   final String iconPath;
-  final String levelPath;
+  final int level;
   final Color backgroundColor;
   final double buttonHeight; // New property for dynamic height
   final bool enabled; // NEW: Enable/Disable Button
@@ -127,7 +125,7 @@ class LevelButton extends StatelessWidget {
   const LevelButton({
     required this.title,
     required this.iconPath,
-    required this.levelPath,
+    required this.level,
     required this.backgroundColor,
     required this.buttonHeight, // Pass height dynamically
     this.enabled = true,
@@ -153,7 +151,7 @@ class LevelButton extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => GameScreen(levelPath),
+                      builder: (context) => GameScreen(level),
                     ),
                   );
                 }

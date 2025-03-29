@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
+import 'package:genequest_app/globals.dart';
 import 'level_selector_screen.dart';
 import 'package:collection/collection.dart';
 
@@ -14,13 +15,16 @@ void main() async {
     'assets/images/block_blue.png',
     'assets/images/block_red.png'
   ]);
-  runApp(MiniGameScreen("Level1.tmx")); // Pass levelName when initializing the screen
+  runApp(MiniGameScreen(0));
 }
 
 class MiniGameScreen extends StatefulWidget {
-  final String levelName; // Accept levelName as a parameter
+  final int levelNum;
+  final String levelName;
 
-  const MiniGameScreen(this.levelName, {super.key}); // Constructor to initialize levelName
+  // ✅ Use a normal constructor, NOT `const`
+  MiniGameScreen(this.levelNum, {super.key})
+      : levelName = gameState.getLevelName(levelNum);
 
   @override
   State<MiniGameScreen> createState() => _MiniGameScreenState();
@@ -28,8 +32,9 @@ class MiniGameScreen extends StatefulWidget {
 
 class _MiniGameScreenState extends State<MiniGameScreen> {
   String? _blockColor; // Tracks the color of the block to spawn
-  List<String?> _droppedBlockFirst = [];
-  List<String?> _droppedBlockSecond = []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
+  final List<String?> _droppedBlockFirst = [];
+  final List<String?> _droppedBlockSecond =
+      []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
 
   void onButtonPressed() {
     // Randomly choose the color of the block
@@ -53,10 +58,11 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     final listEquality = const ListEquality().equals;
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
-        listEquality(_droppedBlockFirst, _droppedBlockSecond.reversed.toList())) {
+        listEquality(
+            _droppedBlockFirst, _droppedBlockSecond.reversed.toList())) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen(widget.levelName)),
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
       );
     }
   }
@@ -66,7 +72,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Mini Game - ${widget.levelName}'), // Display levelName dynamically
+          title: Text(
+              'Mini Game - ${widget.levelName}'), // Display levelName dynamically
         ),
         body: Stack(
           children: [
@@ -109,88 +116,88 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                               data: _blockColor,
                               feedback: widget.levelName.contains("Level1.tmx")
                                   ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Image.asset(
-                                    _blockColor == 'blue'
-                                        ? 'assets/images/block_blue.png'
-                                        : 'assets/images/block_red.png',
-                                    width: 100,
-                                    height: 100,
-                                  ),
-                                  Image.asset(
-                                    _blockColor == 'blue'
-                                        ? 'assets/images/block_blue.png'
-                                        : 'assets/images/block_red.png',
-                                    width: 100,
-                                    height: 100,
-                                  ),
-                                ],
-                              )
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          _blockColor == 'blue'
+                                              ? 'assets/images/block_blue.png'
+                                              : 'assets/images/block_red.png',
+                                          width: 100,
+                                          height: 100,
+                                        ),
+                                        Image.asset(
+                                          _blockColor == 'blue'
+                                              ? 'assets/images/block_blue.png'
+                                              : 'assets/images/block_red.png',
+                                          width: 100,
+                                          height: 100,
+                                        ),
+                                      ],
+                                    )
                                   : Image.asset(
-                                _blockColor == 'blue'
-                                    ? 'assets/images/block_blue.png'
-                                    : 'assets/images/block_red.png',
-                                width: 100,
-                                height: 100,
-                              ),
+                                      _blockColor == 'blue'
+                                          ? 'assets/images/block_blue.png'
+                                          : 'assets/images/block_red.png',
+                                      width: 100,
+                                      height: 100,
+                                    ),
                               childWhenDragging: Opacity(
                                 opacity: 0.5,
                                 child: widget.levelName == "Level1.tmx"
                                     ? Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Image.asset(
-                                      _blockColor == 'blue'
-                                          ? 'assets/images/block_blue.png'
-                                          : 'assets/images/block_red.png',
-                                      width: 100,
-                                      height: 100,
-                                    ),
-                                    Image.asset(
-                                      _blockColor == 'blue'
-                                          ? 'assets/images/block_blue.png'
-                                          : 'assets/images/block_red.png',
-                                      width: 100,
-                                      height: 100,
-                                    ),
-                                  ],
-                                )
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Image.asset(
+                                            _blockColor == 'blue'
+                                                ? 'assets/images/block_blue.png'
+                                                : 'assets/images/block_red.png',
+                                            width: 100,
+                                            height: 100,
+                                          ),
+                                          Image.asset(
+                                            _blockColor == 'blue'
+                                                ? 'assets/images/block_blue.png'
+                                                : 'assets/images/block_red.png',
+                                            width: 100,
+                                            height: 100,
+                                          ),
+                                        ],
+                                      )
                                     : Image.asset(
-                                  _blockColor == 'blue'
-                                      ? 'assets/images/block_blue.png'
-                                      : 'assets/images/block_red.png',
-                                  width: 100,
-                                  height: 100,
-                                ),
+                                        _blockColor == 'blue'
+                                            ? 'assets/images/block_blue.png'
+                                            : 'assets/images/block_red.png',
+                                        width: 100,
+                                        height: 100,
+                                      ),
                               ),
                               child: widget.levelName == "Level1.tmx"
                                   ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Image.asset(
-                                    _blockColor == 'blue'
-                                        ? 'assets/images/block_blue.png'
-                                        : 'assets/images/block_red.png',
-                                    width: 100,
-                                    height: 100,
-                                  ),
-                                  Image.asset(
-                                    _blockColor == 'blue'
-                                        ? 'assets/images/block_blue.png'
-                                        : 'assets/images/block_red.png',
-                                    width: 100,
-                                    height: 100,
-                                  ),
-                                ],
-                              )
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Image.asset(
+                                          _blockColor == 'blue'
+                                              ? 'assets/images/block_blue.png'
+                                              : 'assets/images/block_red.png',
+                                          width: 100,
+                                          height: 100,
+                                        ),
+                                        Image.asset(
+                                          _blockColor == 'blue'
+                                              ? 'assets/images/block_blue.png'
+                                              : 'assets/images/block_red.png',
+                                          width: 100,
+                                          height: 100,
+                                        ),
+                                      ],
+                                    )
                                   : Image.asset(
-                                _blockColor == 'blue'
-                                    ? 'assets/images/block_blue.png'
-                                    : 'assets/images/block_red.png',
-                                width: 100,
-                                height: 100,
-                              ),
+                                      _blockColor == 'blue'
+                                          ? 'assets/images/block_blue.png'
+                                          : 'assets/images/block_red.png',
+                                      width: 100,
+                                      height: 100,
+                                    ),
                             ),
                         ],
                       ),
@@ -218,7 +225,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                           const SizedBox(height: 10),
                           // Red button
                           GestureDetector(
-                            onTap: onButtonPressed, // Trigger the logic to spawn a block
+                            onTap:
+                                onButtonPressed, // Trigger the logic to spawn a block
                             child: Image.asset(
                               'assets/images/red_button.png',
                               width: 100,
@@ -238,12 +246,17 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
-                    if (_droppedBlockFirst.length < 2 && widget.levelName != 'Level1.tmx') { // Allow up to 2 blocks
-                      _droppedBlockFirst.add(data); // Add the new block to the list
+                    if (_droppedBlockFirst.length < 2 &&
+                        widget.levelName != 'Level1.tmx') {
+                      // Allow up to 2 blocks
+                      _droppedBlockFirst
+                          .add(data); // Add the new block to the list
                       _blockColor = null; // Clear the draggable block's state
                     } else {
-                      _droppedBlockFirst.add(data); // Add the new block to the list
-                      _droppedBlockFirst.add(data); // Add the new block to the list
+                      _droppedBlockFirst
+                          .add(data); // Add the new block to the list
+                      _droppedBlockFirst
+                          .add(data); // Add the new block to the list
                       _blockColor = null; // Clear the draggable block's state
                     }
 
@@ -286,12 +299,17 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
-                    if (_droppedBlockSecond.length < 2 && widget.levelName != 'Level1.tmx') { // Allow up to 2 blocks
-                      _droppedBlockSecond.add(data); // Add the new block to the list
+                    if (_droppedBlockSecond.length < 2 &&
+                        widget.levelName != 'Level1.tmx') {
+                      // Allow up to 2 blocks
+                      _droppedBlockSecond
+                          .add(data); // Add the new block to the list
                       _blockColor = null; // Clear the draggable block's state
                     } else {
-                      _droppedBlockSecond.add(data); // Add the new block to the list
-                      _droppedBlockSecond.add(data); // Add the new block to the list
+                      _droppedBlockSecond
+                          .add(data); // Add the new block to the list
+                      _droppedBlockSecond
+                          .add(data); // Add the new block to the list
                       _blockColor = null; // Clear the draggable block's state
                     }
                     checkIfValid();
