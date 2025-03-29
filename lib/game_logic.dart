@@ -25,7 +25,7 @@ class GenequestGame extends FlameGame
   late Goal goal;
   final double containerHeight;
   late BuildContext context;
-  late Vector2 mapSize;
+  late double chasmHeight;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
   Vector2 goalPosition = Vector2.zero();
@@ -169,7 +169,9 @@ class GenequestGame extends FlameGame
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    mapSize = levelMap.size;
+    // How far from chasm damage. adjust to prevent camera off bounds
+    int chasmPadding = 1;
+    chasmHeight = levelMap.size.y - chasmPadding * 64;
 
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
@@ -272,7 +274,7 @@ class GenequestGame extends FlameGame
       avatar.applyGravity(dt);
       avatar.updatePosition(dt);
     }
-    if (avatar.position.y > 1400) {
+    if (avatar.position.y > chasmHeight) {
       avatarFallsOffChasm();
     }
   }
