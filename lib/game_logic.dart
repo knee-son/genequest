@@ -208,7 +208,6 @@ class GenequestGame extends FlameGame
   }
 
   void startJump() {
-    // print(avatar.position.y);
     if (avatar.jumpCount < 2) {
       avatar.velocityY = -300; // Upward velocity
       avatar.isInAir = true; // Set mid-air state
@@ -279,6 +278,7 @@ class GenequestGame extends FlameGame
 
   void avatarFallsOffChasm() {
     avatar.position = spawnPosition;
+    avatar.applyDamageWithImmunity();
   }
 
   void reset() {

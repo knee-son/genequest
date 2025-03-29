@@ -28,8 +28,7 @@ class TitleScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GameScreen("Level1.2.tmx"),
-                  ),
+                      builder: (context) => LevelSelectorScreen("Level0.tmx")),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -52,7 +51,7 @@ class TitleScreen extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
-              child: const Text('Level Selector'),
+              child: const Text('Hot-load Level'),
             ),
             ElevatedButton(
               onPressed: () {

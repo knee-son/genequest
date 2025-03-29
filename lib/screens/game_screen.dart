@@ -44,6 +44,8 @@ class GameScreen extends StatelessWidget {
 
   // HealthBar widget dynamically linked with healthNotifier
   Widget healthBar(BuildContext context) {
+    print(this.levelName);
+
     final gameInstance = GenequestGame.instance;
     if (gameInstance == null) {
       return const SizedBox(); // Return an empty widget if the game is not initialized
@@ -277,7 +279,7 @@ class PauseMenu extends StatelessWidget {
   //Action has two states "Paused" and "Gameover"
   final String action;
 
-  PauseMenu({required this.title, required this.action});
+  const PauseMenu({super.key, required this.title, required this.action});
 
   @override
   Widget build(BuildContext context) {

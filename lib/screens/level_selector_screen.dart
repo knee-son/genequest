@@ -4,6 +4,7 @@ import 'package:flame/flame.dart';
 import 'package:flutter/services.dart';
 
 import 'game_screen.dart';
+import '../globals.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +64,7 @@ class LevelSelectorScreen extends StatelessWidget {
                         backgroundColor: Colors.lightBlueAccent,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
+                        enabled: gameState.level >= 0,
                       ),
                       const SizedBox(
                           height: 2), // Reduced spacing between buttons
@@ -73,6 +75,7 @@ class LevelSelectorScreen extends StatelessWidget {
                         backgroundColor: Colors.green,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
+                        enabled: gameState.level >= 1,
                       ),
                       const SizedBox(height: 2),
                       LevelButton(
@@ -81,6 +84,7 @@ class LevelSelectorScreen extends StatelessWidget {
                         levelPath: "Level2.tmx",
                         backgroundColor: Colors.orange,
                         buttonHeight: screenHeight * 0.2,
+                        enabled: gameState.level >= 2,
                       ),
                       const SizedBox(height: 2),
                       LevelButton(
@@ -89,6 +93,7 @@ class LevelSelectorScreen extends StatelessWidget {
                         levelPath: "Level0.tmx",
                         backgroundColor: Colors.red,
                         buttonHeight: screenHeight * 0.2,
+                        enabled: gameState.level >= 3,
                       ),
                       const SizedBox(height: 2),
                       LevelButton(
@@ -97,6 +102,7 @@ class LevelSelectorScreen extends StatelessWidget {
                         levelPath: "Level0.tmx",
                         backgroundColor: Colors.purple,
                         buttonHeight: screenHeight * 0.2,
+                        enabled: gameState.level >= 4,
                       ),
                     ],
                   ),
@@ -116,6 +122,7 @@ class LevelButton extends StatelessWidget {
   final String levelPath;
   final Color backgroundColor;
   final double buttonHeight; // New property for dynamic height
+  final bool enabled; // NEW: Enable/Disable Button
 
   const LevelButton({
     required this.title,
@@ -123,34 +130,40 @@ class LevelButton extends StatelessWidget {
     required this.levelPath,
     required this.backgroundColor,
     required this.buttonHeight, // Pass height dynamically
+    this.enabled = true,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(2.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white, // Button background color
-          padding: EdgeInsets.zero, // Remove additional padding
-          minimumSize:
-              Size(double.infinity, buttonHeight), // Make button responsive
-        ),
-        onPressed: () {
-          // Define navigation or functionality for each level
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GameScreen(levelPath),
-            ),
-          );
-        },
-        child: Image.asset(
-          iconPath,
-          fit: BoxFit.cover, // Adjust image to fill the button perfectly
-          width: double.infinity, // Stretch image to fill button width
-          height: buttonHeight, // Stretch image to fill button height
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.5, // Dim when disabled
+      child: Padding(
+        padding: const EdgeInsets.all(2.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white, // Button background color
+            padding: EdgeInsets.zero, // Remove additional padding
+            minimumSize:
+                Size(double.infinity, buttonHeight), // Make button responsive
+          ),
+          onPressed: enabled
+              ? () {
+                  // Define navigation or functionality for each level
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GameScreen(levelPath),
+                    ),
+                  );
+                }
+              : null,
+          child: Image.asset(
+            iconPath,
+            fit: BoxFit.cover, // Adjust image to fill the button perfectly
+            width: double.infinity, // Stretch image to fill button width
+            height: buttonHeight, // Stretch image to fill button height
+          ),
         ),
       ),
     );
