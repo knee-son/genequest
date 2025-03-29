@@ -74,10 +74,8 @@ class GenequestGame extends FlameGame
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     final sisterChromatid =
         Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    avatar = Avatar(
-        sprite: chromatidSprite,
-        context: context,
-        levelName: gameState.getLevelName(levelNum));
+    avatar =
+        Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
     goal = Goal(sprite: sisterChromatid, context: context);
 
     // Find the spawn object in the SpawnPoint layer
@@ -356,7 +354,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   bool isImmune = false; // Tracks whether the player is immune to damage
   final BuildContext context;
   int horizontalMoveAxis = 0;
-  String levelName;
+  int levelNum;
 
   final effect = RotateEffect.by(
     tau, // Rotate a full circle (2π radians)
@@ -364,7 +362,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   );
 
   Avatar(
-      {required Sprite sprite, required this.context, required this.levelName})
+      {required Sprite sprite, required this.context, required this.levelNum})
       : super(
           sprite: sprite,
           size: Vector2(60, 100), // Avatar size
@@ -413,6 +411,9 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
       });
     } else {
       // Game Over logic
+
+      gameState.setLevel(levelNum - 1);
+
       if (!isDialogShowing) {
         isDialogShowing = true;
         showDialog(

@@ -308,23 +308,22 @@ class DialogOverlayModal extends StatelessWidget {
                 child: Text("Resume"),
               ),
               const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  // isDialogShowing = false;
-                  Navigator.pop(context); // Close pause menu
-                  // Navigator.pop(context); // Navigate back to TitleScreen
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LevelSelectorScreen(),
-                    ),
-                    (route) =>
-                        false, // This will remove all the previous routes
-                  );
-                },
-                child: Text("Go back"),
-              ),
             ],
+            ElevatedButton(
+              onPressed: () {
+                // isDialogShowing = false;
+                Navigator.pop(context); // Close pause menu
+                // Navigator.pop(context); // Navigate back to TitleScreen
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LevelSelectorScreen(),
+                  ),
+                  (route) => false, // This will remove all the previous routes
+                );
+              },
+              child: Text(action == "Paused" ? "Level Select" : "Go back"),
+            ),
           ],
         ),
       ),
