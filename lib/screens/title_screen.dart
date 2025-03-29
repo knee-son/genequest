@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'game_screen.dart';
-import 'level_selector_screen.dart'; // Import the GameScreen
+import 'level_selector_screen.dart';
+import 'minigame_screen.dart'; // Import the GameScreen
 
 class TitleScreen extends StatelessWidget {
   const TitleScreen({super.key});
@@ -51,6 +52,20 @@ class TitleScreen extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 20),
               ),
               child: const Text('Level Selector'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MiniGameScreen("Level2.tmx")),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                textStyle: const TextStyle(fontSize: 20),
+              ),
+              child: const Text('Mini game'),
             ),
           ],
         ),
