@@ -28,7 +28,7 @@ class TitleScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => LevelSelectorScreen("Level0.tmx")),
+                      builder: (context) => LevelSelectorScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -43,7 +43,7 @@ class TitleScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => LevelSelectorScreen("Level0.tmx")),
+                      builder: (context) => LevelSelectorScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -57,8 +57,7 @@ class TitleScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => MiniGameScreen("Level2.tmx")),
+                  MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
                 );
               },
               style: ElevatedButton.styleFrom(

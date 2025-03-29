@@ -11,6 +11,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 
@@ -19,7 +20,7 @@ import 'package:genequest_app/screens/level_selector_screen.dart';
 class GenequestGame extends FlameGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
-  final int levelNum;
+  int levelNum;
   late Avatar avatar;
   late Goal goal;
   final double containerHeight;
@@ -62,7 +63,7 @@ class GenequestGame extends FlameGame
 
     // Load the level
     levelMap = await flameTiled.TiledComponent.load(
-      levelName,
+      gameState.getLevelName(levelNum),
       Vector2.all(64),
     );
 
@@ -73,8 +74,10 @@ class GenequestGame extends FlameGame
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
     final sisterChromatid =
         Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    avatar =
-        Avatar(sprite: chromatidSprite, context: context, levelName: levelName);
+    avatar = Avatar(
+        sprite: chromatidSprite,
+        context: context,
+        levelName: gameState.getLevelName(levelNum));
     goal = Goal(sprite: sisterChromatid, context: context);
 
     // Find the spawn object in the SpawnPoint layer
@@ -121,7 +124,7 @@ class GenequestGame extends FlameGame
     }
 
     final collisionsLayer =
-        level.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
+        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
     if (collisionsLayer != null) {
       for (final collision in collisionsLayer.objects) {
@@ -162,13 +165,13 @@ class GenequestGame extends FlameGame
     }
 
     // Add the level (tilemap) after collision blocks
-    world.add(level);
+    world.add(levelMap);
 
     add(world);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    mapSize = level.size;
+    mapSize = levelMap.size;
 
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
@@ -409,14 +412,14 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
         }
       });
     } else {
-      // replace with GAME OVER SCREEN
+      // Game Over logic
       if (!isDialogShowing) {
         isDialogShowing = true;
         showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) {
-            return PauseMenu(
+            return DialogOverlayModal(
                 title: "Game Over", action: "Gameover"); // Pause menu dialog
           },
         );

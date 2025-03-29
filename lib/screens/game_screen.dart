@@ -250,7 +250,7 @@ class GameScreen extends StatelessWidget {
                         context: context,
                         barrierDismissible: false,
                         builder: (context) {
-                          return PauseMenu(
+                          return DialogOverlayModal(
                             title: "Game Paused",
                             action: "Paused",
                           ); // Pause menu dialog
@@ -273,12 +273,13 @@ class GameScreen extends StatelessWidget {
   }
 }
 
-class PauseMenu extends StatelessWidget {
+class DialogOverlayModal extends StatelessWidget {
   final String title;
   //Action has two states "Paused" and "Gameover"
   final String action;
 
-  const PauseMenu({super.key, required this.title, required this.action});
+  const DialogOverlayModal(
+      {super.key, required this.title, required this.action});
 
   @override
   Widget build(BuildContext context) {
@@ -306,24 +307,24 @@ class PauseMenu extends StatelessWidget {
                 },
                 child: Text("Resume"),
               ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  // isDialogShowing = false;
+                  Navigator.pop(context); // Close pause menu
+                  // Navigator.pop(context); // Navigate back to TitleScreen
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LevelSelectorScreen(),
+                    ),
+                    (route) =>
+                        false, // This will remove all the previous routes
+                  );
+                },
+                child: Text("Go back"),
+              ),
             ],
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                // isDialogShowing = false;
-                Navigator.pop(context); // Close pause menu
-                // Navigator.pop(context); // Navigate back to TitleScreen
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        LevelSelectorScreen(gameState.levelName),
-                  ),
-                  (route) => false, // This will remove all the previous routes
-                );
-              },
-              child: Text("Exit to Title"),
-            ),
           ],
         ),
       ),
