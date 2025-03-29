@@ -1,9 +1,7 @@
-
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/services.dart';
-
 
 import 'game_screen.dart';
 
@@ -27,7 +25,8 @@ class LevelSelectorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height; // Get screen height
+    final screenHeight =
+        MediaQuery.of(context).size.height; // Get screen height
 
     return MaterialApp(
       home: Scaffold(
@@ -60,20 +59,26 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Peaceful",
                         iconPath: "assets/images/peaceful_level.png",
+                        levelPath: "Level0.tmx",
                         backgroundColor: Colors.lightBlueAccent,
-                        buttonHeight: screenHeight * 0.2, // Responsive button height
+                        buttonHeight:
+                            screenHeight * 0.2, // Responsive button height
                       ),
-                      const SizedBox(height: 2), // Reduced spacing between buttons
+                      const SizedBox(
+                          height: 2), // Reduced spacing between buttons
                       LevelButton(
                         title: "Easy",
                         iconPath: "assets/images/easy_level.png",
+                        levelPath: "Level1.tmx",
                         backgroundColor: Colors.green,
-                        buttonHeight: screenHeight * 0.2, // Responsive button height
+                        buttonHeight:
+                            screenHeight * 0.2, // Responsive button height
                       ),
                       const SizedBox(height: 2),
                       LevelButton(
                         title: "Med",
                         iconPath: "assets/images/medium_level.png",
+                        levelPath: "Level2.tmx",
                         backgroundColor: Colors.orange,
                         buttonHeight: screenHeight * 0.2,
                       ),
@@ -81,6 +86,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Hard",
                         iconPath: "assets/images/hard_level.png",
+                        levelPath: "Level0.tmx",
                         backgroundColor: Colors.red,
                         buttonHeight: screenHeight * 0.2,
                       ),
@@ -88,6 +94,7 @@ class LevelSelectorScreen extends StatelessWidget {
                       LevelButton(
                         title: "Expert",
                         iconPath: "assets/images/expert_level.png",
+                        levelPath: "Level0.tmx",
                         backgroundColor: Colors.purple,
                         buttonHeight: screenHeight * 0.2,
                       ),
@@ -103,16 +110,17 @@ class LevelSelectorScreen extends StatelessWidget {
   }
 }
 
-
 class LevelButton extends StatelessWidget {
   final String title;
   final String iconPath;
+  final String levelPath;
   final Color backgroundColor;
   final double buttonHeight; // New property for dynamic height
 
   const LevelButton({
     required this.title,
     required this.iconPath,
+    required this.levelPath,
     required this.backgroundColor,
     required this.buttonHeight, // Pass height dynamically
     super.key,
@@ -126,25 +134,17 @@ class LevelButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.white, // Button background color
           padding: EdgeInsets.zero, // Remove additional padding
-          minimumSize: Size(double.infinity, buttonHeight), // Make button responsive
+          minimumSize:
+              Size(double.infinity, buttonHeight), // Make button responsive
         ),
         onPressed: () {
           // Define navigation or functionality for each level
-          if (title == "Peaceful"){
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GameScreen("Level0.tmx"),
-              ),
-            );
-          } else if(title == "Easy"){
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => GameScreen("Level1.tmx"),
-              ),
-            );
-          }
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GameScreen(levelPath),
+            ),
+          );
         },
         child: Image.asset(
           iconPath,

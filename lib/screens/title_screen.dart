@@ -28,13 +28,13 @@ class TitleScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => GameScreen("Level0.tmx"),
+                    builder: (context) => GameScreen("Level1.2.tmx"),
                   ),
                 );
               },
               style: ElevatedButton.styleFrom(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
               child: const Text('Play'),
@@ -43,12 +43,13 @@ class TitleScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LevelSelectorScreen("Level0.tmx")),
+                  MaterialPageRoute(
+                      builder: (context) => LevelSelectorScreen("Level0.tmx")),
                 );
               },
               style: ElevatedButton.styleFrom(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
               child: const Text('Level Selector'),
@@ -57,12 +58,13 @@ class TitleScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => MiniGameScreen("Level2.tmx")),
+                  MaterialPageRoute(
+                      builder: (context) => MiniGameScreen("Level2.tmx")),
                 );
               },
               style: ElevatedButton.styleFrom(
                 padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
               child: const Text('Mini game'),
