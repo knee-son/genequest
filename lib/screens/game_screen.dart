@@ -256,7 +256,10 @@ class GameScreen extends StatelessWidget {
                         context: context,
                         barrierDismissible: false,
                         builder: (context) {
-                          return PauseMenu(title: "Game Paused", action: "Paused",); // Pause menu dialog
+                          return PauseMenu(
+                            title: "Game Paused",
+                            action: "Paused",
+                          ); // Pause menu dialog
                         },
                       );
                     },
@@ -277,7 +280,6 @@ class GameScreen extends StatelessWidget {
 }
 
 class PauseMenu extends StatelessWidget {
-
   final String title;
   //Action has two states "Paused" and "Gameover"
   final String action;
@@ -323,7 +325,7 @@ class PauseMenu extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => TitleScreen(),
                   ),
-                      (route) => false, // This will remove all the previous routes
+                  (route) => false, // This will remove all the previous routes
                 );
               },
               child: Text("Exit to Title"),
@@ -392,8 +394,10 @@ class GenequestGame extends FlameGame
 
     // Create the avatar and set its spawn point dynamically
     final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    final sisterChromatid = Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    avatar = Avatar(sprite: chromatidSprite, context: context, levelName: levelName);
+    final sisterChromatid =
+        Sprite(Flame.images.fromCache('sister_chromatid.png'));
+    avatar =
+        Avatar(sprite: chromatidSprite, context: context, levelName: levelName);
     goal = Goal(sprite: sisterChromatid, context: context);
 
     // Find the spawn object in the SpawnPoint layer
@@ -463,8 +467,8 @@ class GenequestGame extends FlameGame
                 isEnemy: true,
                 isFinish: false)
               ..priority = 1;
-              collisionBlocks.add(enemy);
-              add(enemy);
+            collisionBlocks.add(enemy);
+            add(enemy);
           default:
             // Handle other cases if needed
             break;
@@ -486,12 +490,6 @@ class GenequestGame extends FlameGame
     add(world);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    // Create the camera
-    final camera = CameraComponent.withFixedResolution(
-      width: screenWidth * 1.5,
-      height: screenHeight * 1.5,
-      world: world,
-    );
 
     mapSize = level.size;
 
@@ -502,6 +500,13 @@ class GenequestGame extends FlameGame
     // Add the avatar to the world
     world.add(avatar);
     world.add(goal);
+
+    // Create the camera
+    final camera = CameraComponent.withFixedResolution(
+      width: screenWidth * 1.5,
+      height: screenHeight * 1.5,
+      world: world,
+    );
 
     // Make the camera follow the avatar
     camera.follow(avatar);
@@ -526,6 +531,7 @@ class GenequestGame extends FlameGame
   }
 
   void startJump() {
+    // print(avatar.position.y);
     if (avatar.jumpCount < 2) {
       avatar.velocityY = -300; // Upward velocity
       avatar.isInAir = true; // Set mid-air state
@@ -589,7 +595,13 @@ class GenequestGame extends FlameGame
       avatar.applyGravity(dt);
       avatar.updatePosition(dt);
     }
-    // avatar.isInAir = true;
+    if (avatar.position.y > 1400) {
+      avatarFallsOffChasm();
+    }
+  }
+
+  void avatarFallsOffChasm() {
+    avatar.position = spawnPosition;
   }
 
   void reset() {
@@ -608,10 +620,10 @@ class Goal extends SpriteComponent with CollisionCallbacks {
   final BuildContext context;
   Goal({required Sprite sprite, required this.context})
       : super(
-    sprite: sprite,
-    size: Vector2(60, 100), // Avatar size
-    position: Vector2(200, 300), // Starting position above the border
-  );
+          sprite: sprite,
+          size: Vector2(60, 100), // Avatar size
+          position: Vector2(200, 300), // Starting position above the border
+        );
 
   @override
   Future<void> onLoad() async {
@@ -671,13 +683,13 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     InfiniteEffectController(EffectController(duration: 2)), // Loops forever
   );
 
-  Avatar({required Sprite sprite, required this.context, required this.levelName})
+  Avatar(
+      {required Sprite sprite, required this.context, required this.levelName})
       : super(
-    sprite: sprite,
-    size: Vector2(60, 100), // Avatar size
-    position: Vector2(200, 300), // Starting position above the border
-  );
-
+          sprite: sprite,
+          size: Vector2(60, 100), // Avatar size
+          position: Vector2(200, 300), // Starting position above the border
+        );
 
   @override
   Future<void> onLoad() async {
@@ -694,8 +706,51 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     }
   }
 
+  void applyDamageWithImmunity() {
+    if (health - 1 > 0 && !isImmune) {
+      health -= 1; // Reduce health
+      GenequestGame.instance?.updateHealth(health); // Update health bar
+      isImmune = true; // Grant immunity
+      paint.color = const Color(
+          0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
+      // Start blinking effect
+      int blinkCount = 0;
+      async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
+        // Toggle visibility or opacity every 200ms
+        if (blinkCount >= 5) {
+          FlameAudio.play('oof.mp3');
+          // Blink for 1 second (5 cycles)
+          timer.cancel(); // Stop blinking
+          isImmune = false; // End immunity
+          paint.color = const Color(0xFFFFFFFF); // Restore full opacity
+        } else {
+          // Alternate opacity between semi-transparent and fully transparent
+          paint.color = paint.color.a == 0.0
+              ? const Color(0x88FFFFFF) // Semi-transparent
+              : const Color(0x00FFFFFF); // Fully transparent
+          blinkCount++;
+        }
+      });
+    } else {
+      // replace with GAME OVER SCREEN
+      if (!isDialogShowing) {
+        isDialogShowing = true;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return PauseMenu(
+                title: "Game Over", action: "Gameover"); // Pause menu dialog
+          },
+        );
+      }
+    }
+  }
+
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+
     final double avatarTop = position.y;
     final double avatarBottom = position.y + size.y;
     final double avatarRight = position.x + size.x;
@@ -705,56 +760,16 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
     final double floorRight = other.position.x + other.size.x;
     final double floorLeft = other.position.x;
 
-    void applyDamageWithImmunity() {
-      if (health - 1 > 0 && !isImmune) {
-        health -= 1; // Reduce health
-        GenequestGame.instance?.updateHealth(health); // Update health bar
-        isImmune = true; // Grant immunity
-        paint.color = const Color(
-            0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
-        // Start blinking effect
-        int blinkCount = 0;
-        async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
-          // Toggle visibility or opacity every 200ms
-          if (blinkCount >= 5) {
-            FlameAudio.play('oof.mp3');
-            // Blink for 1 second (5 cycles)
-            timer.cancel(); // Stop blinking
-            isImmune = false; // End immunity
-            paint.color = const Color(0xFFFFFFFF); // Restore full opacity
-          } else {
-            // Alternate opacity between semi-transparent and fully transparent
-            paint.color = paint.color.a == 0.0
-                ? const Color(0x88FFFFFF) // Semi-transparent
-                : const Color(0x00FFFFFF); // Fully transparent
-            blinkCount++;
-          }
-        });
-      } else {
-        // replace with GAME OVER SCREEN
-        if (!isDialogShowing) {
-          isDialogShowing = true;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) {
-              return PauseMenu(title: "Game Over", action: "Gameover"); // Pause menu dialog
-            },
-          );
-        }
-      }
-    }
-
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
-      if (other.isFinish){
+      if (other.isFinish) {
         FlameAudio.play('tada.mp3');
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => LevelSelectorScreen(levelName)),
+          MaterialPageRoute(
+              builder: (context) => LevelSelectorScreen(levelName)),
         );
-      }
-      else if ((other.isFloor || other.isEnemy) && velocityY > 0) {
+      } else if ((other.isFloor || other.isEnemy) && velocityY > 0) {
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
         }
@@ -791,7 +806,6 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           velocityY < 0) {
         velocityY = -velocityY; // Reverse vertical velocity
       }
-
     }
   }
 
