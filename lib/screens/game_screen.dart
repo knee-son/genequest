@@ -89,7 +89,8 @@ class GameScreen extends StatelessWidget {
                 game: GenequestGame(
                     containerHeight: containerHeight,
                     context: context,
-                    levelNum: levelNum),
+                    levelNum: levelNum,
+                    levelName: levelName),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
                         alignment: Alignment

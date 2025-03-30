@@ -44,7 +44,7 @@ class TitleScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          GameScreen(0, levelName: "Level1.2.tmx")),
+                          GameScreen(0, levelName: "Level.tmx")),
                 );
               },
               style: ElevatedButton.styleFrom(

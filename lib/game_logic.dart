@@ -21,6 +21,7 @@ class GenequestGame extends FlameGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
   int levelNum;
+  String? levelName;
   late Avatar avatar;
   late Goal goal;
   final double containerHeight;
@@ -36,10 +37,11 @@ class GenequestGame extends FlameGame
   GenequestGame(
       {required this.containerHeight,
       required this.context,
-      required this.levelNum}) {
+      required this.levelNum,
+      this.levelName}) {
     instance = this;
-    context = context;
-    levelNum = levelNum;
+    // context = context;
+    // levelNum = levelNum;
   }
 
   @override
@@ -50,6 +52,7 @@ class GenequestGame extends FlameGame
 
   @override
   Future<void> onLoad() async {
+    print(levelName);
     await Flame.images.loadAll([
       'chromatid.png',
       'sister_chromatid.png',
@@ -63,7 +66,9 @@ class GenequestGame extends FlameGame
 
     // Load the level
     levelMap = await flameTiled.TiledComponent.load(
-      gameState.getLevelName(levelNum),
+      levelName?.isNotEmpty == true
+          ? levelName!
+          : gameState.getLevelName(levelNum),
       Vector2.all(64),
     );
 
