@@ -27,7 +27,7 @@ build: check-branch
 
 # Deploy to GitHub Pages
 deploy: check-branch build
-	git rm -rf --ignore-unmatch $(git ls-files | grep -v '^Makefile$')
+	git rm -rf -- . && git checkout main Makefile
 	cp -r $(BUILD_DIR)/* .
 	git add .
 	git commit -m "ready for gh-pages deployment"
