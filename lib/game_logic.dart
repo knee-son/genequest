@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
+import 'package:genequest_app/screens/minigame_screen.dart';
 
 // ------------------- GAME LOGIC -------------------
 
@@ -92,7 +93,7 @@ class GenequestGame extends FlameGame
           final floor = CollisionBlock(
               position: Vector2(spawn.x, spawn.y),
               size: Vector2(spawn.width, spawn.height),
-              isFloor: true, // This is a floor, not a wall
+              isSolid: true, // This is a floor, not a wall
               isEnemy: false,
               isFinish: false)
             ..priority = 1; // Render above the map;
@@ -108,19 +109,19 @@ class GenequestGame extends FlameGame
           goalPosition = Vector2(spawn.x, spawn.y);
           goalPosition.y -= goal.size.y; // Adjust to align avatar
 
-          // final floor = CollisionBlock(
-          //     position: Vector2(spawn.x, spawn.y),
-          //     size: Vector2(spawn.width, spawn.height),
-          //     isFloor: true, // This is a floor, not a wall
-          //     isEnemy: false,
-          //     isFinish: true)
-          //   ..priority = 1; // Render above the map;
-          // collisionBlocks.add(floor);
-          // Future.delayed(Duration.zero, () {
-          //   add(floor);
-          // });
-          // add(floor);
-          // collisionBlocks.add(floor);
+          final floor = CollisionBlock(
+              position: Vector2(spawn.x, spawn.y),
+              size: Vector2(spawn.width, spawn.height),
+              isSolid: false, // This is a floor, not a wall
+              isEnemy: false,
+              isFinish: true)
+            ..priority = 1; // Render above the map;
+          collisionBlocks.add(floor);
+          Future.delayed(Duration.zero, () {
+            add(floor);
+          });
+          add(floor);
+          collisionBlocks.add(floor);
           break;
         }
       }
@@ -136,7 +137,7 @@ class GenequestGame extends FlameGame
             final floor = CollisionBlock(
                 position: Vector2(collision.x, collision.y),
                 size: Vector2(collision.width, collision.height),
-                isFloor: true, // This is a floor, not a wall
+                isSolid: true, // This is a floor, not a wall
                 isEnemy: false,
                 isFinish: false)
               ..priority = 1;
@@ -146,7 +147,7 @@ class GenequestGame extends FlameGame
             final enemy = CollisionBlock(
                 position: Vector2(collision.x, collision.y),
                 size: Vector2(collision.width, collision.height),
-                isFloor: false, // This is a floor, not a wall
+                isSolid: false, // This is a floor, not a wall
                 isEnemy: true,
                 isFinish: false)
               ..priority = 1;
@@ -301,6 +302,8 @@ class GenequestGame extends FlameGame
   }
 }
 
+// ------------------- GOAL LOGIC -------------------
+
 class Goal extends SpriteComponent with CollisionCallbacks {
   final BuildContext context;
   Goal({required Sprite sprite, required this.context})
@@ -317,15 +320,17 @@ class Goal extends SpriteComponent with CollisionCallbacks {
   }
 }
 
+// ----------------- COLLISION BLOCKS -----------------
+
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
-  bool isFloor;
+  bool isSolid;
   bool isEnemy;
   bool isFinish;
 
   CollisionBlock(
       {required Vector2 position,
       required Vector2 size,
-      required this.isFloor,
+      required this.isSolid,
       required this.isEnemy,
       required this.isFinish})
       : super(position: position, size: size);
@@ -457,12 +462,13 @@ class Avatar extends SpriteComponent
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
       if (other.isFinish) {
-        FlameAudio.play('tada.mp3');
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  MiniGameScreenTransition(levelNum: gameState.level)),
         );
-      } else if ((other.isFloor || other.isEnemy) && velocityY > 0) {
+      } else if ((other.isSolid || other.isEnemy) && velocityY > 0) {
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
         }
@@ -478,7 +484,7 @@ class Avatar extends SpriteComponent
         }
       }
       // Horizontal collisions
-      if ((other.isFloor || other.isEnemy) && position.y != floorTop - size.y) {
+      if ((other.isSolid || other.isEnemy) && position.y != floorTop - size.y) {
         final allowance = (velocityX) * 0.1;
         if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
           position.x = floorLeft - size.x;
@@ -493,7 +499,7 @@ class Avatar extends SpriteComponent
       }
 
       // Check if avatar collides below the floor
-      if (other.isFloor &&
+      if (other.isSolid &&
           avatarTop <= floorBottom &&
           avatarTop >= floorBottom + velocityY * 0.2 &&
           velocityY < 0) {
@@ -527,5 +533,111 @@ class Avatar extends SpriteComponent
   void updatePosition(double dt) {
     position.x += velocityX * dt;
     position.y += velocityY * dt; // Debugging print
+  }
+}
+
+// ----------------- TRANSITION LOGIC -----------------
+
+class MiniGameScreenTransition extends StatefulWidget {
+  final int levelNum;
+
+  const MiniGameScreenTransition({required this.levelNum, super.key});
+
+  @override
+  State<MiniGameScreenTransition> createState() =>
+      _MiniGameScreenTransitionState();
+}
+
+class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _zoomAnimation;
+  late Animation<double> _shakeAnimation;
+  late Animation<double> _whiteOutAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Play 'woosh.wav' as the animation starts
+    FlameAudio.play('slash.wav');
+
+    // Animation Controller
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    // Zoom-in effect
+    _zoomAnimation = Tween<double>(begin: 1.0, end: 2.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    // Shake effect (oscillating position offset)
+    _shakeAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    );
+
+    // White-out effect
+    _whiteOutAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+    );
+
+    // Start animation
+    _controller.forward().then((_) {
+      // Play transition sound and navigate
+      FlameAudio.play('tada.mp3');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MiniGameScreen(widget.levelNum)),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // Zoom & Shake
+                Transform.scale(
+                  scale: _zoomAnimation.value,
+                  child: Transform.translate(
+                    offset: Offset(
+                      (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                      (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                    ),
+                    child: child,
+                  ),
+                ),
+
+                // White-Out Overlay
+                Opacity(
+                  opacity: _whiteOutAnimation.value,
+                  child: Container(color: Colors.white),
+                ),
+              ],
+            );
+          },
+          child: const Text(
+            "Next Level!",
+            style: TextStyle(
+                fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+      ),
+    );
   }
 }
