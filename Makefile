@@ -33,5 +33,9 @@ deploy: check-branch build
 	git commit -m "ready for gh-pages deployment"
 	git push origin $(BRANCH) --force
 
+site:
+	@echo "🌐 GitHub Pages link available here:"
+	@echo -e "\e[36mhttps://knee-son.github.io/genequest/\e[0m"
+
 # Full setup and deployment in one command
-all: check-branch reset enable-web create deploy
+all: check-branch reset enable-web create deploy site
