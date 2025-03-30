@@ -46,8 +46,10 @@ class GenequestGame extends FlameGame
   }
 
   @override
+  bool get debugMode => true;
+
   @override
-  Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
+  Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
 
   @override
   Future<void> onLoad() async {
@@ -140,6 +142,7 @@ class GenequestGame extends FlameGame
               ..priority = 1;
             collisionBlocks.add(floor);
             add(floor);
+
           case 'Enemy':
             final enemy = CollisionBlock(
                 position: Vector2(collision.x, collision.y),
@@ -151,7 +154,6 @@ class GenequestGame extends FlameGame
             collisionBlocks.add(enemy);
             add(enemy);
           default:
-            // Handle other cases if needed
             break;
         }
       }
@@ -321,31 +323,24 @@ class Goal extends SpriteComponent with CollisionCallbacks {
 // ----------------- COLLISION BLOCKS -----------------
 
 class CollisionBlock extends PositionComponent with CollisionCallbacks {
-  bool isSolid;
-  bool isEnemy;
-  bool isFinish;
+  final bool isSolid;
+  final bool isEnemy;
+  final bool isFinish;
 
-  CollisionBlock(
-      {required Vector2 position,
-      required Vector2 size,
-      required this.isSolid,
-      required this.isEnemy,
-      required this.isFinish})
-      : super(position: position, size: size);
+  CollisionBlock({
+    required Vector2 position,
+    required Vector2 size,
+    required this.isSolid,
+    required this.isEnemy,
+    required this.isFinish,
+  }) : super(position: position, size: size);
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
-    // Add a colored rectangle to visualize the block
-    final rectangle = RectangleComponent(
-      position: position,
-      size: size,
-      paint: Paint()..color = const Color(0x88FF0000), // Semi-transparent red
-    );
-    add(rectangle);
-
-    // Add the hitbox as usual
+    // Hitbox for collision detection
     add(RectangleHitbox());
+
+    return super.onLoad(); // Call at the end
   }
 }
 
@@ -364,11 +359,6 @@ class Avatar extends SpriteComponent
   int horizontalMoveAxis = 0;
   int levelNum;
 
-  final effect = RotateEffect.by(
-    tau, // Rotate a full circle (2π radians)
-    InfiniteEffectController(EffectController(duration: 2)), // Loops forever
-  );
-
   Avatar(
       {required Sprite sprite, required this.context, required this.levelNum})
       : super(
@@ -379,8 +369,8 @@ class Avatar extends SpriteComponent
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
     add(RectangleHitbox());
+    return super.onLoad();
   }
 
   void applyGravity(double dt) {
@@ -602,36 +592,46 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
       backgroundColor: Colors.black,
       body: Center(
         child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Stack(
-              children: [
-                // Zoom & Shake
-                Transform.scale(
-                  scale: _zoomAnimation.value,
-                  child: Transform.translate(
-                    offset: Offset(
-                      (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                      (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+            animation: _controller,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  // Zoom & Shake
+                  Transform.scale(
+                    scale: _zoomAnimation.value,
+                    child: Transform.translate(
+                      offset: Offset(
+                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                      ),
+                      child: child,
                     ),
-                    child: child,
                   ),
-                ),
 
-                // White-Out Overlay
-                Opacity(
-                  opacity: _whiteOutAnimation.value,
-                  child: Container(color: Colors.white),
+                  // White-Out Overlay
+                  Opacity(
+                    opacity: _whiteOutAnimation.value,
+                    child: Container(color: Colors.white),
+                  ),
+                ],
+              );
+            },
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.all(
+                    16), // Adds some spacing around the text
+                color: Colors.white, // White background
+                child: const Text(
+                  "Next Level!",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black, // Black text
+                  ),
+                  textAlign: TextAlign.center, // Ensures text is centered
                 ),
-              ],
-            );
-          },
-          child: const Text(
-            "Next Level!",
-            style: TextStyle(
-                fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-        ),
+              ),
+            )),
       ),
     );
   }
