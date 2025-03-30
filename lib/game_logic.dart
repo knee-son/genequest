@@ -46,14 +46,11 @@ class GenequestGame extends FlameGame
   }
 
   @override
-  bool get debugMode => true;
-
   @override
   Color backgroundColor() => const Color(0xFFCCCCCC); // Light gray background
 
   @override
   Future<void> onLoad() async {
-    print(levelName);
     await Flame.images.loadAll([
       'chromatid.png',
       'sister_chromatid.png',
@@ -189,8 +186,8 @@ class GenequestGame extends FlameGame
 
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: screenWidth * 1.5,
-      height: screenHeight * 1.5,
+      width: screenWidth * 1.4,
+      height: screenHeight * 1.4,
       world: world,
     );
 
@@ -277,6 +274,7 @@ class GenequestGame extends FlameGame
   void update(double dt) {
     if (!isPaused) {
       super.update(dt);
+      dt = dt * 1.2;
       avatar.applyGravity(dt);
       avatar.updatePosition(dt);
     }
@@ -334,9 +332,6 @@ class CollisionBlock extends PositionComponent with CollisionCallbacks {
       required this.isEnemy,
       required this.isFinish})
       : super(position: position, size: size);
-
-  @override
-  bool get debugMode => true;
 
   @override
   Future<void> onLoad() async {
