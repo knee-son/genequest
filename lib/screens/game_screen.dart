@@ -40,8 +40,9 @@ bool isDialogShowing = false;
 class GameScreen extends StatelessWidget {
   // final String levelName; // Declare a final field for the level name
   final int levelNum; // change to int
+  final String levelName; // optional param for debugging
 
-  const GameScreen(this.levelNum, {super.key});
+  const GameScreen(this.levelNum, {this.levelName = "", super.key});
 
   // HealthBar widget dynamically linked with healthNotifier
   Widget healthBar(BuildContext context) {

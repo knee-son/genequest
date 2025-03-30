@@ -103,19 +103,19 @@ class GenequestGame extends FlameGame
           goalPosition = Vector2(spawn.x, spawn.y);
           goalPosition.y -= goal.size.y; // Adjust to align avatar
 
-          final floor = CollisionBlock(
-              position: Vector2(spawn.x, spawn.y),
-              size: Vector2(spawn.width, spawn.height),
-              isFloor: true, // This is a floor, not a wall
-              isEnemy: false,
-              isFinish: true)
-            ..priority = 1; // Render above the map;
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
-          add(floor);
-          collisionBlocks.add(floor);
+          // final floor = CollisionBlock(
+          //     position: Vector2(spawn.x, spawn.y),
+          //     size: Vector2(spawn.width, spawn.height),
+          //     isFloor: true, // This is a floor, not a wall
+          //     isEnemy: false,
+          //     isFinish: true)
+          //   ..priority = 1; // Render above the map;
+          // collisionBlocks.add(floor);
+          // Future.delayed(Duration.zero, () {
+          //   add(floor);
+          // });
+          // add(floor);
+          // collisionBlocks.add(floor);
           break;
         }
       }
@@ -269,8 +269,8 @@ class GenequestGame extends FlameGame
 
   @override
   void update(double dt) {
-    super.update(dt);
     if (!isPaused) {
+      super.update(dt);
       avatar.applyGravity(dt);
       avatar.updatePosition(dt);
     }
@@ -346,7 +346,8 @@ class CollisionBlock extends PositionComponent with CollisionCallbacks {
 
 // ------------------- AVATAR LOGIC -------------------
 
-class Avatar extends SpriteComponent with CollisionCallbacks {
+class Avatar extends SpriteComponent
+    with CollisionCallbacks, HasGameRef<GenequestGame> {
   double velocityX = 0; // Horizontal velocity
   double velocityY = 0; // Vertical velocity
   final double gravity = 300; // Downward acceleration
@@ -387,7 +388,7 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
   }
 
   void applyDamageWithImmunity() {
-    if (health - 1 > 0 && !isImmune) {
+    if (!isImmune) {
       health -= 1; // Reduce health
       GenequestGame.instance?.updateHealth(health); // Update health bar
       isImmune = true; // Grant immunity
@@ -396,14 +397,15 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
       // Start blinking effect
       int blinkCount = 0;
       async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
-        // Toggle visibility or opacity every 200ms
         if (blinkCount >= 5) {
-          FlameAudio.play('oof.mp3');
-          // Blink for 1 second (5 cycles)
           timer.cancel(); // Stop blinking
           isImmune = false; // End immunity
           paint.color = const Color(0xFFFFFFFF); // Restore full opacity
         } else {
+          // Play audio on each blink
+          if (blinkCount == 0) {
+            FlameAudio.play('oof.mp3');
+          }
           // Alternate opacity between semi-transparent and fully transparent
           paint.color = paint.color.a == 0.0
               ? const Color(0x88FFFFFF) // Semi-transparent
@@ -411,10 +413,14 @@ class Avatar extends SpriteComponent with CollisionCallbacks {
           blinkCount++;
         }
       });
-    } else {
+    }
+
+    if (health <= 0) {
       // Game Over logic
 
       gameState.setLevel(levelNum - 1);
+      // pause();
+      gameRef.pause();
 
       if (!isDialogShowing) {
         isDialogShowing = true;
