@@ -23,11 +23,11 @@ create: check-branch
 
 # Build the Flutter web app
 build: check-branch
-	flutter build web --base-href="//genequest/"
+	MSYS_NO_PATHCONV=1 flutter build web --base-href="/genequest/"
 
 # Deploy to GitHub Pages
 deploy: check-branch build
-	git rm -rf .
+	git rm -rf --ignore-unmatch $(git ls-files | grep -v '^Makefile$')
 	cp -r $(BUILD_DIR)/* .
 	git add .
 	git commit -m "ready for gh-pages deployment"
