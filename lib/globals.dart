@@ -9,8 +9,8 @@ class GameState {
   static const int _maxLevel = 4;
 
   final Map<int, String> _levelNames = {
-    0: "Level0.2.tmx",
-    1: "Level1.3.tmx",
+    0: "Level0.tmx",
+    1: "Level1.tmx",
     2: "Level2.tmx",
     3: "Level3.tmx",
     4: "Level4.tmx",
