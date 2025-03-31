@@ -1,9 +1,17 @@
 import 'package:flame/game.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 
 import 'game_screen.dart';
 import '../globals.dart';
+
+class LevelSelectorScreen extends StatefulWidget {
+  const LevelSelectorScreen({super.key});
+
+  @override
+  LevelSelectorScreenState createState() => LevelSelectorScreenState();
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +27,26 @@ void main() async {
   runApp(const LevelSelectorScreen());
 }
 
-class LevelSelectorScreen extends StatelessWidget {
-  const LevelSelectorScreen({super.key});
+class LevelSelectorScreenState extends State<LevelSelectorScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _playMusic();
+  }
+
+  void _playMusic() {
+    FlameAudio.bgm.initialize();
+    FlameAudio.bgm.play(
+      'music4.mp3',
+      volume: 0.5,
+    );
+  }
+
+  @override
+  void dispose() {
+    FlameAudio.bgm.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
