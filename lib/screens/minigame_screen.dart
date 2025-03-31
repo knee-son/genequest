@@ -22,7 +22,6 @@ class MiniGameScreen extends StatefulWidget {
   final int levelNum;
   final String levelName;
 
-  // ✅ Use a normal constructor, NOT `const`
   MiniGameScreen(this.levelNum, {super.key})
       : levelName = gameState.getLevelName(levelNum);
 
@@ -33,8 +32,7 @@ class MiniGameScreen extends StatefulWidget {
 class _MiniGameScreenState extends State<MiniGameScreen> {
   String? _blockColor; // Tracks the color of the block to spawn
   final List<String?> _droppedBlockFirst = [];
-  final List<String?> _droppedBlockSecond =
-      []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
+  final List<String?> _droppedBlockSecond = []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
 
   void onButtonPressed() {
     // Randomly choose the color of the block
@@ -58,9 +56,38 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     final listEquality = const ListEquality().equals;
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
-        listEquality(
-            _droppedBlockFirst, _droppedBlockSecond.reversed.toList())) {
-      // unlock next level
+        _droppedBlockFirst.toString() ==
+            _droppedBlockSecond.reversed.toList().toString()
+    ) {
+      String dominantTrait = gameState.traits[gameState.level].defaultTrait;
+      String nondomi = gameState.traits[gameState.level].traits.last;
+
+      Trait newTrait = Trait(
+          name: gameState.traits[gameState.level].name,
+          traits: gameState.traits[gameState.level].traits,
+          difficulty: gameState.traits[gameState.level].difficulty,
+          selectedTrait: dominantTrait,
+          level: gameState.traits[gameState.level].level
+      );
+
+      if (_droppedBlockFirst.contains("red")){
+        newTrait.selectedTrait = dominantTrait;
+      } else {
+        newTrait.selectedTrait = nondomi;
+      }
+
+      // Check for an existing trait where the level matches gameState.level
+      var existingTraitIndex = gameState.savedTraits.indexWhere(
+            (trait) => trait.level == gameState.level,
+      );
+
+      if (existingTraitIndex != -1) {
+        // Update the existing trait instance if found and selectedTrait is not empty
+        gameState.savedTraits[gameState.level] = newTrait;
+      } else {
+        gameState.savedTraits.add(newTrait);
+      }
+
       gameState.incrementLevel();
 
       Navigator.pushReplacement(
