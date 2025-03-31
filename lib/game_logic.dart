@@ -61,6 +61,7 @@ class GenequestGame extends FlameGame
       'heart_full.png',
       'heart_half.png',
       'heart_empty.png',
+      'mob.png',
     ]);
     overlays.add('HealthBar');
 
@@ -83,6 +84,9 @@ class GenequestGame extends FlameGame
         Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
     goal = Goal(sprite: sisterChromatid, context: context);
 
+
+    // Initialize the world
+    final world = World();
     // Find the spawn object in the SpawnPoint layer
     if (spawnPointLayer != null) {
       for (final spawn in spawnPointLayer.objects) {
@@ -144,23 +148,50 @@ class GenequestGame extends FlameGame
             add(floor);
 
           case 'Enemy':
+          // Load the mob.png sprite
+            final mobSprite =  Sprite(Flame.images.fromCache('mob.png'));
+
+            // Create a new enemy instance
             final enemy = CollisionBlock(
+              position: Vector2(collision.x, collision.y), // Enemy position
+              size: Vector2(collision.width, collision.height), // Enemy size
+              isSolid: false, // Not a solid block
+              isEnemy: true, // Mark as enemy
+              isFinish: false, // Not a finish block
+            )
+              ..priority = 1; // Ensure enemy has higher rendering priority
+
+            // Add the enemy to the collision blocks list
+            collisionBlocks.add(enemy);
+
+            // Add a mob image for every enemy
+            final mobImage = SpriteComponent(
+              sprite: mobSprite, // mob.png sprite
+              size: Vector2(50, 50), // Adjust size as needed
+              position: Vector2(collision.x, collision.y), // Spawn on the enemy's position
+            )
+              ..priority = 2; // Ensure mob is rendered above the enemy
+
+            // Add the mob image to the game world
+            mobImage.position = Vector2(enemy.x, enemy.y);
+            world.add(mobImage);
+          case 'Trap':
+            final floor = CollisionBlock(
                 position: Vector2(collision.x, collision.y),
                 size: Vector2(collision.width, collision.height),
-                isSolid: false, // This is a floor, not a wall
+                isSolid: true, // This is a floor, not a wall
                 isEnemy: true,
                 isFinish: false)
               ..priority = 1;
-            collisionBlocks.add(enemy);
-            add(enemy);
+            collisionBlocks.add(floor);
+            add(floor);
           default:
             break;
         }
       }
     }
 
-    // Initialize the world
-    final world = World();
+
 
     // Add collision blocks first to ensure they render above the tilemap
     for (final block in collisionBlocks) {
