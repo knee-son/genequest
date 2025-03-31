@@ -242,6 +242,52 @@ class GenequestGame extends FlameGame
     isPaused = true;
   }
 
+  void saveTrait() {
+    if (gameState.level == 0) {
+      // Ensure there are traits available before proceeding
+      if (gameState.traits.isNotEmpty) {
+        String dominantTrait = gameState.traits[gameState.level].defaultTrait;
+        String nondomi = gameState.traits[gameState.level].traits.last;
+
+        Trait newTrait = Trait(
+            name: gameState.traits[gameState.level].name,
+            traits: gameState.traits[gameState.level].traits,
+            difficulty: gameState.traits[gameState.level].difficulty,
+            selectedTrait: dominantTrait,
+            level: gameState.traits[gameState.level].level
+        );
+
+        // Check for an existing trait where the level matches gameState.level
+        var existingTraitIndex = gameState.savedTraits.indexWhere(
+              (trait) => trait.level == gameState.level,
+        );
+
+        if (existingTraitIndex != -1) {
+          // Update the existing trait instance if found and selectedTrait is not empty
+          gameState.savedTraits[gameState.level] = newTrait;
+        } else {
+          gameState.savedTraits.add(newTrait);
+        }
+      }
+    }
+    if (gameState.level > 0 ){
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                MiniGameScreenTransition(levelNum: gameState.level)),
+      );
+    } else {
+      gameState.incrementLevel();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                LevelSelectorScreen()),
+      );
+    }
+  }
+
   void resume() {
     isPaused = false;
   }
@@ -479,12 +525,7 @@ class Avatar extends SpriteComponent
       // Check if avatar is landed on top of the floor
       if (other.isFinish) {
         gameRef.pause();
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  MiniGameScreenTransition(levelNum: gameState.level)),
-        );
+        gameRef.saveTrait();
       } else if ((other.isSolid || other.isEnemy) && velocityY > 0) {
         if (other.isEnemy && !isImmune) {
           applyDamageWithImmunity(); // Handle damage and grant immunity
