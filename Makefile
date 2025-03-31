@@ -11,7 +11,8 @@ check-branch:
 	fi
 
 reset: check-branch
-	git reset --hard main
+	git fetch origin
+	git reset --hard origin/main
 
 # Enable Flutter web support
 enable-web: check-branch
