@@ -83,6 +83,21 @@ class TitleScreenState extends State<TitleScreen> {
             ),
             ElevatedButton(
               onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                textStyle: const TextStyle(fontSize: 20),
+              ),
+              child: const Text('Mini game'),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
                 // Navigator.push(
                 //   context,
                 //   MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
@@ -95,10 +110,10 @@ class TitleScreenState extends State<TitleScreen> {
               },
               style: ElevatedButton.styleFrom(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                 textStyle: const TextStyle(fontSize: 20),
               ),
-              child: const Text('Mini game'),
+              child: const Text('Game Over Screen'),
             ),
           ],
         ),

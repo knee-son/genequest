@@ -64,7 +64,7 @@ class GameState {
   String getLevelName(int levelNum) {
     return _levelNames[levelNum] ?? "Unknown Level";
   }
-
+  // hard coded for testing purposes
   final List<Trait> randomTraits = List.unmodifiable([
     Trait(
         name: 'gender',
