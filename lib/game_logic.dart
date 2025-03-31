@@ -247,7 +247,7 @@ class GenequestGame extends FlameGame
       // Ensure there are traits available before proceeding
       if (gameState.traits.isNotEmpty) {
         String dominantTrait = gameState.traits[gameState.level].defaultTrait;
-        String nondomi = gameState.traits[gameState.level].traits.last;
+        String nonDominantTrait = gameState.traits[gameState.level].traits.last;
 
         Trait newTrait = Trait(
             name: gameState.traits[gameState.level].name,
@@ -256,6 +256,12 @@ class GenequestGame extends FlameGame
             selectedTrait: dominantTrait,
             level: gameState.traits[gameState.level].level
         );
+
+        if (goal.size == goal.regularSize){
+          newTrait.selectedTrait = nonDominantTrait;
+        } else {
+          newTrait.selectedTrait = dominantTrait;
+        }
 
         // Check for an existing trait where the level matches gameState.level
         var existingTraitIndex = gameState.savedTraits.indexWhere(
@@ -383,6 +389,9 @@ class GenequestGame extends FlameGame
 
 class Goal extends SpriteComponent with CollisionCallbacks {
   final BuildContext context;
+  final Vector2 regularSize = Vector2(60, 100);
+  final Vector2 halfSize = Vector2(60, 100) / 2;
+
   Goal({required Sprite sprite, required this.context})
       : super(
           sprite: sprite,
@@ -394,6 +403,20 @@ class Goal extends SpriteComponent with CollisionCallbacks {
   Future<void> onLoad() async {
     super.onLoad();
     add(RectangleHitbox());
+
+    if (gameState.level == 0) {
+      async.Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (size == regularSize){
+          resize(halfSize);
+        } else {
+          resize(regularSize);
+        }
+      });
+    }
+  }
+
+  void resize(Vector2 newSize) {
+    size = newSize;
   }
 }
 
