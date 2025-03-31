@@ -53,21 +53,20 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   void checkIfValid() {
-    final listEquality = const ListEquality().equals;
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
         _droppedBlockFirst.toString() ==
             _droppedBlockSecond.reversed.toList().toString()
     ) {
-      String dominantTrait = gameState.traits[gameState.level].defaultTrait;
-      String nondomi = gameState.traits[gameState.level].traits.last;
+      String dominantTrait = gameState.traits[gameState.currentLevel].defaultTrait;
+      String nondomi = gameState.traits[gameState.currentLevel].traits.last;
 
       Trait newTrait = Trait(
-          name: gameState.traits[gameState.level].name,
-          traits: gameState.traits[gameState.level].traits,
-          difficulty: gameState.traits[gameState.level].difficulty,
+          name: gameState.traits[gameState.currentLevel].name,
+          traits: gameState.traits[gameState.currentLevel].traits,
+          difficulty: gameState.traits[gameState.currentLevel].difficulty,
           selectedTrait: dominantTrait,
-          level: gameState.traits[gameState.level].level
+          level: gameState.traits[gameState.currentLevel].level
       );
 
       if (_droppedBlockFirst.contains("red")){
@@ -78,12 +77,12 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
       // Check for an existing trait where the level matches gameState.level
       var existingTraitIndex = gameState.savedTraits.indexWhere(
-            (trait) => trait.level == gameState.level,
+            (trait) => trait.level == gameState.currentLevel,
       );
 
       if (existingTraitIndex != -1) {
         // Update the existing trait instance if found and selectedTrait is not empty
-        gameState.savedTraits[gameState.level] = newTrait;
+        gameState.savedTraits[gameState.currentLevel] = newTrait;
       } else {
         gameState.savedTraits.add(newTrait);
       }

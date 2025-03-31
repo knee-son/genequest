@@ -5,8 +5,11 @@ class GameState {
 
   int currentLevel = 0; // depends on game
   int _level = 0; // levels unlocked
+
+  int maxLevelReached = 0;
   static const int _minLevel = 0;
   static const int _maxLevel = 4;
+
   List<Trait> savedTraits = [];
 
   final Map<int, String> _levelNames = {
@@ -61,6 +64,44 @@ class GameState {
   String getLevelName(int levelNum) {
     return _levelNames[levelNum] ?? "Unknown Level";
   }
+
+  final List<Trait> randomTraits = List.unmodifiable([
+    Trait(
+        name: 'gender',
+        traits: ['Male', 'Female'],
+        difficulty: 'peaceful',
+        level: 0,
+        selectedTrait: "Female"
+    ),
+    Trait(
+        name: 'skin',
+        traits: ['Fair', 'Brown'],
+        difficulty: 'easy',
+        level: 1,
+        selectedTrait: "Brown"
+    ),
+    Trait(
+        name: 'eyes',
+        traits: ['Round', 'Almond'],
+        difficulty: 'medium',
+        level: 2,
+        selectedTrait: "Round"
+    ),
+    Trait(
+        name: 'height',
+        traits: ['Average', 'Tall'],
+        difficulty: 'hard',
+        level: 3,
+        selectedTrait: "Average"
+    ),
+    Trait(
+        name: 'hair',
+        traits: ['Black', 'Blonde'],
+        difficulty: 'expert',
+        level: 4,
+        selectedTrait: "Black"
+    ),
+  ]);
 
   void setLevel(int newLevel) {
     _level =
