@@ -447,6 +447,7 @@ class Avatar extends SpriteComponent
     if (other is CollisionBlock) {
       // Check if avatar is landed on top of the floor
       if (other.isFinish) {
+        gameRef.pause();
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -622,7 +623,7 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
                     16), // Adds some spacing around the text
                 color: Colors.white, // White background
                 child: const Text(
-                  "Next Level!",
+                  "Minigame Time!",
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,

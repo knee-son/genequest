@@ -3,7 +3,7 @@ class GameState {
   factory GameState() => _instance;
   GameState._internal();
 
-  int _currentLevel = 0; // depends on game
+  int currentLevel = 0; // depends on game
   int _level = 0; // levels unlocked
   static const int _minLevel = 0;
   static const int _maxLevel = 4;
@@ -15,8 +15,6 @@ class GameState {
     3: "Level3.tmx",
     4: "Level4.tmx",
   };
-
-  int get currentLevel => _currentLevel;
   int get level => _level;
   String get levelName => _levelNames[_level] ?? "Unknown Level";
 
@@ -24,13 +22,15 @@ class GameState {
     return _levelNames[levelNum] ?? "Unknown Level";
   }
 
-  void setCurrentLevel(int currentLevel) {
-    _level = currentLevel.clamp(_minLevel, _level);
-  }
-
   void setLevel(int newLevel) {
     _level =
         newLevel.clamp(_minLevel, _maxLevel); // Ensures level stays in range
+  }
+
+  void incrementLevel() {
+    if (_level == currentLevel) {
+      setLevel(_level + 1); // Use the setter method
+    }
   }
 }
 

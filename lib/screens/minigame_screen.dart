@@ -60,6 +60,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         _droppedBlockSecond.length == 2 &&
         listEquality(
             _droppedBlockFirst, _droppedBlockSecond.reversed.toList())) {
+      // unlock next level
+      gameState.incrementLevel();
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LevelSelectorScreen()),

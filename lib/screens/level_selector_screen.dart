@@ -147,7 +147,7 @@ class LevelButton extends StatelessWidget {
           ),
           onPressed: enabled
               ? () {
-                  // Define navigation or functionality for each level
+                  gameState.currentLevel = level;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
