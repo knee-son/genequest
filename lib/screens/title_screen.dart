@@ -1,10 +1,36 @@
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'game_screen.dart';
 import 'level_selector_screen.dart';
 import 'minigame_screen.dart'; // Import the GameScreen
 
-class TitleScreen extends StatelessWidget {
+class TitleScreen extends StatefulWidget {
   const TitleScreen({super.key});
+
+  @override
+  TitleScreenState createState() => TitleScreenState();
+}
+
+class TitleScreenState extends State<TitleScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _playMusic();
+  }
+
+  void _playMusic() {
+    FlameAudio.bgm.initialize();
+    FlameAudio.bgm.play(
+      'music2.mp3',
+      volume: 0.5,
+    );
+  }
+
+  @override
+  void dispose() {
+    FlameAudio.bgm.stop(); // Stop music when leaving the screen
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
