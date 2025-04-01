@@ -109,16 +109,9 @@ class GameScreen extends StatelessWidget {
           // Bottom menu for movement buttons
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              height: containerHeight,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                border: Border(
-                  top: BorderSide(color: Colors.black, width: 2),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              // Adding bottom padding
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -193,17 +186,6 @@ class GameScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      // Start button logic
-                      debugPrint('Start button pressed');
-                    },
-                    child: Image.asset(
-                      'assets/images/button_start.png',
-                      width: 100,
-                      height: 50,
-                    ),
-                  ),
                   const SizedBox(height: 10), // Space between buttons
                   GestureDetector(
                     onTap: () {
@@ -231,7 +213,7 @@ class GameScreen extends StatelessWidget {
                   // Menu button
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                           builder: (context) => TitleScreen(),
@@ -313,15 +295,12 @@ class DialogOverlayModal extends StatelessWidget {
             ],
             ElevatedButton(
               onPressed: () {
-                // isDialogShowing = false;
                 Navigator.pop(context); // Close pause menu
-                // Navigator.pop(context); // Navigate back to TitleScreen
-                Navigator.pushAndRemoveUntil(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => LevelSelectorScreen(),
                   ),
-                  (route) => false, // This will remove all the previous routes
                 );
               },
               child: Text(action == "Paused" ? "Level Select" : "Go back"),

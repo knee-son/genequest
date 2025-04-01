@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/game_over_screen.dart';
 import 'level_selector_screen.dart';
 import 'package:collection/collection.dart';
 
@@ -88,12 +89,18 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         gameState.savedTraits.add(newTrait);
       }
 
-      gameState.incrementLevel();
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
-      );
+      if (gameState.currentLevel == 4){
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => GameOverScreen()),
+        );
+      } else {
+        gameState.incrementLevel();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+        );
+      }
     }
   }
 
