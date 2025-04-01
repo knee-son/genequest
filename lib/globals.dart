@@ -1,10 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 class GameState {
   static final GameState _instance = GameState._internal();
   factory GameState() => _instance;
   GameState._internal();
 
   int currentLevel = 0; // depends on game
-  int _level = 0; // levels unlocked
+  int _level = kDebugMode ? 4 : 0; // 4 in debug mode, 0 otherwise
 
   int maxLevelReached = 0;
   static const int _minLevel = 0;
@@ -22,40 +24,35 @@ class GameState {
 
   final List<Trait> traits = List.unmodifiable([
     Trait(
-      name: 'gender',
-      traits: ['Male', 'Female'],
-      difficulty: 'peaceful',
-      level: 0,
-      selectedTrait: ""
-    ),
+        name: 'gender',
+        traits: ['Male', 'Female'],
+        difficulty: 'peaceful',
+        level: 0,
+        selectedTrait: ""),
     Trait(
-      name: 'skin',
-      traits: ['Fair', 'Brown'],
-      difficulty: 'easy',
-      level: 1,
-      selectedTrait: ""
-    ),
+        name: 'skin',
+        traits: ['Fair', 'Brown'],
+        difficulty: 'easy',
+        level: 1,
+        selectedTrait: ""),
     Trait(
-      name: 'eyes',
-      traits: ['Round', 'Almond'],
-      difficulty: 'medium',
-      level: 2,
-      selectedTrait: ""
-    ),
+        name: 'eyes',
+        traits: ['Round', 'Almond'],
+        difficulty: 'medium',
+        level: 2,
+        selectedTrait: ""),
     Trait(
-      name: 'height',
-      traits: ['Average', 'Tall'],
-      difficulty: 'hard',
-      level: 3,
-      selectedTrait: ""
-    ),
+        name: 'height',
+        traits: ['Average', 'Tall'],
+        difficulty: 'hard',
+        level: 3,
+        selectedTrait: ""),
     Trait(
-      name: 'hair',
-      traits: ['Black', 'Blonde'],
-      difficulty: 'expert',
-      level: 4,
-      selectedTrait: ""
-    ),
+        name: 'hair',
+        traits: ['Black', 'Blonde'],
+        difficulty: 'expert',
+        level: 4,
+        selectedTrait: ""),
   ]);
 
   int get level => _level;
@@ -64,6 +61,7 @@ class GameState {
   String getLevelName(int levelNum) {
     return _levelNames[levelNum] ?? "Unknown Level";
   }
+
   // hard coded for testing purposes
   final List<Trait> randomTraits = List.unmodifiable([
     Trait(
@@ -71,36 +69,31 @@ class GameState {
         traits: ['Male', 'Female'],
         difficulty: 'peaceful',
         level: 0,
-        selectedTrait: "Female"
-    ),
+        selectedTrait: "Female"),
     Trait(
         name: 'skin',
         traits: ['Fair', 'Brown'],
         difficulty: 'easy',
         level: 1,
-        selectedTrait: "Brown"
-    ),
+        selectedTrait: "Brown"),
     Trait(
         name: 'eyes',
         traits: ['Round', 'Almond'],
         difficulty: 'medium',
         level: 2,
-        selectedTrait: "Round"
-    ),
+        selectedTrait: "Round"),
     Trait(
         name: 'height',
         traits: ['Average', 'Tall'],
         difficulty: 'hard',
         level: 3,
-        selectedTrait: "Average"
-    ),
+        selectedTrait: "Average"),
     Trait(
         name: 'hair',
         traits: ['Black', 'Blonde'],
         difficulty: 'expert',
         level: 4,
-        selectedTrait: "Black"
-    ),
+        selectedTrait: "Black"),
   ]);
 
   void setLevel(int newLevel) {
@@ -122,13 +115,12 @@ class Trait {
   final int level;
   String selectedTrait;
 
-  Trait({
-    required this.name,
-    required this.traits,
-    required this.difficulty,
-    required this.level,
-    this.selectedTrait = ""
-  });
+  Trait(
+      {required this.name,
+      required this.traits,
+      required this.difficulty,
+      required this.level,
+      this.selectedTrait = ""});
 
   // Method to get the default trait
   String get defaultTrait {
@@ -145,7 +137,6 @@ class Trait {
         'Difficulty: $difficulty,'
         'selectedTrait: $selectedTrait';
   }
-
 }
 
 final gameState = GameState(); // Global instance

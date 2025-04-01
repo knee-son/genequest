@@ -1,0 +1,2 @@
+C:/Users/duterte/Documents/DONT_FORGET_YOURE_HERE_FOREVER/genequest/android/app/.cxx/RelWithDebInfo/4v4c2o6e/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/duterte/Documents/DONT_FORGET_YOURE_HERE_FOREVER/genequest/android/app/.cxx/RelWithDebInfo/4v4c2o6e/x86_64/CMakeFiles/rebuild_cache.dir

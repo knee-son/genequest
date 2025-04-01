@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
 import 'package:genequest_app/globals.dart';
@@ -32,7 +33,8 @@ class MiniGameScreen extends StatefulWidget {
 class _MiniGameScreenState extends State<MiniGameScreen> {
   String? _blockColor; // Tracks the color of the block to spawn
   final List<String?> _droppedBlockFirst = [];
-  final List<String?> _droppedBlockSecond = []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
+  final List<String?> _droppedBlockSecond =
+      []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
 
   void onButtonPressed() {
     // Randomly choose the color of the block
@@ -56,9 +58,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
         _droppedBlockFirst.toString() ==
-            _droppedBlockSecond.reversed.toList().toString()
-    ) {
-      String dominantTrait = gameState.traits[gameState.currentLevel].defaultTrait;
+            _droppedBlockSecond.reversed.toList().toString()) {
+      String dominantTrait =
+          gameState.traits[gameState.currentLevel].defaultTrait;
       String nondomi = gameState.traits[gameState.currentLevel].traits.last;
 
       Trait newTrait = Trait(
@@ -66,10 +68,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           traits: gameState.traits[gameState.currentLevel].traits,
           difficulty: gameState.traits[gameState.currentLevel].difficulty,
           selectedTrait: dominantTrait,
-          level: gameState.traits[gameState.currentLevel].level
-      );
+          level: gameState.traits[gameState.currentLevel].level);
 
-      if (_droppedBlockFirst.contains("red")){
+      if (_droppedBlockFirst.contains("red")) {
         newTrait.selectedTrait = dominantTrait;
       } else {
         newTrait.selectedTrait = nondomi;
@@ -77,7 +78,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
       // Check for an existing trait where the level matches gameState.level
       var existingTraitIndex = gameState.savedTraits.indexWhere(
-            (trait) => trait.level == gameState.currentLevel,
+        (trait) => trait.level == gameState.currentLevel,
       );
 
       if (existingTraitIndex != -1) {
@@ -101,8 +102,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text(
-              'Mini Game - ${widget.levelName}'), // Display levelName dynamically
+          title:
+              kDebugMode ? Text('Mini Game - ${widget.levelName}') : SizedBox(),
         ),
         body: Stack(
           children: [

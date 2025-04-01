@@ -15,6 +15,7 @@ import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_screen.dart';
+import 'package:flutter/foundation.dart';
 
 // ------------------- GAME LOGIC -------------------
 
@@ -46,7 +47,7 @@ class GenequestGame extends FlameGame
   }
 
   @override
-  bool get debugMode => true;
+  bool get debugMode => kDebugMode; // depends if flutter is in debug
 
   @override
   Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
@@ -83,7 +84,6 @@ class GenequestGame extends FlameGame
     avatar =
         Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
     goal = Goal(sprite: sisterChromatid, context: context);
-
 
     // Initialize the world
     final world = World();
@@ -148,8 +148,8 @@ class GenequestGame extends FlameGame
             add(floor);
 
           case 'Enemy':
-          // Load the mob.png sprite
-            final mobSprite =  Sprite(Flame.images.fromCache('mob.png'));
+            // Load the mob.png sprite
+            final mobSprite = Sprite(Flame.images.fromCache('mob.png'));
 
             // Create a new enemy instance
             final enemy = CollisionBlock(
@@ -158,8 +158,7 @@ class GenequestGame extends FlameGame
               isSolid: false, // Not a solid block
               isEnemy: true, // Mark as enemy
               isFinish: false, // Not a finish block
-            )
-              ..priority = 1; // Ensure enemy has higher rendering priority
+            )..priority = 1; // Ensure enemy has higher rendering priority
 
             // Add the enemy to the collision blocks list
             collisionBlocks.add(enemy);
@@ -168,9 +167,9 @@ class GenequestGame extends FlameGame
             final mobImage = SpriteComponent(
               sprite: mobSprite, // mob.png sprite
               size: Vector2(50, 50), // Adjust size as needed
-              position: Vector2(collision.x, collision.y), // Spawn on the enemy's position
-            )
-              ..priority = 2; // Ensure mob is rendered above the enemy
+              position: Vector2(
+                  collision.x, collision.y), // Spawn on the enemy's position
+            )..priority = 2; // Ensure mob is rendered above the enemy
 
             // Add the mob image to the game world
             mobImage.position = Vector2(enemy.x, enemy.y);
@@ -190,8 +189,6 @@ class GenequestGame extends FlameGame
         }
       }
     }
-
-
 
     // Add collision blocks first to ensure they render above the tilemap
     for (final block in collisionBlocks) {
@@ -246,18 +243,19 @@ class GenequestGame extends FlameGame
     if (gameState.level == 0) {
       // Ensure there are traits available before proceeding
       if (gameState.traits.isNotEmpty) {
-        String dominantTrait = gameState.traits[gameState.currentLevel].defaultTrait;
-        String nonDominantTrait = gameState.traits[gameState.currentLevel].traits.last;
+        String dominantTrait =
+            gameState.traits[gameState.currentLevel].defaultTrait;
+        String nonDominantTrait =
+            gameState.traits[gameState.currentLevel].traits.last;
 
         Trait newTrait = Trait(
             name: gameState.traits[gameState.currentLevel].name,
             traits: gameState.traits[gameState.currentLevel].traits,
             difficulty: gameState.traits[gameState.currentLevel].difficulty,
             selectedTrait: dominantTrait,
-            level: gameState.traits[gameState.currentLevel].level
-        );
+            level: gameState.traits[gameState.currentLevel].level);
 
-        if (goal.size == goal.regularSize){
+        if (goal.size == goal.regularSize) {
           newTrait.selectedTrait = nonDominantTrait;
         } else {
           newTrait.selectedTrait = dominantTrait;
@@ -265,7 +263,7 @@ class GenequestGame extends FlameGame
 
         // Check for an existing trait where the level matches gameState.level
         var existingTraitIndex = gameState.savedTraits.indexWhere(
-              (trait) => trait.level == gameState.currentLevel,
+          (trait) => trait.level == gameState.currentLevel,
         );
 
         if (existingTraitIndex != -1) {
@@ -276,7 +274,7 @@ class GenequestGame extends FlameGame
         }
       }
     }
-    if (gameState.level > 0 ){
+    if (gameState.level > 0) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -287,9 +285,7 @@ class GenequestGame extends FlameGame
       gameState.incrementLevel();
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-            builder: (context) =>
-                LevelSelectorScreen()),
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
       );
     }
   }
@@ -406,7 +402,7 @@ class Goal extends SpriteComponent with CollisionCallbacks {
 
     if (gameState.currentLevel == 0) {
       async.Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (size == regularSize){
+        if (size == regularSize) {
           resize(halfSize);
         } else {
           resize(regularSize);

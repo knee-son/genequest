@@ -1,4 +1,5 @@
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
 import 'game_screen.dart';
@@ -42,7 +43,7 @@ class TitleScreenState extends State<TitleScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'GENEQUEST',
+              'GENEQUEST!',
               style: TextStyle(
                 color: Color.fromARGB(255, 0, 0, 0),
                 fontSize: 32,
@@ -59,62 +60,70 @@ class TitleScreenState extends State<TitleScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFC60201), // Background color
+                foregroundColor: Color(0xFFBDAA02), // Text color
                 padding:
                     const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                textStyle: const TextStyle(fontSize: 20),
+                textStyle: const TextStyle(
+                  fontSize: 20,
+                  fontFamily: 'Times New Roman',
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               child: const Text('Play'),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          GameScreen(0, levelName: "Level.tmx")),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                textStyle: const TextStyle(fontSize: 20),
+            if (kDebugMode) ...[
+              // exist only in debug mode
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            GameScreen(0, levelName: "Level.tmx")),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                child: const Text('Hot-load Level'),
               ),
-              child: const Text('Hot-load Level'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                textStyle: const TextStyle(fontSize: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                child: const Text('Mini game'),
               ),
-              child: const Text('Mini game'),
-            ),
+              ElevatedButton(
+                onPressed: () {
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
+                  // );
 
-            ElevatedButton(
-              onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => MiniGameScreen(1)),
-                // );
-
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => GameOverScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                textStyle: const TextStyle(fontSize: 20),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => GameOverScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                child: const Text('Game Over Screen'),
               ),
-              child: const Text('Game Over Screen'),
-            ),
+            ],
           ],
         ),
       ),
