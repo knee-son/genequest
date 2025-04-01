@@ -216,8 +216,8 @@ class GenequestGame extends FlameGame
 
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: screenWidth * 1.4,
-      height: screenHeight * 1.4,
+      width: screenWidth * 2,
+      height: screenHeight * 2,
       world: world,
     );
 
@@ -240,7 +240,7 @@ class GenequestGame extends FlameGame
   }
 
   void saveTrait() {
-    if (gameState.level == 0) {
+    if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
       if (gameState.traits.isNotEmpty) {
         String dominantTrait =
@@ -273,19 +273,22 @@ class GenequestGame extends FlameGame
           gameState.savedTraits.add(newTrait);
         }
       }
+      gameState.incrementLevel();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      );  gameState.incrementLevel();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      );
     }
-    if (gameState.level > 0) {
+    else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) =>
                 MiniGameScreenTransition(levelNum: gameState.currentLevel)),
-      );
-    } else {
-      gameState.incrementLevel();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
       );
     }
   }
