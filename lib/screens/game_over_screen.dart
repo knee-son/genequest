@@ -25,9 +25,8 @@ class _GameOverScreenState extends State<GameOverScreen> {
     super.initState();
 
     // Extract all selectedTrait values from randomTraits
-    selectedTraits = gameState.randomTraits
-        .map((trait) => trait.selectedTrait)
-        .toList();
+    selectedTraits =
+        gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
     List<String> imageFiles = [
       "Almond_Eyes_Trait.png",
       "Black_Hair_Trait.png",
@@ -57,21 +56,22 @@ class _GameOverScreenState extends State<GameOverScreen> {
       "Male_Fair_Skin_Round_Eyes_Tall_Height_Blonde_Hair.png",
     ];
     // Find the matching image based on selectedTraits
-    imageFilePath = findMatchingImage(selectedTraits, imageFiles );
+    imageFilePath = findMatchingImage(selectedTraits, imageFiles);
   }
 
-  String? findMatchingImage(List<String> selectedTraits, List<String> imageFiles) {
+  String? findMatchingImage(
+      List<String> selectedTraits, List<String> imageFiles) {
     // Iterate through all image file names
     for (String fileName in imageFiles) {
       // Check if the file name contains all selected traits
-      bool matchesAllTraits = selectedTraits.every((trait) => fileName.contains(trait));
+      bool matchesAllTraits =
+          selectedTraits.every((trait) => fileName.contains(trait));
       if (matchesAllTraits) {
         return fileName; // Return the matching file name
       }
     }
     return null; // Return null if no match is found
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -86,8 +86,9 @@ class _GameOverScreenState extends State<GameOverScreen> {
             // Wrap Image.asset in Flexible to adjust to the screen dynamically
             Flexible(
               child: Image.asset(
-                "/images/portraits/$imageFilePath",
-                fit: BoxFit.contain, // Adjust the image to fit within the available space
+                "images/portraits/$imageFilePath",
+                fit: BoxFit
+                    .contain, // Adjust the image to fit within the available space
                 errorBuilder: (context, error, stackTrace) {
                   return const Text(
                     'Image not found!',
