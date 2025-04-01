@@ -29,7 +29,7 @@ class TitleScreenState extends State<TitleScreen> {
 
   @override
   void dispose() {
-    FlameAudio.bgm.stop(); // Stop music when leaving the screen
+    FlameAudio.bgm.stop();
     super.dispose();
   }
 
