@@ -246,15 +246,15 @@ class GenequestGame extends FlameGame
     if (gameState.level == 0) {
       // Ensure there are traits available before proceeding
       if (gameState.traits.isNotEmpty) {
-        String dominantTrait = gameState.traits[gameState.level].defaultTrait;
-        String nonDominantTrait = gameState.traits[gameState.level].traits.last;
+        String dominantTrait = gameState.traits[gameState.currentLevel].defaultTrait;
+        String nonDominantTrait = gameState.traits[gameState.currentLevel].traits.last;
 
         Trait newTrait = Trait(
-            name: gameState.traits[gameState.level].name,
-            traits: gameState.traits[gameState.level].traits,
-            difficulty: gameState.traits[gameState.level].difficulty,
+            name: gameState.traits[gameState.currentLevel].name,
+            traits: gameState.traits[gameState.currentLevel].traits,
+            difficulty: gameState.traits[gameState.currentLevel].difficulty,
             selectedTrait: dominantTrait,
-            level: gameState.traits[gameState.level].level
+            level: gameState.traits[gameState.currentLevel].level
         );
 
         if (goal.size == goal.regularSize){
@@ -265,12 +265,12 @@ class GenequestGame extends FlameGame
 
         // Check for an existing trait where the level matches gameState.level
         var existingTraitIndex = gameState.savedTraits.indexWhere(
-              (trait) => trait.level == gameState.level,
+              (trait) => trait.level == gameState.currentLevel,
         );
 
         if (existingTraitIndex != -1) {
           // Update the existing trait instance if found and selectedTrait is not empty
-          gameState.savedTraits[gameState.level] = newTrait;
+          gameState.savedTraits[gameState.currentLevel] = newTrait;
         } else {
           gameState.savedTraits.add(newTrait);
         }
@@ -281,7 +281,7 @@ class GenequestGame extends FlameGame
         context,
         MaterialPageRoute(
             builder: (context) =>
-                MiniGameScreenTransition(levelNum: gameState.level)),
+                MiniGameScreenTransition(levelNum: gameState.currentLevel)),
       );
     } else {
       gameState.incrementLevel();
@@ -404,7 +404,7 @@ class Goal extends SpriteComponent with CollisionCallbacks {
     super.onLoad();
     add(RectangleHitbox());
 
-    if (gameState.level == 0) {
+    if (gameState.currentLevel == 0) {
       async.Timer.periodic(const Duration(seconds: 1), (timer) {
         if (size == regularSize){
           resize(halfSize);
