@@ -42,14 +42,23 @@ class GameScreen extends StatelessWidget {
   final int levelNum; // change to int
   final String levelName; // optional param for debugging
 
+
+  final AssetImage forwardButtonImage = const AssetImage('assets/images/button_forward.png');
+  final AssetImage resetButtonImage = const AssetImage('assets/images/button_reset.png');
+  final AssetImage pauseButtonImage = const AssetImage('assets/images/button_pause.png');
+  final AssetImage menuButtonImage = const AssetImage('assets/images/button_menu.png');
+
+
   const GameScreen(this.levelNum, {this.levelName = "", super.key});
 
   // HealthBar widget dynamically linked with healthNotifier
-  Widget healthBar(BuildContext context) {
+  Widget _buildHealthBar(BuildContext context) {
     final gameInstance = GenequestGame.instance;
+
     if (gameInstance == null) {
-      return const SizedBox(); // Return an empty widget if the game is not initialized
+      return const SizedBox(); // Return empty widget if the game instance is not initialized
     }
+
     return ValueListenableBuilder<int>(
       valueListenable: gameInstance.healthNotifier,
       builder: (context, health, child) {
@@ -57,14 +66,11 @@ class GameScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (index) {
             int heartHealth = health - (index * 2);
-            String asset;
-            if (heartHealth >= 2) {
-              asset = 'assets/images/heart_full.png'; // Full heart
-            } else if (heartHealth == 1) {
-              asset = 'assets/images/heart_half.png'; // Half heart
-            } else {
-              asset = 'assets/images/heart_empty.png'; // Empty heart
-            }
+            String asset = heartHealth >= 2
+                ? 'assets/images/heart_full.png'
+                : heartHealth == 1
+                ? 'assets/images/heart_half.png'
+                : 'assets/images/heart_empty.png';
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Image.asset(asset, width: 40, height: 40),
@@ -74,6 +80,7 @@ class GameScreen extends StatelessWidget {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +105,7 @@ class GameScreen extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.all(
                               10), // Add spacing for aesthetics
-                          child: healthBar(context),
+                          child: _buildHealthBar(context),
                         ),
                       ),
                 },
@@ -111,65 +118,42 @@ class GameScreen extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              // Adding bottom padding
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Left movement buttons (Back, Forward)
+                  // Left movement buttons
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Row(
                       children: [
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatarBack();
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar();
-                          },
+                        InkWell(
+                          onTapDown: (_) => GenequestGame.instance?.startMovingAvatarBack(),
+                          onTapUp: (_) => GenequestGame.instance?.stopMovingAvatar(),
                           child: Transform(
                             alignment: Alignment.center,
                             transform: Matrix4.rotationY(3.14159),
-                            child: Image.asset(
-                              'assets/images/button_forward.png',
-                              width: 60,
-                              height: 60,
-                            ),
+                            child: Image(image: forwardButtonImage, width: 60, height: 60),
                           ),
                         ),
                         const SizedBox(width: 20),
-                        GestureDetector(
-                          onTapDown: (details) {
-                            GenequestGame.instance?.startMovingAvatar();
-                          },
-                          onTapUp: (details) {
-                            GenequestGame.instance?.stopMovingAvatar();
-                          },
-                          child: Image.asset(
-                            'assets/images/button_forward.png',
-                            width: 60,
-                            height: 60,
-                          ),
+                        InkWell(
+                          onTapDown: (_) => GenequestGame.instance?.startMovingAvatar(),
+                          onTapUp: (_) => GenequestGame.instance?.stopMovingAvatar(),
+                          child: Image(image: forwardButtonImage, width: 60, height: 60),
                         ),
                       ],
                     ),
                   ),
 
-                  // Right movement button (Jump)
+                  // Right movement button
                   Padding(
                     padding: const EdgeInsets.only(right: 10),
-                    child: GestureDetector(
-                      onTapDown: (details) {
-                        GenequestGame.instance?.startJump();
-                      },
+                    child: InkWell(
+                      onTapDown: (_) => GenequestGame.instance?.startJump(),
                       child: Transform(
                         alignment: Alignment.center,
                         transform: Matrix4.rotationZ(-1.5708),
-                        child: Image.asset(
-                          'assets/images/button_forward.png',
-                          width: 60,
-                          height: 60,
-                        ),
+                        child: Image(image: forwardButtonImage, width: 60, height: 60),
                       ),
                     ),
                   ),
@@ -255,19 +239,33 @@ class GameScreen extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    // Clear cached assets to free memory
+    forwardButtonImage.evict();
+    resetButtonImage.evict();
+    pauseButtonImage.evict();
+    menuButtonImage.evict();
+  }
+
+
 }
 
 class DialogOverlayModal extends StatelessWidget {
   final String title;
-  //Action has two states "Paused" and "Gameover"
   final String action;
 
-  const DialogOverlayModal(
-      {super.key, required this.title, required this.action});
+  const DialogOverlayModal({
+    super.key,
+    required this.title,
+    required this.action,
+  });
 
   @override
   Widget build(BuildContext context) {
     GenequestGame.instance?.pause();
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
@@ -277,37 +275,36 @@ class DialogOverlayModal extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            if (action == "Paused") ...[
+            if (action == "Paused")
               ElevatedButton(
-                onPressed: () {
-                  isDialogShowing = false;
-                  if (GenequestGame.instance?.isPaused == true) {
-                    GenequestGame.instance?.resume(); // Resume the game
-                  }
-                  Navigator.pop(context); // Close the pause menu
-                },
-                child: Text("Resume"),
+                onPressed: () => _dismissDialog(context),
+                child: const Text("Resume"),
               ),
-              const SizedBox(height: 10),
-            ],
+            const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close pause menu
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => LevelSelectorScreen(),
-                  ),
-                );
-              },
-              child: Text(action == "Paused" ? "Level Select" : "Go back"),
+              onPressed: () => _navigateToLevelSelector(context),
+              child: Text(action == "Paused" ? "Level Select" : "Go Back"),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  void _dismissDialog(BuildContext context) {
+    isDialogShowing = false;
+    GenequestGame.instance?.resume();
+    Navigator.pop(context);
+  }
+
+  void _navigateToLevelSelector(BuildContext context) {
+    Navigator.pop(context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
     );
   }
 }

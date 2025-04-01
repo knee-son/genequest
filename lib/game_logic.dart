@@ -216,8 +216,8 @@ class GenequestGame extends FlameGame
 
     // Create the camera
     final camera = CameraComponent.withFixedResolution(
-      width: screenWidth * 1.4,
-      height: screenHeight * 1.4,
+      width: screenWidth * 2,
+      height: screenHeight * 2,
       world: world,
     );
 
