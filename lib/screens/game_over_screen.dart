@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/title_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -100,7 +101,12 @@ class _GameOverScreenState extends State<GameOverScreen> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Return to the previous screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TitleScreen(),
+                  ),
+                );
               },
               child: const Text('Back to Main Menu'),
             ),

@@ -162,30 +162,6 @@ class GameScreen extends StatelessWidget {
             ),
           ),
 
-          // Left-center alignment for Start and Reset buttons
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 10), // Space between buttons
-                  GestureDetector(
-                    onTap: () {
-                      GenequestGame.instance?.reset(); // Reset game logic
-                    },
-                    child: Image.asset(
-                      'assets/images/button_reset.png',
-                      width: 100,
-                      height: 50,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // Top-left alignment for Menu and Pause buttons
           Align(
             alignment: Alignment.topLeft,
@@ -204,11 +180,18 @@ class GameScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    child: Image.asset(
-                      'assets/images/button_menu.png',
+                    child: Image(
+                      image: menuButtonImage,
                       width: 100,
                       height: 50,
                     ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () {
+                      GenequestGame.instance?.reset(); // Reset game logic
+                    },
+                    child: Image(image: resetButtonImage, width: 100, height: 50),
                   ),
                   const SizedBox(width: 10),
                   // Pause button
@@ -225,8 +208,8 @@ class GameScreen extends StatelessWidget {
                         },
                       );
                     },
-                    child: Image.asset(
-                      'assets/images/button_pause.png',
+                    child: Image(
+                      image: pauseButtonImage,
                       width: 50,
                       height: 50,
                     ),
