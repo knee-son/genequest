@@ -15,19 +15,20 @@ class LevelSelectorScreen extends StatefulWidget {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load all required images at the start
-  await Flame.images.loadAll([
-    'assets/images/peaceful_level.png',
-    'assets/images/easy_level.png',
-    'assets/images/medium_level.png',
-    'assets/images/hard_level.png',
-    'assets/images/expert_level.png',
-    'assets/images/select_a_level_text.png',
-  ]);
-  runApp(const LevelSelectorScreen());
+
+  // No need to load images here; FlameGame will handle it
+  runApp(GameWidget(game: LevelSelector())); // Use Flame's GameWidget to run the game
 }
 
+
 class LevelSelectorScreenState extends State<LevelSelectorScreen> {
+
+  final AssetImage peacefulLevel = const AssetImage('assets/images/peaceful_level.png');
+  final AssetImage easyLevel = const AssetImage('assets/images/easy_level.png');
+  final AssetImage mediumLevel = const AssetImage('assets/images/medium_level.png');
+  final AssetImage hardLevel = const AssetImage('assets/images/hard_level.png');
+  final AssetImage expertLevel = const AssetImage('assets/images/expert_level.png');
+  final AssetImage selectALevel = const AssetImage('assets/images/select_a_level_text.png');
   @override
   void initState() {
     super.initState();
@@ -66,8 +67,8 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      "assets/images/select_a_level_text.png",
+                    Image(
+                      image: selectALevel,
                       fit: BoxFit.contain, // Ensure the image scales properly
                     ),
                   ],
@@ -83,7 +84,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                     children: [
                       LevelButton(
                         title: "Peaceful",
-                        iconPath: "assets/images/peaceful_level.png",
+                        iconPath: peacefulLevel,
                         level: 0,
                         backgroundColor: Colors.lightBlueAccent,
                         buttonHeight:
@@ -94,7 +95,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                           height: 2), // Reduced spacing between buttons
                       LevelButton(
                         title: "Easy",
-                        iconPath: "assets/images/easy_level.png",
+                        iconPath: easyLevel,
                         level: 1,
                         backgroundColor: Colors.green,
                         buttonHeight:
@@ -104,7 +105,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       const SizedBox(height: 2),
                       LevelButton(
                         title: "Medium",
-                        iconPath: "assets/images/medium_level.png",
+                        iconPath: mediumLevel,
                         level: 2,
                         backgroundColor: Colors.orange,
                         buttonHeight: screenHeight * 0.2,
@@ -113,7 +114,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       const SizedBox(height: 2),
                       LevelButton(
                         title: "Hard",
-                        iconPath: "assets/images/hard_level.png",
+                        iconPath: hardLevel,
                         level: 3,
                         backgroundColor: Colors.red,
                         buttonHeight: screenHeight * 0.2,
@@ -122,7 +123,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       const SizedBox(height: 2),
                       LevelButton(
                         title: "Expert",
-                        iconPath: "assets/images/expert_level.png",
+                        iconPath: expertLevel,
                         level: 4,
                         backgroundColor: Colors.purple,
                         buttonHeight: screenHeight * 0.2,
@@ -142,7 +143,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
 class LevelButton extends StatelessWidget {
   final String title;
-  final String iconPath;
+  final AssetImage iconPath;
   final int level;
   final Color backgroundColor;
   final double buttonHeight; // New property for dynamic height
@@ -182,8 +183,8 @@ class LevelButton extends StatelessWidget {
                   );
                 }
               : null,
-          child: Image.asset(
-            iconPath,
+          child: Image(
+            image: iconPath,
             fit: BoxFit.cover, // Adjust image to fill the button perfectly
             width: double.infinity, // Stretch image to fill button width
             height: buttonHeight, // Stretch image to fill button height
@@ -197,7 +198,7 @@ class LevelButton extends StatelessWidget {
 class LevelSelector extends FlameGame {
   @override
   Future<void> onLoad() async {
-    // Ensure consistent paths to assets
+    // Preload all required assets only once
     await Flame.images.loadAll([
       'assets/images/peaceful_level.png',
       'assets/images/easy_level.png',
@@ -208,3 +209,4 @@ class LevelSelector extends FlameGame {
     ]);
   }
 }
+

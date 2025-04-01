@@ -59,11 +59,6 @@ class GenequestGame extends FlameGame
     await Flame.images.loadAll([
       'chromatid.png',
       'sister_chromatid.png',
-      'platform_1.png',
-      'button_forward.png',
-      'heart_full.png',
-      'heart_half.png',
-      'heart_empty.png',
       'mob.png',
     ]);
     overlays.add('HealthBar');
@@ -278,6 +273,10 @@ class GenequestGame extends FlameGame
         }
       }
       gameState.incrementLevel();
+      Flame.images.clear('chromatid.png');
+      Flame.images.clear('sister_chromatid.png');
+      Flame.images.clear('mob.png');
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LevelSelectorScreen()),

@@ -1,24 +1,12 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flame/flame.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 import 'level_selector_screen.dart';
 import '../game_logic.dart';
-import '../globals.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Flame.images.loadAll([
-    'chromatid.png',
-    'sister_chromatid.png',
-    'platform_1.png',
-    'button_forward.png',
-    'heart_full.png',
-    'heart_half.png',
-    'heart_empty.png',
-  ]);
-
   runApp(const GameApp());
 }
 
@@ -47,6 +35,9 @@ class GameScreen extends StatelessWidget {
   final AssetImage resetButtonImage = const AssetImage('assets/images/button_reset.png');
   final AssetImage pauseButtonImage = const AssetImage('assets/images/button_pause.png');
   final AssetImage menuButtonImage = const AssetImage('assets/images/button_menu.png');
+  final AssetImage heartEmptyImage = const AssetImage('assets/images/heart_empty.png');
+  final AssetImage heartHalfImage = const AssetImage('assets/images/heart_half.png');
+  final AssetImage heartFullImage = const AssetImage('assets/images/heart_full.png');
 
 
   const GameScreen(this.levelNum, {this.levelName = "", super.key});
@@ -66,14 +57,14 @@ class GameScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (index) {
             int heartHealth = health - (index * 2);
-            String asset = heartHealth >= 2
-                ? 'assets/images/heart_full.png'
+            AssetImage asset = heartHealth >= 2
+                ? heartFullImage
                 : heartHealth == 1
-                ? 'assets/images/heart_half.png'
-                : 'assets/images/heart_empty.png';
+                ? heartHalfImage
+                : heartEmptyImage;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Image.asset(asset, width: 40, height: 40),
+              child: Image(image: asset, width: 40, height: 40),
             );
           }),
         );
@@ -223,14 +214,6 @@ class GameScreen extends StatelessWidget {
     );
   }
 
-  @override
-  void dispose() {
-    // Clear cached assets to free memory
-    forwardButtonImage.evict();
-    resetButtonImage.evict();
-    pauseButtonImage.evict();
-    menuButtonImage.evict();
-  }
 
 
 }
