@@ -35,9 +35,9 @@ class TitleScreenState extends State<TitleScreen>
     // Initialize the second controller (for growth)
     _growController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: 1),
+      duration: Duration(milliseconds: 800),
     )..repeat(reverse: true);
-    _growAnimation = Tween<double>(begin: 40, end: 64).animate(
+    _growAnimation = Tween<double>(begin: 50, end: 64).animate(
       CurvedAnimation(
         parent: _growController,
         curve: Curves.easeInOut, // Smooth growth and shrink
@@ -69,9 +69,12 @@ class TitleScreenState extends State<TitleScreen>
           AnimatedBuilder(
             animation: _animation,
             builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(
-                    _animation.value, _animation.value), // Move horizontally
+              return Transform(
+                transform: Matrix4.identity()
+                  ..translate(_animation.value,
+                      _animation.value) // Move horizontally and vertically
+                  ..scale(1.4), // Scale based on animation value
+                alignment: Alignment.center,
                 child: Container(
                   decoration: BoxDecoration(
                     image: DecorationImage(
@@ -92,44 +95,68 @@ class TitleScreenState extends State<TitleScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Center(
-                    child: Container(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'GENE',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: _growAnimation.value *
-                                  1.4, // Adjust font size with _growAnimation
-                              fontFamily: 'WinkySans',
-                              letterSpacing: 2,
+                    child: SizedBox(
+                      width: 480, // Fixed width
+                      height: 130, // Fixed height
+                      child: Center(
+                        child: Container(
+                          width: _growAnimation.value * 6.6,
+                          height: _growAnimation.value * 2.2,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 223, 215, 235),
+                            border: Border.all(
+                              color: const Color.fromARGB(
+                                  255, 4, 1, 19), // Border color
+                              width: 10, // Border thickness
                             ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'QUEST!',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: _growAnimation
-                                  .value, // Adjust font size with _growAnimation
-                              fontFamily: 'WinkySans',
-                              letterSpacing: 2,
-                            ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'GENE',
+                                      style: TextStyle(
+                                        color:
+                                            const Color.fromARGB(255, 47, 9, 2),
+                                        fontSize: _growAnimation.value * 1.3,
+                                        fontFamily: 'WinkySans',
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    Text(
+                                      'QUEST!',
+                                      style: TextStyle(
+                                        color:
+                                            const Color.fromARGB(255, 47, 9, 2),
+                                        fontSize: _growAnimation.value,
+                                        fontFamily: 'WinkySans',
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Transform.translate(
+                                offset: Offset(-35, -25),
+                                child: Image.asset(
+                                  'assets/images/chromosome_art.png', // Replace with your image path
+                                  fit: BoxFit.contain, // Adjust as needed
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -143,16 +170,18 @@ class TitleScreenState extends State<TitleScreen>
                       );
                     },
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(
+                          255, 255, 145, 2), // Background color
+                      foregroundColor: Colors.white, // Text color
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 15),
-                      foregroundColor: Color.fromARGB(255, 0, 0, 0),
+                          horizontal: 18, vertical: 15),
                       textStyle: const TextStyle(
-                        fontSize: 20,
-                        fontFamily: 'Times New Roman',
+                        fontSize: 18,
+                        fontFamily: 'WinkySans',
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text('Play'),
+                    child: const Text('Play!'),
                   ),
                   if (kDebugMode) ...[
                     ElevatedButton(
