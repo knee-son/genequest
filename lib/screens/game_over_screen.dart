@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/title_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,13 +19,20 @@ class GameOverScreen extends StatefulWidget {
 
 class _GameOverScreenState extends State<GameOverScreen> {
   List<String> selectedTraits = [];
-  String? imageFilePath;
-
+  AssetImage fullImagePath = AssetImage('assets/images/portrait');
+  // AssetImage forwardButtonImage = const AssetImage('assets/images/portrait/');
   @override
   void initState() {
     super.initState();
 
     // Extract all selectedTrait values from randomTraits
+    if (gameState.savedTraits.length == 4){
+      selectedTraits =
+          gameState.savedTraits.map((trait) => trait.selectedTrait).toList();
+    } else {
+      selectedTraits =
+          gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
+    }
     selectedTraits =
         gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
     List<String> imageFiles = [
@@ -56,7 +64,8 @@ class _GameOverScreenState extends State<GameOverScreen> {
       "Male_Fair_Skin_Round_Eyes_Tall_Height_Blonde_Hair.png",
     ];
     // Find the matching image based on selectedTraits
-    imageFilePath = findMatchingImage(selectedTraits, imageFiles);
+    String? imageFilePath = findMatchingImage(selectedTraits, imageFiles);
+    fullImagePath = AssetImage("assets/images/portraits/$imageFilePath");
   }
 
   String? findMatchingImage(
@@ -85,22 +94,28 @@ class _GameOverScreenState extends State<GameOverScreen> {
           children: [
             // Wrap Image.asset in Flexible to adjust to the screen dynamically
             Flexible(
-              child: Image.asset(
-                "images/portraits/$imageFilePath",
-                fit: BoxFit
-                    .contain, // Adjust the image to fit within the available space
-                errorBuilder: (context, error, stackTrace) {
-                  return const Text(
-                    'Image not found!',
-                    style: TextStyle(fontSize: 16, color: Colors.red),
-                  );
-                },
+              child: fullImagePath != null
+                  ? Image(
+                image: fullImagePath,
+                width: 200,
+                height: 200,
+              )
+                  : const Center(
+                child: Text(
+                  'Error: Image not available',
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
               ),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Return to the previous screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TitleScreen(),
+                  ),
+                );
               },
               child: const Text('Back to Main Menu'),
             ),

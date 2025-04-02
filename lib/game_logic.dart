@@ -1,11 +1,10 @@
 import 'dart:async' as async;
 
+import 'package:flame/camera.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/effects.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:flame/geometry.dart';
 import 'package:flame/input.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
@@ -35,6 +34,8 @@ class GenequestGame extends FlameGame
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
   late flameTiled.TiledComponent levelMap;
+  late double screenWidth;
+  late double screenHeight;
 
   GenequestGame(
       {required this.containerHeight,
@@ -45,6 +46,7 @@ class GenequestGame extends FlameGame
     // context = context;
     // levelNum = levelNum;
   }
+
 
   @override
   bool get debugMode => kDebugMode; // depends if flutter is in debug
@@ -57,11 +59,6 @@ class GenequestGame extends FlameGame
     await Flame.images.loadAll([
       'chromatid.png',
       'sister_chromatid.png',
-      'platform_1.png',
-      'button_forward.png',
-      'heart_full.png',
-      'heart_half.png',
-      'heart_empty.png',
       'mob.png',
     ]);
     overlays.add('HealthBar');
@@ -199,8 +196,7 @@ class GenequestGame extends FlameGame
     world.add(levelMap);
 
     add(world);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+
 
     // How far from chasm damage. adjust to prevent camera off bounds
     int chasmPadding = 1;
@@ -214,21 +210,24 @@ class GenequestGame extends FlameGame
     world.add(avatar);
     world.add(goal);
 
+    screenWidth = MediaQuery.of(context).size.width;
+    screenHeight = MediaQuery.of(context).size.height;
+
     // Create the camera
-    final camera = CameraComponent.withFixedResolution(
+    camera = CameraComponent.withFixedResolution(
       width: screenWidth * 2,
       height: screenHeight * 2,
       world: world,
+      viewfinder: Viewfinder()
+        ..position = avatar.position // Define the starting position
     );
+    // Assuming `camera` is already declared and added to the game
 
-    // Make the camera follow the avatar
-    camera.follow(avatar);
-
-    // Add keyboard listener
     add(KeyboardListenerComponent());
 
     // Add the camera to the game
     add(camera);
+    camera.moveTo(goalPosition, speed: 1000);
   }
 
   void updateHealth(int newHealth) {
@@ -274,6 +273,10 @@ class GenequestGame extends FlameGame
         }
       }
       gameState.incrementLevel();
+      Flame.images.clear('chromatid.png');
+      Flame.images.clear('sister_chromatid.png');
+      Flame.images.clear('mob.png');
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
@@ -310,6 +313,7 @@ class GenequestGame extends FlameGame
   void startMovingAvatar() {
     avatar.horizontalMoveAxis = 1;
     avatar.velocityX = 300; // Move right
+    camera.follow(avatar);
   }
 
   void startMovingAvatarBack() {
