@@ -68,6 +68,7 @@ flutter:
     - assets/images/
     - assets/tiles/
     - assets/audio/
+    - assets/images/portraits/
 
   fonts:
     - family: WinkySans
