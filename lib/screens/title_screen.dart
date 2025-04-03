@@ -57,6 +57,7 @@ class TitleScreenState extends State<TitleScreen>
   void dispose() {
     FlameAudio.bgm.stop();
     _controller.dispose();
+    _growController.dispose();
     super.dispose();
   }
 

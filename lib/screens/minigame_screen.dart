@@ -1,22 +1,12 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flame/flame.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
 import 'level_selector_screen.dart';
-import 'package:collection/collection.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Flame.images.loadAll([
-    'assets/images/chromatid.png',
-    'assets/images/sister_chromatid.png',
-    'assets/images/combined_chromatid.png',
-    'assets/images/red_button.png',
-    'assets/images/pill_blue.png',
-    'assets/images/pill_red.png'
-  ]);
   runApp(MiniGameScreen(0));
 }
 
@@ -36,7 +26,14 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   final List<String?> _droppedBlockFirst = [];
   final List<String?> _droppedBlockSecond =
       []; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
-
+  final AssetImage combinedChromatid =
+  const AssetImage('assets/images/combined_chromatid.png');
+  final AssetImage redButton =
+  const AssetImage('assets/images/red_button.png');
+  final AssetImage pillBlue =
+  const AssetImage('assets/images/pill_blue.png');
+  final AssetImage pillRed =
+  const AssetImage('assets/images/pill_red.png');
   void onButtonPressed() {
     // Randomly choose the color of the block
     final isBlue = Random().nextBool();
@@ -81,18 +78,19 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       var existingTraitIndex = gameState.savedTraits.indexWhere(
         (trait) => trait.level == gameState.currentLevel,
       );
-
       if (existingTraitIndex != -1) {
         // Update the existing trait instance if found and selectedTrait is not empty
-        gameState.savedTraits[gameState.currentLevel] = newTrait;
+        gameState.savedTraits[existingTraitIndex] = newTrait;
       } else {
         gameState.savedTraits.add(newTrait);
       }
-
       if (gameState.currentLevel == 4) {
-        Navigator.pushReplacement(
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => GameOverScreen()),
+          MaterialPageRoute(
+            builder: (context) => GameOverScreen(),
+          ),
+              (Route<dynamic> route) => false, // Removes all previous routes
         );
       } else {
         gameState.incrementLevel();
@@ -121,8 +119,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   // Combined chromatid asset
                   Stack(
                     children: [
-                      Image.asset(
-                        'assets/images/combined_chromatid.png',
+                      Image(
+                        image: combinedChromatid,
                         width: 300,
                         height: 300,
                       ),
@@ -155,26 +153,26 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                   ? Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Image.asset(
-                                          _blockColor == 'blue'
-                                              ? 'assets/images/pill_blue.png'
-                                              : 'assets/images/pill_red.png',
+                                        Image(
+                                          image: _blockColor == 'blue'
+                                              ? pillBlue
+                                              : pillRed,
                                           width: 100,
                                           height: 100,
                                         ),
-                                        Image.asset(
-                                          _blockColor == 'blue'
-                                              ? 'assets/images/pill_blue.png'
-                                              : 'assets/images/pill_red.png',
+                                        Image(
+                                          image: _blockColor == 'blue'
+                                              ? pillBlue
+                                              : pillRed,
                                           width: 100,
                                           height: 100,
                                         ),
                                       ],
                                     )
-                                  : Image.asset(
-                                      _blockColor == 'blue'
-                                          ? 'assets/images/pill_blue.png'
-                                          : 'assets/images/pill_red.png',
+                                  : Image(
+                                    image: _blockColor == 'blue'
+                                        ? pillBlue
+                                        : pillRed,
                                       width: 100,
                                       height: 100,
                                     ),
@@ -184,26 +182,26 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                     ? Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Image.asset(
-                                            _blockColor == 'blue'
-                                                ? 'assets/images/pill_blue.png'
-                                                : 'assets/images/pill_red.png',
+                                          Image(
+                                            image: _blockColor == 'blue'
+                                                ? pillBlue
+                                                : pillRed,
                                             width: 100,
                                             height: 100,
                                           ),
-                                          Image.asset(
-                                            _blockColor == 'blue'
-                                                ? 'assets/images/pill_blue.png'
-                                                : 'assets/images/pill_red.png',
+                                          Image(
+                                            image: _blockColor == 'blue'
+                                                ? pillBlue
+                                                : pillRed,
                                             width: 100,
                                             height: 100,
                                           ),
                                         ],
                                       )
-                                    : Image.asset(
-                                        _blockColor == 'blue'
-                                            ? 'assets/images/pill_blue.png'
-                                            : 'assets/images/pill_red.png',
+                                    : Image(
+                                        image: _blockColor == 'blue'
+                                            ? pillBlue
+                                            : pillRed,
                                         width: 100,
                                         height: 100,
                                       ),
@@ -212,26 +210,26 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                   ? Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Image.asset(
-                                          _blockColor == 'blue'
-                                              ? 'assets/images/pill_blue.png'
-                                              : 'assets/images/pill_red.png',
+                                        Image(
+                                          image: _blockColor == 'blue'
+                                              ? pillBlue
+                                              : pillRed,
                                           width: 100,
                                           height: 100,
                                         ),
-                                        Image.asset(
-                                          _blockColor == 'blue'
-                                              ? 'assets/images/pill_blue.png'
-                                              : 'assets/images/pill_red.png',
+                                        Image(
+                                          image: _blockColor == 'blue'
+                                              ? pillBlue
+                                              : pillRed,
                                           width: 100,
                                           height: 100,
                                         ),
                                       ],
                                     )
-                                  : Image.asset(
-                                      _blockColor == 'blue'
-                                          ? 'assets/images/pill_blue.png'
-                                          : 'assets/images/pill_red.png',
+                                  : Image(
+                                      image: _blockColor == 'blue'
+                                          ? pillBlue
+                                          : pillRed,
                                       width: 100,
                                       height: 100,
                                     ),
@@ -264,8 +262,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                           GestureDetector(
                             onTap:
                                 onButtonPressed, // Trigger the logic to spawn a block
-                            child: Image.asset(
-                              'assets/images/red_button.png',
+                            child: Image(
+                              image: redButton,
                               width: 100,
                               height: 150,
                             ),
@@ -315,10 +313,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: _droppedBlockFirst.map((block) {
-                          return Image.asset(
-                            block == 'blue'
-                                ? 'assets/images/pill_blue.png'
-                                : 'assets/images/pill_red.png',
+                          return Image(
+                            image: block == 'blue'
+                                ? pillBlue
+                                : pillRed,
                             width: 100,
                             height: 100,
                           );
@@ -367,10 +365,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: _droppedBlockSecond.map((block) {
-                          return Image.asset(
-                            block == 'blue'
-                                ? 'assets/images/pill_blue.png'
-                                : 'assets/images/pill_red.png',
+                          return Image(
+                            image: block == 'blue'
+                                ? pillBlue
+                                : pillRed,
                             width: 100,
                             height: 100,
                           );
