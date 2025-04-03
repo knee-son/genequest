@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameState {
   static final GameState _instance = GameState._internal();
@@ -6,11 +7,22 @@ class GameState {
   GameState._internal();
 
   int currentLevel = 0; // depends on game
-  int _level = kDebugMode ? 4 : 0; // 4 in debug mode, 0 otherwise
+  int _maxLevelReached = kDebugMode ? 4 : 0; // 4 in debug mode, 0 otherwise
 
-  int maxLevelReached = 0;
   static const int _minLevel = 0;
   static const int _maxLevel = 4;
+
+  /// Load saved state from shared_preferences
+  Future<void> loadState() async {
+    final prefs = await SharedPreferences.getInstance();
+    _maxLevelReached = prefs.getInt('_maxLevelReached') ?? _maxLevelReached;
+  }
+
+  /// Save current state to shared_preferences
+  Future<void> saveState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('_maxLevelReached', _maxLevelReached);
+  }
 
   List<Trait> savedTraits = [];
 
@@ -55,8 +67,8 @@ class GameState {
         selectedTrait: ""),
   ]);
 
-  int get level => _level;
-  String get levelName => _levelNames[_level] ?? "Unknown Level";
+  int get level => _maxLevelReached;
+  String get levelName => _levelNames[currentLevel] ?? "Unknown Level";
 
   String getLevelName(int levelNum) {
     return _levelNames[levelNum] ?? "Unknown Level";
@@ -97,13 +109,14 @@ class GameState {
   ]);
 
   void setLevel(int newLevel) {
-    _level =
+    _maxLevelReached =
         newLevel.clamp(_minLevel, _maxLevel); // Ensures level stays in range
+    saveState();
   }
 
   void incrementLevel() {
-    if (_level == currentLevel) {
-      setLevel(_level + 1); // Use the setter method
+    if (_maxLevelReached == currentLevel) {
+      setLevel(_maxLevelReached + 1); // Use the setter method
     }
   }
 }

@@ -5,10 +5,10 @@ import 'package:genequest_app/screens/title_screen.dart';
 import 'level_selector_screen.dart';
 import '../game_logic.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const GameApp());
-}
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   runApp(const GameApp());
+// }
 
 class GameApp extends StatelessWidget {
   const GameApp({super.key});
@@ -30,15 +30,20 @@ class GameScreen extends StatelessWidget {
   final int levelNum; // change to int
   final String levelName; // optional param for debugging
 
-
-  final AssetImage forwardButtonImage = const AssetImage('assets/images/button_forward.png');
-  final AssetImage resetButtonImage = const AssetImage('assets/images/button_reset.png');
-  final AssetImage pauseButtonImage = const AssetImage('assets/images/button_pause.png');
-  final AssetImage menuButtonImage = const AssetImage('assets/images/button_menu.png');
-  final AssetImage heartEmptyImage = const AssetImage('assets/images/heart_empty.png');
-  final AssetImage heartHalfImage = const AssetImage('assets/images/heart_half.png');
-  final AssetImage heartFullImage = const AssetImage('assets/images/heart_full.png');
-
+  final AssetImage forwardButtonImage =
+      const AssetImage('assets/images/button_forward.png');
+  final AssetImage resetButtonImage =
+      const AssetImage('assets/images/button_reset.png');
+  final AssetImage pauseButtonImage =
+      const AssetImage('assets/images/button_pause.png');
+  final AssetImage menuButtonImage =
+      const AssetImage('assets/images/button_menu.png');
+  final AssetImage heartEmptyImage =
+      const AssetImage('assets/images/heart_empty.png');
+  final AssetImage heartHalfImage =
+      const AssetImage('assets/images/heart_half.png');
+  final AssetImage heartFullImage =
+      const AssetImage('assets/images/heart_full.png');
 
   const GameScreen(this.levelNum, {this.levelName = "", super.key});
 
@@ -60,8 +65,8 @@ class GameScreen extends StatelessWidget {
             AssetImage asset = heartHealth >= 2
                 ? heartFullImage
                 : heartHealth == 1
-                ? heartHalfImage
-                : heartEmptyImage;
+                    ? heartHalfImage
+                    : heartEmptyImage;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Image(image: asset, width: 40, height: 40),
@@ -71,7 +76,6 @@ class GameScreen extends StatelessWidget {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -118,19 +122,27 @@ class GameScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         InkWell(
-                          onTapDown: (_) => GenequestGame.instance?.startMovingAvatarBack(),
-                          onTapUp: (_) => GenequestGame.instance?.stopMovingAvatar(),
+                          onTapDown: (_) =>
+                              GenequestGame.instance?.startMovingAvatarBack(),
+                          onTapUp: (_) =>
+                              GenequestGame.instance?.stopMovingAvatar(),
                           child: Transform(
                             alignment: Alignment.center,
                             transform: Matrix4.rotationY(3.14159),
-                            child: Image(image: forwardButtonImage, width: 60, height: 60),
+                            child: Image(
+                                image: forwardButtonImage,
+                                width: 60,
+                                height: 60),
                           ),
                         ),
                         const SizedBox(width: 20),
                         InkWell(
-                          onTapDown: (_) => GenequestGame.instance?.startMovingAvatar(),
-                          onTapUp: (_) => GenequestGame.instance?.stopMovingAvatar(),
-                          child: Image(image: forwardButtonImage, width: 60, height: 60),
+                          onTapDown: (_) =>
+                              GenequestGame.instance?.startMovingAvatar(),
+                          onTapUp: (_) =>
+                              GenequestGame.instance?.stopMovingAvatar(),
+                          child: Image(
+                              image: forwardButtonImage, width: 60, height: 60),
                         ),
                       ],
                     ),
@@ -144,7 +156,8 @@ class GameScreen extends StatelessWidget {
                       child: Transform(
                         alignment: Alignment.center,
                         transform: Matrix4.rotationZ(-1.5708),
-                        child: Image(image: forwardButtonImage, width: 60, height: 60),
+                        child: Image(
+                            image: forwardButtonImage, width: 60, height: 60),
                       ),
                     ),
                   ),
@@ -182,7 +195,8 @@ class GameScreen extends StatelessWidget {
                     onTap: () {
                       GenequestGame.instance?.reset(); // Reset game logic
                     },
-                    child: Image(image: resetButtonImage, width: 100, height: 50),
+                    child:
+                        Image(image: resetButtonImage, width: 100, height: 50),
                   ),
                   const SizedBox(width: 10),
                   // Pause button
@@ -213,9 +227,6 @@ class GameScreen extends StatelessWidget {
       ),
     );
   }
-
-
-
 }
 
 class DialogOverlayModal extends StatelessWidget {

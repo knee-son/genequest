@@ -97,7 +97,7 @@ class TitleScreenState extends State<TitleScreen>
                   Center(
                     child: SizedBox(
                       width: 480, // Fixed width
-                      height: 130, // Fixed height
+                      height: 180, // Fixed height
                       child: Center(
                         child: Container(
                           width: _growAnimation.value * 6.6,
@@ -123,6 +123,7 @@ class TitleScreenState extends State<TitleScreen>
                               Center(
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text(
                                       'GENE',
@@ -160,7 +161,6 @@ class TitleScreenState extends State<TitleScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
