@@ -26,15 +26,14 @@ class _GameOverScreenState extends State<GameOverScreen> {
     super.initState();
 
     // Extract all selectedTrait values from randomTraits
-    if (gameState.savedTraits.length == 4){
+    if (gameState.savedTraits.length == 5){
       selectedTraits =
           gameState.savedTraits.map((trait) => trait.selectedTrait).toList();
     } else {
       selectedTraits =
           gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
     }
-    selectedTraits =
-        gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
+
     List<String> imageFiles = [
       "Almond_Eyes_Trait.png",
       "Black_Hair_Trait.png",
