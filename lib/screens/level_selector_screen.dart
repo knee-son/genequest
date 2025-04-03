@@ -27,12 +27,12 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
   @override
   void initState() {
     super.initState();
-    gameState.loadState();
+    FlameAudio.bgm.initialize();
+    // gameState.loadState();
     _playMusic();
   }
 
   void _playMusic() {
-    FlameAudio.bgm.initialize();
     FlameAudio.bgm.play(
       'music4.mp3',
       volume: 0.5,

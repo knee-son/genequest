@@ -1,35 +1,30 @@
+import 'dart:math';
+
 import 'package:flame/game.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
+import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 import 'level_selector_screen.dart';
 import '../game_logic.dart';
 
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   runApp(const GameApp());
-// }
+class GameScreen extends StatefulWidget {
+  final int levelNum;
+  final String levelName;
 
-class GameApp extends StatelessWidget {
-  const GameApp({super.key});
+  GameScreen(this.levelNum, {String? levelName, super.key})
+      : levelName =
+            levelName ?? gameState.getLevelName(levelNum); // Default if null
 
   @override
-  Widget build(BuildContext context) {
-    // Pass the level name here
-    return MaterialApp(
-      home: GameScreen(0),
-    );
-  }
+  State<GameScreen> createState() => _GameScreenState();
 }
 
 bool isNavigatingToTitleScreen = false;
 bool isDialogShowing = false;
 
-class GameScreen extends StatelessWidget {
-  // final String levelName; // Declare a final field for the level name
-  final int levelNum; // change to int
-  final String levelName; // optional param for debugging
-
+class _GameScreenState extends State<GameScreen> {
   final AssetImage forwardButtonImage =
       const AssetImage('assets/images/button_forward.png');
   final AssetImage resetButtonImage =
@@ -45,7 +40,35 @@ class GameScreen extends StatelessWidget {
   final AssetImage heartFullImage =
       const AssetImage('assets/images/heart_full.png');
 
-  const GameScreen(this.levelNum, {this.levelName = "", super.key});
+  @override
+  void initState() {
+    super.initState();
+    FlameAudio.bgm.initialize();
+    // gameState.loadState();
+    _playMusic();
+  }
+
+  void _playMusic() {
+    // List of music tracks to choose from
+    final List<String> musicTracks = ['music1.mp3', 'music3.mp3'];
+
+    // Pick a random track
+    final String selectedMusic =
+        musicTracks[Random().nextInt(musicTracks.length)];
+
+    // Play the randomly selected music
+    FlameAudio.bgm.play(
+      selectedMusic,
+      volume: 0.5,
+    );
+  }
+
+  @override
+  void dispose() {
+    debugPrint('game screen disposed');
+    FlameAudio.bgm.stop();
+    super.dispose();
+  }
 
   // HealthBar widget dynamically linked with healthNotifier
   Widget _buildHealthBar(BuildContext context) {
@@ -91,8 +114,8 @@ class GameScreen extends StatelessWidget {
                 game: GenequestGame(
                     containerHeight: containerHeight,
                     context: context,
-                    levelNum: levelNum,
-                    levelName: levelName),
+                    levelNum: widget.levelNum,
+                    levelName: widget.levelName),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
                         alignment: Alignment

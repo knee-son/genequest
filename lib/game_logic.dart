@@ -47,7 +47,6 @@ class GenequestGame extends FlameGame
     // levelNum = levelNum;
   }
 
-
   @override
   bool get debugMode => kDebugMode; // depends if flutter is in debug
 
@@ -197,7 +196,6 @@ class GenequestGame extends FlameGame
 
     add(world);
 
-
     // How far from chasm damage. adjust to prevent camera off bounds
     int chasmPadding = 1;
     chasmHeight = levelMap.size.y - chasmPadding * 64;
@@ -215,12 +213,12 @@ class GenequestGame extends FlameGame
 
     // Create the camera
     camera = CameraComponent.withFixedResolution(
-      width: screenWidth * 2,
-      height: screenHeight * 2,
-      world: world,
-      viewfinder: Viewfinder()
-        ..position = avatar.position // Define the starting position
-    );
+        width: screenWidth * 2,
+        height: screenHeight * 2,
+        world: world,
+        viewfinder: Viewfinder()
+          ..position = avatar.position // Define the starting position
+        );
     // Assuming `camera` is already declared and added to the game
 
     add(KeyboardListenerComponent());
@@ -280,13 +278,13 @@ class GenequestGame extends FlameGame
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
-      );  gameState.incrementLevel();
+      );
+      gameState.incrementLevel();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
       );
-    }
-    else {
+    } else {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -405,6 +403,10 @@ class Goal extends SpriteComponent with CollisionCallbacks {
   @override
   Future<void> onLoad() async {
     super.onLoad();
+
+    await FlameAudio.audioCache.load('jump.wav');
+    await FlameAudio.audioCache.load('oof.mp3');
+
     add(RectangleHitbox());
 
     if (gameState.currentLevel == 0) {
