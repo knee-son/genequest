@@ -24,7 +24,7 @@ create: check-branch
 
 # Build the Flutter web app
 build: check-branch
-	MSYS_NO_PATHCONV=1 flutter build web --base-href="/genequest/"
+	MSYS_NO_PATHCONV=1 flutter build web --base-href="/genequest/" --release
 
 # Deploy to GitHub Pages
 deploy: check-branch build
