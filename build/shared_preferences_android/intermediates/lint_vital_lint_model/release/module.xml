@@ -1,0 +1,37 @@
+<lint-module
+    format="1"
+    dir="C:\Users\knee-son\AppData\Local\Pub\Cache\hosted\pub.dev\shared_preferences_android-2.4.8\android"
+    name=":shared_preferences_android"
+    type="LIBRARY"
+    maven="io.flutter.plugins.sharedpreferences:shared_preferences_android:"
+    agpVersion="8.2.1"
+    buildFolder="C:\Users\knee-son\Documents\VSC\genequest\build\shared_preferences_android"
+    bootClassPath="C:\Users\knee-son\AppData\Local\Android\sdk\platforms\android-35\android.jar;C:\Users\knee-son\AppData\Local\Android\sdk\build-tools\34.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="11"
+    compileTarget="android-35"
+    neverShrinking="true">
+  <lintOptions
+      disable="AndroidGradlePluginVersion,InvalidPackage,GradleDependency,NewerVersionAvailable"
+      abortOnError="true"
+      absolutePaths="true"
+      checkAllWarnings="true"
+      warningsAsErrors="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="AndroidGradlePluginVersion"
+        severity="IGNORE" />
+      <severity
+        id="GradleDependency"
+        severity="IGNORE" />
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+      <severity
+        id="NewerVersionAvailable"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

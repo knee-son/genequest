@@ -1,2 +1,0 @@
-C:/Users/knee-son/Documents/VSC/genequest/android/app/.cxx/Debug/361k6e4n/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/knee-son/Documents/VSC/genequest/android/app/.cxx/Debug/361k6e4n/armeabi-v7a/CMakeFiles/rebuild_cache.dir

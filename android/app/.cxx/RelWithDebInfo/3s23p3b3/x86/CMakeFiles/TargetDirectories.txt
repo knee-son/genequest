@@ -1,2 +1,0 @@
-C:/Users/knee-son/Documents/VSC/genequest/android/app/.cxx/RelWithDebInfo/3s23p3b3/x86/CMakeFiles/edit_cache.dir
-C:/Users/knee-son/Documents/VSC/genequest/android/app/.cxx/RelWithDebInfo/3s23p3b3/x86/CMakeFiles/rebuild_cache.dir

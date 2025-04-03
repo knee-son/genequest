@@ -1,0 +1,1 @@
+ C:\\Users\\knee-son\\Documents\\VSC\\genequest\\.dart_tool\\flutter_build\\3b117b6a95dba81a0629bb960585754a\\native_assets.json: 
