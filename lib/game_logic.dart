@@ -1,20 +1,22 @@
 import 'dart:async' as async;
 
 import 'package:flame/camera.dart';
-import 'package:flame/collisions.dart';
+import 'package:flame/components.dart' as flame;
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
+import 'package:flutter/foundation.dart';
+import 'package:forge2d/forge2d.dart' as forge2d;
+
+// Other imports
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_screen.dart';
-import 'package:flutter/foundation.dart';
 
 // ------------------- GAME LOGIC -------------------
 
@@ -43,8 +45,6 @@ class GenequestGame extends FlameGame
       required this.levelNum,
       this.levelName}) {
     instance = this;
-    // context = context;
-    // levelNum = levelNum;
   }
 
   @override
@@ -55,158 +55,69 @@ class GenequestGame extends FlameGame
 
   @override
   Future<void> onLoad() async {
+    super.onLoad();
+
     await Flame.images.loadAll([
-      'chromatid.png',
+      'chromatid2.png',
       'sister_chromatid.png',
       'mob.png',
     ]);
+
     overlays.add('HealthBar');
 
-    // Load the level
+    // Load the Tiled map (handles rendering of the map)
     levelMap = await flameTiled.TiledComponent.load(
       levelName?.isNotEmpty == true
           ? levelName!
           : gameState.getLevelName(levelNum),
-      Vector2.all(64),
+      Vector2.all(64), // Tile size
     );
+    add(levelMap);
+
+    // Initialize physics world and objects (collision blocks, avatar)
+    var world = forge2d.World(Vector2(0, -10) as forge2d.Vector2?); // Gravity
+    // Find the spawn object in the SpawnPoint layer
+
+    final collisionsLayer =
+        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
+
+    if (collisionsLayer != null) {
+      // Iterate through each object in the 'Floor' layer and create CollisionBlocks
+      for (var object in collisionsLayer.objects) {
+        var collisionBlock = CollisionBlock(
+          position: Vector2(object.x, object.y),
+          width: object.width,
+          height: object.height,
+        );
+        collisionBlock.initialize(world as flame.World);
+        add(collisionBlock);
+      }
+    }
 
     final spawnPointLayer =
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
 
     // Create the avatar and set its spawn point dynamically
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
+    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid2.png'));
     final sisterChromatid =
         Sprite(Flame.images.fromCache('sister_chromatid.png'));
     avatar =
         Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
     goal = Goal(sprite: sisterChromatid, context: context);
 
-    // Initialize the world
-    final world = World();
-    // Find the spawn object in the SpawnPoint layer
-    if (spawnPointLayer != null) {
-      for (final spawn in spawnPointLayer.objects) {
-        if (spawn.name == 'Spawn') {
-          spawnPosition = Vector2(spawn.x, spawn.y);
-          spawnPosition.y -= avatar.size.y; // Adjust to align avatar
-          final floor = CollisionBlock(
-              position: Vector2(spawn.x, spawn.y),
-              size: Vector2(spawn.width, spawn.height),
-              isSolid: true, // This is a floor, not a wall
-              isEnemy: false,
-              isFinish: false)
-            ..priority = 1; // Render above the map;
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
-          add(floor);
-          collisionBlocks.add(floor);
-        }
-        // spawn sister chromatid
-        else if (spawn.name == 'Finish') {
-          goalPosition = Vector2(spawn.x, spawn.y);
-          goalPosition.y -= goal.size.y; // Adjust to align avatar
-
-          final floor = CollisionBlock(
-              position: Vector2(spawn.x, spawn.y),
-              size: Vector2(spawn.width, spawn.height),
-              isSolid: false, // This is a floor, not a wall
-              isEnemy: false,
-              isFinish: true)
-            ..priority = 1; // Render above the map;
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
-          add(floor);
-          collisionBlocks.add(floor);
-          break;
-        }
-      }
-    }
-
-    final collisionsLayer =
-        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
-
-    if (collisionsLayer != null) {
-      for (final collision in collisionsLayer.objects) {
-        switch (collision.name) {
-          case 'Floor':
-            final floor = CollisionBlock(
-                position: Vector2(collision.x, collision.y),
-                size: Vector2(collision.width, collision.height),
-                isSolid: true, // This is a floor, not a wall
-                isEnemy: false,
-                isFinish: false)
-              ..priority = 1;
-            collisionBlocks.add(floor);
-            add(floor);
-
-          case 'Enemy':
-            // Load the mob.png sprite
-            final mobSprite = Sprite(Flame.images.fromCache('mob.png'));
-
-            // Create a new enemy instance
-            final enemy = CollisionBlock(
-              position: Vector2(collision.x, collision.y), // Enemy position
-              size: Vector2(collision.width, collision.height), // Enemy size
-              isSolid: false, // Not a solid block
-              isEnemy: true, // Mark as enemy
-              isFinish: false, // Not a finish block
-            )..priority = 1; // Ensure enemy has higher rendering priority
-
-            // Add the enemy to the collision blocks list
-            collisionBlocks.add(enemy);
-
-            // Add a mob image for every enemy
-            final mobImage = SpriteComponent(
-              sprite: mobSprite, // mob.png sprite
-              size: Vector2(50, 50), // Adjust size as needed
-              position: Vector2(
-                  collision.x, collision.y), // Spawn on the enemy's position
-            )..priority = 2; // Ensure mob is rendered above the enemy
-
-            // Add the mob image to the game world
-            mobImage.position = Vector2(enemy.x, enemy.y);
-            world.add(mobImage);
-          case 'Trap':
-            final floor = CollisionBlock(
-                position: Vector2(collision.x, collision.y),
-                size: Vector2(collision.width, collision.height),
-                isSolid: true, // This is a floor, not a wall
-                isEnemy: true,
-                isFinish: false)
-              ..priority = 1;
-            collisionBlocks.add(floor);
-            add(floor);
-          default:
-            break;
-        }
-      }
-    }
-
-    // Add collision blocks first to ensure they render above the tilemap
-    for (final block in collisionBlocks) {
-      world.add(block);
-    }
-
-    // Add the level (tilemap) after collision blocks
-    world.add(levelMap);
-
-    add(world);
-
-    // How far from chasm damage. adjust to prevent camera off bounds
-    int chasmPadding = 1;
-    chasmHeight = levelMap.size.y - chasmPadding * 64;
-
     // Calculate the spawn point based on the map height (ground level)
     avatar.position = spawnPosition;
     goal.position = goalPosition;
 
     // Add the avatar to the world
-    world.add(avatar);
-    world.add(goal);
+    add(avatar);
+    add(goal);
+
+    add(world as flame.World);
+
+    // How far from chasm damage. adjust to prevent camera off bounds
+    int chasmPadding = 1;
+    chasmHeight = levelMap.size.y - chasmPadding * 64;
 
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
@@ -215,7 +126,7 @@ class GenequestGame extends FlameGame
     camera = CameraComponent.withFixedResolution(
         width: screenWidth * 2,
         height: screenHeight * 2,
-        world: world,
+        world: world as flame.World,
         viewfinder: Viewfinder()
           ..position = avatar.position // Define the starting position
         );
@@ -271,7 +182,7 @@ class GenequestGame extends FlameGame
         }
       }
       gameState.incrementLevel();
-      Flame.images.clear('chromatid.png');
+      Flame.images.clear('chromatid2.png');
       Flame.images.clear('sister_chromatid.png');
       Flame.images.clear('mob.png');
 
@@ -427,25 +338,33 @@ class Goal extends SpriteComponent with CollisionCallbacks {
 
 // ----------------- COLLISION BLOCKS -----------------
 
-class CollisionBlock extends PositionComponent with CollisionCallbacks {
-  final bool isSolid;
-  final bool isEnemy;
-  final bool isFinish;
+class CollisionBlock extends PositionComponent {
+  late Body _body;
+  final Vector2 position;
+  final double width, height;
 
-  CollisionBlock({
-    required Vector2 position,
-    required Vector2 size,
-    required this.isSolid,
-    required this.isEnemy,
-    required this.isFinish,
-  }) : super(position: position, size: size);
+  CollisionBlock(
+      {required this.position, required this.width, required this.height});
+
+  void initialize(World world) {
+    var shape = PolygonShape()..setAsBox(width / 2, height / 2);
+    var bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    _body = world.createBody(bodyDef);
+    _body.createFixtureFromShape(shape, 1.0);
+  }
 
   @override
-  Future<void> onLoad() async {
-    // Hitbox for collision detection
-    add(RectangleHitbox());
-
-    return super.onLoad(); // Call at the end
+  void render(Canvas canvas) {
+    super.render(canvas);
+    // Optionally render the collision block visually
+    canvas.drawRect(
+      Rect.fromLTWH(_body.position.x - width / 2, _body.position.y - height / 2,
+          width, height),
+      Paint()..color = Colors.blue,
+    );
   }
 }
 
@@ -468,7 +387,12 @@ class Avatar extends SpriteComponent
       {required Sprite sprite, required this.context, required this.levelNum})
       : super(
           sprite: sprite,
-          size: Vector2(60, 100), // Avatar size
+          size: Vector2(
+            60, // Width (fixed)
+            60 *
+                (sprite.srcSize.y /
+                    sprite.srcSize.x), // Adjust height based on aspect ratio
+          ),
           position: Vector2(200, 300), // Starting position above the border
         );
 
