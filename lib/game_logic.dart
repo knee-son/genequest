@@ -46,7 +46,7 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     required this.context,
     required this.levelNum,
     this.levelName,
-  }) : super(gravity: Vector2(0, 300)); // Pass gravity to the super class
+  }) : super(gravity: Vector2(0, 100000)); // Pass gravity to the super class
 
   // @override
   // bool get debugMode => kDebugMode; // depends if flutter is in debug
@@ -100,6 +100,9 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     // Add the Avatar
     avatar = Avatar(position: Vector2.all(100));
     add(avatar);
+
+    CollisionBlock collision = CollisionBlock();
+    add(collision);
 
     // final spawnPointLayer =
     //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
@@ -222,15 +225,17 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     isPaused = false;
   }
 
-  // void startJump() {
-  //   if (avatar.jumpCount < 2) {
-  //     avatar.velocityY = -300; // Upward velocity
-  //     avatar.isInAir = true; // Set mid-air state
-  //     // play jump sound
-  //     FlameAudio.play('jump.wav');
-  //     avatar.jumpCount += 1;
-  //   }
-  // }
+  void startJump() {
+    avatar.jump();
+
+    // if (avatar.jumpCount < 2) {
+    //   avatar.velocityY = -300; // Upward velocity
+    //   avatar.isInAir = true; // Set mid-air state
+    //   // play jump sound
+    //   FlameAudio.play('jump.wav');
+    //   avatar.jumpCount += 1;
+    // }
+  }
 
   // void startMovingAvatar() {
   //   avatar.horizontalMoveAxis = 1;
@@ -251,32 +256,22 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    // if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
-    //     event.logicalKey == LogicalKeyboardKey.arrowUp) {
-    //   startJump();
-    // }
 
-    // if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
-    //     keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
-    //   stopMovingAvatar();
-    // } else {
-    //   if (event is KeyDownEvent &&
-    //       event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-    //     startMovingAvatarBack();
-    //   } else if (event is KeyDownEvent &&
-    //       event.logicalKey == LogicalKeyboardKey.arrowRight) {
-    //     startMovingAvatar();
-    //   }
-    // }
+    if (event is KeyDownEvent) {
+      final jumpStrength = 10.0;
+      final moveStrength = 200.0;  // Adjust this value based on your needs
 
-    // if (event is KeyUpEvent &&
-    //     event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-    //   stopMovingAvatar();
-    // } else if (event is KeyUpEvent &&
-    //     event.logicalKey == LogicalKeyboardKey.arrowRight) {
-    //   stopMovingAvatar();
-    // }
-
+      // Check which key is pressed and apply corresponding force
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        avatar.body.applyLinearImpulse(Vector2(0, jumpStrength), point: avatar.body.worldCenter);
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        avatar.body.applyForce(Vector2(0, moveStrength), point: avatar.body.worldCenter); // Apply force down
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        avatar.body.applyForce(Vector2(-moveStrength, 0), point: avatar.body.worldCenter); // Apply force left
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        avatar.body.applyForce(Vector2(moveStrength, 0), point: avatar.body.worldCenter); // Apply force right
+      }
+    }
     return super.onKeyEvent(event, keysPressed);
   }
 
@@ -345,67 +340,23 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
 
 // ----------------- COLLISION BLOCKS -----------------
 
-class CollisionBlock extends PositionComponent {
-  // late forge2d.Body _body;
-
-  // CollisionBlock({
-  //   super.position,
-  //   super.size,
-  //   super.scale,
-  //   super.angle,
-  //   super.anchor,
-  // });
-
-  // void initialize(forge2d.World world) {
-  //   var shape = forge2d.PolygonShape()
-  //     ..setAsBox(width / 2, height / 2, position as forge2d.Vector2, 0);
-  //   var bodyDef = forge2d.BodyDef()
-  //     ..position = position as forge2d.Vector2
-  //     ..type = forge2d.BodyType.static;
-
-  //   _body = world.createBody(bodyDef);
-  //   _body.createFixtureFromShape(shape);
-  // }
-}
-
-// ------------------- AVATAR LOGIC -------------------
-
-class Avatar extends BodyComponent {
-  @override
-  Vector2 position;
-  late Vector2 size;
-  late Sprite sprite;
-
-  Avatar({required this.position});
-
-  @override
-  bool get debugMode => true;
-
-  @override
-  Future<void> onLoad() async {
-    await super.onLoad();
-
-    sprite = Sprite(Flame.images.fromCache('chromatid2.png'));
-  }
+class CollisionBlock extends BodyComponent {
+  
 
   @override
   Body createBody() {
-    size = sprite.srcSize;
+    Vector2 position = Vector2(0,500);
+    Vector2 size = Vector2.all(300);
 
-    // renderBody = false; // Optional: Hide raw body shape when sprite is visible
+    // // renderBody = false; // Optional: Hide raw body shape when sprite is visible
 
-    // Set up rendering if you're using sprite
-    add(SpriteComponent(
-      sprite: sprite,
-      size: size,
-      anchor: Anchor.center,
-    ));
 
     final bodyDef = BodyDef()
-      ..type = BodyType.dynamic
+      ..type = BodyType.static
       ..position = position;
 
     final body = world.createBody(bodyDef);
+
 
     final shape = PolygonShape();
     shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
@@ -418,10 +369,89 @@ class Avatar extends BodyComponent {
     body.createFixture(fixtureDef);
     return body;
   }
+}
+
+// ------------------- AVATAR LOGIC -------------------
+
+class Avatar extends BodyComponent {
+  @override
+  Vector2 position;
+  late Vector2 size;
+  late Sprite sprite;
+  late final double jumpStrength; 
+  late final double walkStrength;
+
+  Avatar({required this.position});
+
+  @override
+  bool get debugMode => true;
+
+  @override
+  Future<void> onLoad() async {
+    
+    await super.onLoad();
+  }
+
+  @override
+  Body createBody() {
+    print('hello');
+    sprite = Sprite(Flame.images.fromCache('chromatid2.png'));
+    size = sprite.srcSize;
+
+    renderBody = false;
+    debugMode = false;
+
+    // Set up rendering if you're using sprite
+    add(SpriteComponent(
+      sprite: sprite,
+      size: size,
+    ));
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.dynamic
+      ..position = position - size
+      ..gravityOverride = Vector2(0, 1000);
+
+    final body = world.createBody(bodyDef);
+
+
+    final shape = PolygonShape();
+    shape.setAsBox(size.x / 2, size.y / 2, size/2, 0);
+
+    jumpStrength = -20.0 * (size.y); 
+    walkStrength = size.x;
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 0.00001
+      ..friction = 0.01
+      ..restitution = 0.3;
+
+    body.createFixture(fixtureDef);
+    return body;
+  }
 
   // Method to update the position
   void setPosition(Vector2 newPosition) {
-    body.position.setFrom(newPosition);
+    body.position.setFrom(newPosition - size);
+  }
+
+  void jump() {
+    print('Jumping...');
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyLinearImpulse(Vector2(0, jumpStrength), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
+  }
+
+  void moveLeft() {
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyForce(Vector2(-walkStrength, 0), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
+  }
+
+  void moveRight() {
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyForce(Vector2(walkStrength, 0), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
   }
 }
 

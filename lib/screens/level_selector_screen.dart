@@ -41,7 +41,6 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
   @override
   void dispose() {
-    debugPrint('level screen disposed');
     FlameAudio.bgm.stop();
     super.dispose();
   }
