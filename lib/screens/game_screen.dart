@@ -89,8 +89,8 @@ class _GameScreenState extends State<GameScreen> {
               AssetImage asset = heartHealth >= 2
                   ? heartFullImage
                   : heartHealth == 1
-                  ? heartHalfImage
-                  : heartEmptyImage;
+                      ? heartHalfImage
+                      : heartEmptyImage;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Image(image: asset, width: 40, height: 40),
@@ -148,10 +148,10 @@ class _GameScreenState extends State<GameScreen> {
                       child: Row(
                         children: [
                           InkWell(
-                            onTapDown: (_) =>
-                                GenequestGame.instance?.startMovingAvatarBack(),
-                            onTapUp: (_) =>
-                                GenequestGame.instance?.stopMovingAvatar(),
+                            // onTapDown: (_) =>
+                            //     GenequestGame.instance?.startMovingAvatarBack(),
+                            // onTapUp: (_) =>
+                            //     GenequestGame.instance?.stopMovingAvatar(),
                             child: Transform(
                               alignment: Alignment.center,
                               transform: Matrix4.rotationY(3.14159),
@@ -163,10 +163,14 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                           const SizedBox(width: 20),
                           InkWell(
-                            onTapDown: (_) => GenequestGame.instance?.startMovingAvatar(),
-                            onTapUp: (_) => GenequestGame.instance?.stopMovingAvatar(),
+                            // onTapDown: (_) =>
+                            //     GenequestGame.instance?.startMovingAvatar(),
+                            // onTapUp: (_) =>
+                            //     GenequestGame.instance?.stopMovingAvatar(),
                             child: Image(
-                                image: forwardButtonImage, width: 60, height: 60),
+                                image: forwardButtonImage,
+                                width: 60,
+                                height: 60),
                           ),
                         ],
                       ),
@@ -176,7 +180,7 @@ class _GameScreenState extends State<GameScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: InkWell(
-                        onTapDown: (_) => GenequestGame.instance?.startJump(),
+                        // onTapDown: (_) => GenequestGame.instance?.startJump(),
                         child: Transform(
                           alignment: Alignment.center,
                           transform: Matrix4.rotationZ(-1.5708),

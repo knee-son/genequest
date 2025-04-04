@@ -40,7 +40,7 @@ dependencies:
   flame_tiled: ^2.0.0
   flame_audio: ^2.11.2
   collection: ^1.19.1
-  forge2d: ^0.14.0
+  flame_forge2d: ^0.18.3+1
 
 
 dev_dependencies:

@@ -1,15 +1,16 @@
 import 'dart:async' as async;
 
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flame/camera.dart';
-import 'package:flame/components.dart' as flame;
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
 import 'package:flame/game.dart';
-import 'package:flame/input.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
 import 'package:flutter/foundation.dart';
-import 'package:forge2d/forge2d.dart' as forge2d;
 
 // Other imports
 import 'package:flutter/material.dart';
@@ -20,13 +21,12 @@ import 'package:genequest_app/screens/minigame_screen.dart';
 
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame
-    with KeyboardEvents, HasCollisionDetection {
+class GenequestGame extends Forge2DGame with KeyboardEvents {
   static GenequestGame? instance; // Singleton for UI interaction
   int levelNum;
   String? levelName;
   late Avatar avatar;
-  late Goal goal;
+  // late Goal goal;
   final double containerHeight;
   late BuildContext context;
   late double chasmHeight;
@@ -39,13 +39,13 @@ class GenequestGame extends FlameGame
   late double screenWidth;
   late double screenHeight;
 
-  GenequestGame(
-      {required this.containerHeight,
-      required this.context,
-      required this.levelNum,
-      this.levelName}) {
-    instance = this;
-  }
+  // Constructor
+  GenequestGame({
+    required this.containerHeight,
+    required this.context,
+    required this.levelNum,
+    this.levelName,
+  }) : super(gravity: Vector2(0, 10)); // Pass gravity to the super class
 
   @override
   bool get debugMode => kDebugMode; // depends if flutter is in debug
@@ -63,6 +63,9 @@ class GenequestGame extends FlameGame
       'mob.png',
     ]);
 
+    await FlameAudio.audioCache.load('jump.wav');
+    await FlameAudio.audioCache.load('oof.mp3');
+
     overlays.add('HealthBar');
 
     // Load the Tiled map (handles rendering of the map)
@@ -74,50 +77,52 @@ class GenequestGame extends FlameGame
     );
     add(levelMap);
 
-    // Initialize physics world and objects (collision blocks, avatar)
-    var world = forge2d.World(Vector2(0, -10) as forge2d.Vector2?); // Gravity
-    // Find the spawn object in the SpawnPoint layer
+    // // Initialize physics world and objects (collision blocks, avatar)
+    // physicsWorld = forge2d.World(Vector2(0, -10)); // Gravity
+    // add(physicsWorld as flame.World);
 
-    final collisionsLayer =
-        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
+    // final collisionsLayer =
+    //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
-    if (collisionsLayer != null) {
-      // Iterate through each object in the 'Floor' layer and create CollisionBlocks
-      for (var object in collisionsLayer.objects) {
-        var collisionBlock = CollisionBlock(
-          position: Vector2(object.x, object.y),
-          width: object.width,
-          height: object.height,
-        );
-        collisionBlock.initialize(world as flame.World);
-        add(collisionBlock);
-      }
-    }
+    // if (collisionsLayer != null) {
+    //   // Iterate through each object in the 'Floor' layer and create CollisionBlocks
+    //   for (var object in collisionsLayer.objects) {
+    //     var collisionBlock = CollisionBlock(
+    //       position: Vector2(object.x, object.y),
+    //       size: Vector2(object.width, object.height),
+    //     );
+    //     collisionBlock.initialize(physicsWorld);
+    //     add(collisionBlock);
+    //   }
+    // }
 
-    final spawnPointLayer =
-        levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+    // Add the Avatar
+    avatar = Avatar(size: Vector2(100, 100), position: Vector2(100, 100));
+    // avatar.initialize(physicsWorld);
+    add(avatar); // Add the avatar as a component
 
-    // Create the avatar and set its spawn point dynamically
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid2.png'));
-    final sisterChromatid =
-        Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    avatar =
-        Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
-    goal = Goal(sprite: sisterChromatid, context: context);
+    // // final spawnPointLayer =
+    // //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
 
-    // Calculate the spawn point based on the map height (ground level)
-    avatar.position = spawnPosition;
-    goal.position = goalPosition;
+    // // // Create the avatar and set its spawn point dynamically
+    // // final chromatidSprite = Sprite(Flame.images.fromCache('chromatid2.png'));
+    // // final sisterChromatid =
+    // //     Sprite(Flame.images.fromCache('sister_chromatid.png'));
+    // // // avatar =
+    // // //     Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
+    // // goal = Goal(sprite: sisterChromatid, context: context);
 
-    // Add the avatar to the world
-    add(avatar);
-    add(goal);
+    // // Calculate the spawn point based on the map height (ground level)
+    // // avatar.position = spawnPosition;
+    // // goal.position = goalPosition;
 
-    add(world as flame.World);
+    // // Add the avatar to the world
+    // // add(avatar);
+    // // add(goal);
 
-    // How far from chasm damage. adjust to prevent camera off bounds
-    int chasmPadding = 1;
-    chasmHeight = levelMap.size.y - chasmPadding * 64;
+    // // How far from chasm damage. adjust to prevent camera off bounds
+    // int chasmPadding = 1;
+    // chasmHeight = levelMap.size.y - chasmPadding * 64;
 
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
@@ -126,7 +131,7 @@ class GenequestGame extends FlameGame
     camera = CameraComponent.withFixedResolution(
         width: screenWidth * 2,
         height: screenHeight * 2,
-        world: world as flame.World,
+        world: world,
         viewfinder: Viewfinder()
           ..position = avatar.position // Define the starting position
         );
@@ -136,7 +141,8 @@ class GenequestGame extends FlameGame
 
     // Add the camera to the game
     add(camera);
-    camera.moveTo(goalPosition, speed: 1000);
+    // camera.moveTo(goalPosition, speed: 1000);
+    camera.follow(avatar);
   }
 
   void updateHealth(int newHealth) {
@@ -163,11 +169,11 @@ class GenequestGame extends FlameGame
             selectedTrait: dominantTrait,
             level: gameState.traits[gameState.currentLevel].level);
 
-        if (goal.size == goal.regularSize) {
-          newTrait.selectedTrait = nonDominantTrait;
-        } else {
-          newTrait.selectedTrait = dominantTrait;
-        }
+        // if (goal.size == goal.regularSize) {
+        //   newTrait.selectedTrait = nonDominantTrait;
+        // } else {
+        //   newTrait.selectedTrait = dominantTrait;
+        // }
 
         // Check for an existing trait where the level matches gameState.level
         var existingTraitIndex = gameState.savedTraits.indexWhere(
@@ -209,60 +215,60 @@ class GenequestGame extends FlameGame
     isPaused = false;
   }
 
-  void startJump() {
-    if (avatar.jumpCount < 2) {
-      avatar.velocityY = -300; // Upward velocity
-      avatar.isInAir = true; // Set mid-air state
-      // play jump sound
-      FlameAudio.play('jump.wav');
-      avatar.jumpCount += 1;
-    }
-  }
+  // void startJump() {
+  //   if (avatar.jumpCount < 2) {
+  //     avatar.velocityY = -300; // Upward velocity
+  //     avatar.isInAir = true; // Set mid-air state
+  //     // play jump sound
+  //     FlameAudio.play('jump.wav');
+  //     avatar.jumpCount += 1;
+  //   }
+  // }
 
-  void startMovingAvatar() {
-    avatar.horizontalMoveAxis = 1;
-    avatar.velocityX = 300; // Move right
-    camera.follow(avatar);
-  }
+  // void startMovingAvatar() {
+  //   avatar.horizontalMoveAxis = 1;
+  //   avatar.velocityX = 300; // Move right
+  //   camera.follow(avatar);
+  // }
 
-  void startMovingAvatarBack() {
-    avatar.horizontalMoveAxis = -1;
-    avatar.velocityX = -300; // Move left
-  }
+  // void startMovingAvatarBack() {
+  //   avatar.horizontalMoveAxis = -1;
+  //   avatar.velocityX = -300; // Move left
+  // }
 
-  void stopMovingAvatar() {
-    avatar.horizontalMoveAxis = 0;
-    avatar.velocityX = 0; // Stop movement
-  }
+  // void stopMovingAvatar() {
+  //   avatar.horizontalMoveAxis = 0;
+  //   avatar.velocityX = 0; // Stop movement
+  // }
 
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
-        event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      startJump();
-    }
+    // if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
+    //     event.logicalKey == LogicalKeyboardKey.arrowUp) {
+    //   startJump();
+    // }
 
-    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
-        keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
-      stopMovingAvatar();
-    } else {
-      if (event is KeyDownEvent &&
-          event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        startMovingAvatarBack();
-      } else if (event is KeyDownEvent &&
-          event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        startMovingAvatar();
-      }
-    }
+    // if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
+    //     keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
+    //   stopMovingAvatar();
+    // } else {
+    //   if (event is KeyDownEvent &&
+    //       event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    //     startMovingAvatarBack();
+    //   } else if (event is KeyDownEvent &&
+    //       event.logicalKey == LogicalKeyboardKey.arrowRight) {
+    //     startMovingAvatar();
+    //   }
+    // }
 
-    if (event is KeyUpEvent &&
-        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      stopMovingAvatar();
-    } else if (event is KeyUpEvent &&
-        event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      stopMovingAvatar();
-    }
+    // if (event is KeyUpEvent &&
+    //     event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+    //   stopMovingAvatar();
+    // } else if (event is KeyUpEvent &&
+    //     event.logicalKey == LogicalKeyboardKey.arrowRight) {
+    //   stopMovingAvatar();
+    // }
 
     return super.onKeyEvent(event, keysPressed);
   }
@@ -271,278 +277,129 @@ class GenequestGame extends FlameGame
   void update(double dt) {
     if (!isPaused) {
       super.update(dt);
-      dt = dt * 1.2;
-      avatar.applyGravity(dt);
-      avatar.updatePosition(dt);
     }
-    if (avatar.position.y > chasmHeight) {
-      avatarFallsOffChasm();
-    }
+
+    // world.stepDt(dt);
   }
 
   void avatarFallsOffChasm() {
     avatar.position = spawnPosition;
-    avatar.applyDamageWithImmunity();
+    // avatar.applyDamageWithImmunity();
   }
 
   void reset() {
     avatar.position = spawnPosition;
-    avatar.velocityX = 0; // Stop horizontal movement
-    avatar.velocityY = 0; // Stop vertical movement
-    avatar.isInAir = false; // Ensure avatar is grounded
-    avatar.jumpCount = 0; // Reset jump count
-    avatar.health = 6;
-    GenequestGame.instance?.updateHealth(avatar.health);
+    // avatar.velocityX = 0; // Stop horizontal movement
+    // avatar.velocityY = 0; // Stop vertical movement
+    // avatar.isInAir = false; // Ensure avatar is grounded
+    // avatar.jumpCount = 0; // Reset jump count
+    // avatar.health = 6;
+    // GenequestGame.instance?.updateHealth(avatar.health);
     // If you have additional game state variables (e.g., score, level), reset them here
   }
 }
 
 // ------------------- GOAL LOGIC -------------------
 
-class Goal extends SpriteComponent with CollisionCallbacks {
-  final BuildContext context;
-  final Vector2 regularSize = Vector2(60, 100);
-  final Vector2 halfSize = Vector2(60, 100) / 2;
-
-  Goal({required Sprite sprite, required this.context})
-      : super(
-          sprite: sprite,
-          size: Vector2(60, 100), // Avatar size
-          position: Vector2(200, 300), // Starting position above the border
-        );
-
-  @override
-  Future<void> onLoad() async {
-    super.onLoad();
-
-    await FlameAudio.audioCache.load('jump.wav');
-    await FlameAudio.audioCache.load('oof.mp3');
-
-    add(RectangleHitbox());
-
-    if (gameState.currentLevel == 0) {
-      async.Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (size == regularSize) {
-          resize(halfSize);
-        } else {
-          resize(regularSize);
-        }
-      });
-    }
-  }
-
-  void resize(Vector2 newSize) {
-    size = newSize;
-  }
-}
+// class Goal extends SpriteComponent with CollisionCallbacks {
+//   final BuildContext context;
+//   final Vector2 regularSize = Vector2(60, 100);
+//   final Vector2 halfSize = Vector2(60, 100) / 2;
+//
+//   Goal({required Sprite sprite, required this.context})
+//       : super(
+//           sprite: sprite,
+//           size: Vector2(60, 100), // Avatar size
+//           position: Vector2(200, 300), // Starting position above the border
+//         );
+//
+//   @override
+//   Future<void> onLoad() async {
+//     super.onLoad();
+//
+//     await FlameAudio.audioCache.load('jump.wav');
+//     await FlameAudio.audioCache.load('oof.mp3');
+//
+//     add(RectangleHitbox());
+//
+//     if (gameState.currentLevel == 0) {
+//       async.Timer.periodic(const Duration(seconds: 1), (timer) {
+//         if (size == regularSize) {
+//           resize(halfSize);
+//         } else {
+//           resize(regularSize);
+//         }
+//       });
+//     }
+//   }
+//
+//   void resize(Vector2 newSize) {
+//     size = newSize;
+//   }
+// }
 
 // ----------------- COLLISION BLOCKS -----------------
 
 class CollisionBlock extends PositionComponent {
-  late Body _body;
-  final Vector2 position;
-  final double width, height;
+  // late forge2d.Body _body;
 
-  CollisionBlock(
-      {required this.position, required this.width, required this.height});
+  // CollisionBlock({
+  //   super.position,
+  //   super.size,
+  //   super.scale,
+  //   super.angle,
+  //   super.anchor,
+  // });
 
-  void initialize(World world) {
-    var shape = PolygonShape()..setAsBox(width / 2, height / 2);
-    var bodyDef = BodyDef()
-      ..position = position
-      ..type = BodyType.static;
+  // void initialize(forge2d.World world) {
+  //   var shape = forge2d.PolygonShape()
+  //     ..setAsBox(width / 2, height / 2, position as forge2d.Vector2, 0);
+  //   var bodyDef = forge2d.BodyDef()
+  //     ..position = position as forge2d.Vector2
+  //     ..type = forge2d.BodyType.static;
 
-    _body = world.createBody(bodyDef);
-    _body.createFixtureFromShape(shape, 1.0);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    // Optionally render the collision block visually
-    canvas.drawRect(
-      Rect.fromLTWH(_body.position.x - width / 2, _body.position.y - height / 2,
-          width, height),
-      Paint()..color = Colors.blue,
-    );
-  }
+  //   _body = world.createBody(bodyDef);
+  //   _body.createFixtureFromShape(shape);
+  // }
 }
 
 // ------------------- AVATAR LOGIC -------------------
 
-class Avatar extends SpriteComponent
-    with CollisionCallbacks, HasGameRef<GenequestGame> {
-  double velocityX = 0; // Horizontal velocity
-  double velocityY = 0; // Vertical velocity
-  final double gravity = 300; // Downward acceleration
-  bool isInAir = false; // Tracks whether the avatar is airborne
-  int jumpCount = 0; // Tracks the number of jumps
-  int health = 6;
-  bool isImmune = false; // Tracks whether the player is immune to damage
-  final BuildContext context;
-  int horizontalMoveAxis = 0;
-  int levelNum;
+class Avatar extends BodyComponent {
+  final Vector2 size;
+  @override
+  final Vector2 position;
 
-  Avatar(
-      {required Sprite sprite, required this.context, required this.levelNum})
-      : super(
-          sprite: sprite,
-          size: Vector2(
-            60, // Width (fixed)
-            60 *
-                (sprite.srcSize.y /
-                    sprite.srcSize.x), // Adjust height based on aspect ratio
-          ),
-          position: Vector2(200, 300), // Starting position above the border
-        );
+  // Constructor to accept size and position parameters
+  Avatar({
+    required this.size,
+    required this.position,
+  });
+
+  set position(Vector2 newPosition) {
+    bodyDef?.position = newPosition;
+  }
 
   @override
   Future<void> onLoad() async {
-    add(RectangleHitbox());
-    return super.onLoad();
-  }
+    // Create a polygon shape for the avatar using the provided size
+    super.onLoad();
+    final shape = PolygonShape();
+    shape.setAsBox(size.x / 2, size.y / 2, position,
+        0); // Define the size of the shape (half-width, half-height)
 
-  void applyGravity(double dt) {
-    // Apply gravity only while airborne
-    if (isInAir) {
-      velocityY += gravity * dt; // Gravity pulls the avatar down
-    } else {
-      velocityY = 0;
-    }
-  }
+    // Define the fixture for the body (density, friction, restitution)
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.3
+      ..restitution = 0.5;
 
-  void applyDamageWithImmunity() {
-    if (!isImmune) {
-      health -= 1; // Reduce health
-      GenequestGame.instance?.updateHealth(health); // Update health bar
-      isImmune = true; // Grant immunity
-      paint.color = const Color(
-          0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
-      // Start blinking effect
-      int blinkCount = 0;
-      async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
-        if (blinkCount >= 5) {
-          timer.cancel(); // Stop blinking
-          isImmune = false; // End immunity
-          paint.color = const Color(0xFFFFFFFF); // Restore full opacity
-        } else {
-          // Play audio on each blink
-          if (blinkCount == 0) {
-            FlameAudio.play('oof.mp3');
-          }
-          // Alternate opacity between semi-transparent and fully transparent
-          paint.color = paint.color.a == 0.0
-              ? const Color(0x88FFFFFF) // Semi-transparent
-              : const Color(0x00FFFFFF); // Fully transparent
-          blinkCount++;
-        }
-      });
-    }
+    bodyDef?.type = BodyType.dynamic;
+    bodyDef?.position = Vector2(100, 100);
 
-    if (health <= 0) {
-      // Game Over logic
+    fixtureDefs?.add(fixtureDef);
 
-      gameState.setLevel(levelNum - 1);
-      // pause();
-      gameRef.pause();
-
-      if (!isDialogShowing) {
-        isDialogShowing = true;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return DialogOverlayModal(
-                title: "Game Over", action: "Gameover"); // Pause menu dialog
-          },
-        );
-      }
-    }
-  }
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-
-    final double avatarTop = position.y;
-    final double avatarBottom = position.y + size.y;
-    final double avatarRight = position.x + size.x;
-    final double avatarLeft = position.x;
-    final double floorTop = other.position.y;
-    final double floorBottom = other.position.y + size.y;
-    final double floorRight = other.position.x + other.size.x;
-    final double floorLeft = other.position.x;
-
-    if (other is CollisionBlock) {
-      // Check if avatar is landed on top of the floor
-      if (other.isFinish) {
-        gameRef.pause();
-        gameRef.saveTrait();
-      } else if ((other.isSolid || other.isEnemy) && velocityY > 0) {
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
-        if (floorTop <= avatarBottom &&
-            avatarBottom <= floorTop + velocityY * 0.05) {
-          position.y = floorTop - size.y; // Align avatar to floor
-          isInAir = false; // Mark as grounded
-          jumpCount = 0; // Reset jump count
-        }
-      } else if (velocityY == 0) {
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
-      }
-      // Horizontal collisions
-      if ((other.isSolid || other.isEnemy) && position.y != floorTop - size.y) {
-        final allowance = (velocityX) * 0.1;
-        if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
-          position.x = floorLeft - size.x;
-        } else if (floorRight >= avatarLeft &&
-            avatarLeft >= floorRight + allowance) {
-          position.x = floorRight;
-        }
-
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
-      }
-
-      // Check if avatar collides below the floor
-      if (other.isSolid &&
-          avatarTop <= floorBottom &&
-          avatarTop >= floorBottom + velocityY * 0.2 &&
-          velocityY < 0) {
-        velocityY = -velocityY; // Reverse vertical velocity
-      }
-    }
-  }
-
-  // [Unused] But may be useful for future reference
-  // void navigateToTitleScreen(BuildContext context) {
-  //   if (!isNavigatingToTitleScreen) {
-  //     isNavigatingToTitleScreen = true;
-  //     Navigator.pushAndRemoveUntil(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => TitleScreen(),
-  //       ),
-  //           (route) => false,
-  //     );
-  //   }
-  // }
-
-  @override
-  void onCollisionEnd(PositionComponent other) {
-    super.onCollisionEnd(other);
-    // surely hovering on air, duh
-    isInAir = true;
-  }
-
-  // Update the avatar's position based on velocities
-  void updatePosition(double dt) {
-    position.x += velocityX * dt;
-    position.y += velocityY * dt; // Debugging print
+    await super.onLoad();
   }
 }
 
@@ -622,16 +479,16 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
               return Stack(
                 children: [
                   // Zoom & Shake
-                  Transform.scale(
-                    scale: _zoomAnimation.value,
-                    child: Transform.translate(
-                      offset: Offset(
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                      ),
-                      child: child,
-                    ),
-                  ),
+                  // Transform.scale(
+                  //   scale: _zoomAnimation.value,
+                  //   child: Transform.translate(
+                  //     offset: Offset(
+                  //       (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                  //       (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                  //     ),
+                  //     child: child,
+                  //   ),
+                  // ),
 
                   // White-Out Overlay
                   Opacity(
