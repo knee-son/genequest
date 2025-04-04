@@ -38,6 +38,7 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   late flameTiled.TiledComponent levelMap;
   late double screenWidth;
   late double screenHeight;
+  // late CameraComponent camera;
 
   // Constructor
   GenequestGame({
@@ -45,10 +46,13 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     required this.context,
     required this.levelNum,
     this.levelName,
-  }) : super(gravity: Vector2(0, 10)); // Pass gravity to the super class
+  }) : super(gravity: Vector2(0, 300)); // Pass gravity to the super class
+
+  // @override
+  // bool get debugMode => kDebugMode; // depends if flutter is in debug
 
   @override
-  bool get debugMode => kDebugMode; // depends if flutter is in debug
+  bool get debugMode => true; // depends if flutter is in debug
 
   @override
   Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
@@ -77,10 +81,6 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     );
     add(levelMap);
 
-    // // Initialize physics world and objects (collision blocks, avatar)
-    // physicsWorld = forge2d.World(Vector2(0, -10)); // Gravity
-    // add(physicsWorld as flame.World);
-
     // final collisionsLayer =
     //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
@@ -96,15 +96,22 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     //   }
     // }
 
+    // Create the avatar and set its spawn point dynamically
     // Add the Avatar
-    avatar = Avatar(size: Vector2(100, 100), position: Vector2(100, 100));
-    // avatar.initialize(physicsWorld);
-    add(avatar); // Add the avatar as a component
+    avatar = Avatar(position: Vector2.all(100));
+    add(avatar);
 
-    // // final spawnPointLayer =
-    // //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+    // final spawnPointLayer =
+    //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
+    // if (spawnPointLayer != null) {
+    //   for (final spawn in spawnPointLayer.objects) {
+    //     if (spawn.name == 'Spawn') {
+    //       spawnPosition = Vector2(spawn.x, spawn.y - avatar.size.y);
+    //       avatar.position = spawnPosition;
+    //     }
+    //   }
+    // }
 
-    // // // Create the avatar and set its spawn point dynamically
     // // final chromatidSprite = Sprite(Flame.images.fromCache('chromatid2.png'));
     // // final sisterChromatid =
     // //     Sprite(Flame.images.fromCache('sister_chromatid.png'));
@@ -127,22 +134,22 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
-    // Create the camera
-    camera = CameraComponent.withFixedResolution(
-        width: screenWidth * 2,
-        height: screenHeight * 2,
-        world: world,
-        viewfinder: Viewfinder()
-          ..position = avatar.position // Define the starting position
-        );
-    // Assuming `camera` is already declared and added to the game
+    // // Create the camera
+    // camera = CameraComponent.withFixedResolution(
+    //     width: screenWidth * 2,
+    //     height: screenHeight * 2,
+    //     world: world,
+    //     viewfinder: Viewfinder());
+
+    // camera = CameraComponent();
 
     add(KeyboardListenerComponent());
 
     // Add the camera to the game
-    add(camera);
-    // camera.moveTo(goalPosition, speed: 1000);
-    camera.follow(avatar);
+    // add(camera);
+    // camera.moveTo(Vector2.all(1000), speed: 1000);
+
+    // camera.follow(avatar);
   }
 
   void updateHealth(int newHealth) {
@@ -278,12 +285,10 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     if (!isPaused) {
       super.update(dt);
     }
-
-    // world.stepDt(dt);
   }
 
   void avatarFallsOffChasm() {
-    avatar.position = spawnPosition;
+    avatar.setPosition(Vector2(200, 200));
     // avatar.applyDamageWithImmunity();
   }
 
@@ -366,40 +371,57 @@ class CollisionBlock extends PositionComponent {
 // ------------------- AVATAR LOGIC -------------------
 
 class Avatar extends BodyComponent {
-  final Vector2 size;
   @override
-  final Vector2 position;
+  Vector2 position;
+  late Vector2 size;
+  late Sprite sprite;
 
-  // Constructor to accept size and position parameters
-  Avatar({
-    required this.size,
-    required this.position,
-  });
+  Avatar({required this.position});
 
-  set position(Vector2 newPosition) {
-    bodyDef?.position = newPosition;
-  }
+  @override
+  bool get debugMode => true;
 
   @override
   Future<void> onLoad() async {
-    // Create a polygon shape for the avatar using the provided size
-    super.onLoad();
-    final shape = PolygonShape();
-    shape.setAsBox(size.x / 2, size.y / 2, position,
-        0); // Define the size of the shape (half-width, half-height)
+    await super.onLoad();
 
-    // Define the fixture for the body (density, friction, restitution)
+    sprite = Sprite(Flame.images.fromCache('chromatid2.png'));
+  }
+
+  @override
+  Body createBody() {
+    size = sprite.srcSize;
+
+    // renderBody = false; // Optional: Hide raw body shape when sprite is visible
+
+    // Set up rendering if you're using sprite
+    add(SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    ));
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.dynamic
+      ..position = position;
+
+    final body = world.createBody(bodyDef);
+
+    final shape = PolygonShape();
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+
     final fixtureDef = FixtureDef(shape)
       ..density = 1.0
-      ..friction = 0.3
-      ..restitution = 0.5;
+      ..friction = 0.5
+      ..restitution = 0.3;
 
-    bodyDef?.type = BodyType.dynamic;
-    bodyDef?.position = Vector2(100, 100);
+    body.createFixture(fixtureDef);
+    return body;
+  }
 
-    fixtureDefs?.add(fixtureDef);
-
-    await super.onLoad();
+  // Method to update the position
+  void setPosition(Vector2 newPosition) {
+    body.position.setFrom(newPosition);
   }
 }
 
