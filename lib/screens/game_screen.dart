@@ -65,7 +65,6 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
-    debugPrint('game screen disposed');
     FlameAudio.bgm.stop();
     super.dispose();
   }

@@ -224,15 +224,17 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     isPaused = false;
   }
 
-  // void startJump() {
-  //   if (avatar.jumpCount < 2) {
-  //     avatar.velocityY = -300; // Upward velocity
-  //     avatar.isInAir = true; // Set mid-air state
-  //     // play jump sound
-  //     FlameAudio.play('jump.wav');
-  //     avatar.jumpCount += 1;
-  //   }
-  // }
+  void startJump() {
+    avatar.jump();
+
+    // if (avatar.jumpCount < 2) {
+    //   avatar.velocityY = -300; // Upward velocity
+    //   avatar.isInAir = true; // Set mid-air state
+    //   // play jump sound
+    //   FlameAudio.play('jump.wav');
+    //   avatar.jumpCount += 1;
+    // }
+  }
 
   // void startMovingAvatar() {
   //   avatar.horizontalMoveAxis = 1;
@@ -253,32 +255,25 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    // if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
-    //     event.logicalKey == LogicalKeyboardKey.arrowUp) {
-    //   startJump();
-    // }
+    if (event is KeyDownEvent) {
+      final jumpStrength = 10.0;
+      final moveStrength = 200.0; // Adjust this value based on your needs
 
-    // if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
-    //     keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
-    //   stopMovingAvatar();
-    // } else {
-    //   if (event is KeyDownEvent &&
-    //       event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-    //     startMovingAvatarBack();
-    //   } else if (event is KeyDownEvent &&
-    //       event.logicalKey == LogicalKeyboardKey.arrowRight) {
-    //     startMovingAvatar();
-    //   }
-    // }
-
-    // if (event is KeyUpEvent &&
-    //     event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-    //   stopMovingAvatar();
-    // } else if (event is KeyUpEvent &&
-    //     event.logicalKey == LogicalKeyboardKey.arrowRight) {
-    //   stopMovingAvatar();
-    // }
-
+      // Check which key is pressed and apply corresponding force
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        avatar.body.applyLinearImpulse(Vector2(0, jumpStrength),
+            point: avatar.body.worldCenter);
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        avatar.body.applyForce(Vector2(0, moveStrength),
+            point: avatar.body.worldCenter); // Apply force down
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        avatar.body.applyForce(Vector2(-moveStrength, 0),
+            point: avatar.body.worldCenter); // Apply force left
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        avatar.body.applyForce(Vector2(moveStrength, 0),
+            point: avatar.body.worldCenter); // Apply force right
+      }
+    }
     return super.onKeyEvent(event, keysPressed);
   }
 
@@ -406,6 +401,8 @@ class Avatar extends BodyComponent {
   Vector2 spawnPoint;
   late Vector2 size;
   late Sprite sprite;
+  late final double jumpStrength;
+  late final double walkStrength;
 
   Avatar({required this.spawnPoint});
 
@@ -432,7 +429,10 @@ class Avatar extends BodyComponent {
     final body = world.createBody(bodyDef);
 
     final shape = PolygonShape();
-    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+    shape.setAsBox(size.x / 2, size.y / 2, size / 2, 0);
+
+    jumpStrength = -20.0 * (size.y);
+    walkStrength = size.x;
 
     final fixtureDef = FixtureDef(shape)
       ..density = 1.0
@@ -445,7 +445,26 @@ class Avatar extends BodyComponent {
 
   // Method to update the position
   void setPosition(Vector2 newPosition) {
-    body.position.setFrom(newPosition);
+    body.position.setFrom(newPosition - size);
+  }
+
+  void jump() {
+    print('Jumping...');
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyLinearImpulse(Vector2(0, jumpStrength), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
+  }
+
+  void moveLeft() {
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyForce(Vector2(-walkStrength, 0), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
+  }
+
+  void moveRight() {
+    print('Velocity before: ${body.linearVelocity}');
+    body.applyForce(Vector2(walkStrength, 0), point: body.worldCenter);
+    print('Velocity after: ${body.linearVelocity}');
   }
 }
 
