@@ -13,14 +13,6 @@ class LevelSelectorScreen extends StatefulWidget {
   LevelSelectorScreenState createState() => LevelSelectorScreenState();
 }
 
-void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
-
-  // // No need to load images here; FlameGame will handle it
-  // runApp(GameWidget(
-  //     game: LevelSelector())); // Use Flame's GameWidget to run the game
-}
-
 class LevelSelectorScreenState extends State<LevelSelectorScreen> {
   // final AssetImage selectALevel =
   //     const AssetImage('assets/images/select_a_level_text.png');
