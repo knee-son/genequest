@@ -270,7 +270,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                   : Image(
                                 image: _blockColor == 'blue' ? pillBlue : pillRed,
                                 width: spawnPillWidth,
-                                height: 100,
+                                height: spawnPillHeight,
                               ),
                               childWhenDragging: Opacity(
                                 opacity: 0.5,
