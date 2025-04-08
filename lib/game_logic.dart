@@ -95,57 +95,16 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
       }
     }
 
-    // Create the avatar and set its spawn point dynamically
-    // Add the Avatar
     avatar = Avatar(spawnPoint: Vector2(100, -100));
     await add(avatar); // await to load body
-
-    // add(CollisionBlock());
-    // final spawnPointLayer =
-    //     levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
-    // if (spawnPointLayer != null) {
-    //   for (final spawn in spawnPointLayer.objects) {
-    //     if (spawn.name == 'Spawn') {
-    //       spawnPosition = Vector2(spawn.x, spawn.y - avatar.size.y);
-    //       avatar.position = spawnPosition;
-    //     }
-    //   }
-    // }
-
-    // // final chromatidSprite = Sprite(Flame.images.fromCache('chromatid2.png'));
-    // // final sisterChromatid =
-    // //     Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    // // // avatar =
-    // // //     Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
-    // // goal = Goal(sprite: sisterChromatid, context: context);
-
-    // // Calculate the spawn point based on the map height (ground level)
-    // // avatar.position = spawnPosition;
-    // // goal.position = goalPosition;
-
-    // // Add the avatar to the world
-    // // add(avatar);
-    // // add(goal);
-
-    // // How far from chasm damage. adjust to prevent camera off bounds
-    // int chasmPadding = 1;
-    // chasmHeight = levelMap.size.y - chasmPadding * 64;
 
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
-    // // Create the camera
-    // camera = CameraComponent.withFixedResolution(
-    //     width: screenWidth * 20,
-    //     height: screenHeight * 20,
-    //     world: world,
-    //     viewfinder: Viewfinder());
-
-    // camera = CameraComponent();
-
     add(KeyboardListenerComponent());
 
     // Add the camera to the game
+    camera.viewport.size = Vector2(screenWidth, screenHeight);
     add(camera);
     // camera.moveTo(Vector2.all(1000), speed: 1000);
 

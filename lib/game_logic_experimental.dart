@@ -71,21 +71,34 @@ class GenequestGame extends Forge2DGame {
 
   @override
   Future<void> onLoad() async {
+    // print('context $context');
     ball = Ball(10.0);
     floor = Floor();
 
-    add(ball!);
-    add(floor!);
+    await add(ball!);
+    await add(floor!);
 
-    camera = CameraComponent.withFixedResolution(
-        width: screenWidth * 2,
-        height: screenHeight * 2,
-        world: world,
-        viewfinder: Viewfinder()
-          ..position = avatar.position // Define the starting position
-        );
-    add(camera);
+    final double screenWidth = size.x;
+    final double screenHeight = size.y;
+
+    // camera = CameraComponent.withFixedResolution(
+    //     width: screenWidth * 2,
+    //     height: screenHeight * 2,
+    //     world: world,
+    //     viewfinder: Viewfinder()
+    //       ..position = Vector2.all(-100) // Define the starting position
+    //     );
+    // add(camera);
+
+    print(world.size);
+
+    print('$screenWidth, $screenHeight');
+    camera.viewport.size = Vector2(screenWidth, screenHeight);
+    camera.viewport.position = (Vector2.all(500));
+    print(camera.visibleWorldRect);
+
     camera.follow(ball!);
+    // camera.viewfinder
   }
 
   void resume() {
