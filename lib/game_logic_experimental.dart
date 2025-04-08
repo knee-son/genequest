@@ -1,9 +1,11 @@
 import 'dart:ui';
 
-import 'package:flame/camera.dart';
+import 'package:flame/camera.dart' as flame_camera;
 import 'package:flame_forge2d/flame_forge2d.dart';
+import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:genequest_app/globals.dart';
 
 class Ball extends BodyComponent {
   final double radius;
@@ -62,6 +64,8 @@ class Floor extends BodyComponent {
 class GenequestGame extends Forge2DGame {
   static GenequestGame? instance;
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
+  late flameTiled.TiledComponent levelMap;
+  late flame_camera.World w;
 
   Ball? ball;
   Floor? floor;
@@ -71,35 +75,52 @@ class GenequestGame extends Forge2DGame {
 
   @override
   Future<void> onLoad() async {
+
+  levelMap = await flameTiled.TiledComponent.load(
+    gameState.getLevelName(3),
+    Vector2.all(64),
+  );
     // print('context $context');
     ball = Ball(10.0);
     floor = Floor();
 
     await add(ball!);
     await add(floor!);
+    // add(levelMap);
 
     final double screenWidth = size.x;
     final double screenHeight = size.y;
 
-    // camera = CameraComponent.withFixedResolution(
-    //     width: screenWidth * 2,
-    //     height: screenHeight * 2,
-    //     world: world,
-    //     viewfinder: Viewfinder()
-    //       ..position = Vector2.all(-100) // Define the starting position
-    //     );
-    // add(camera);
-
-    print(world.size);
-
-    print('$screenWidth, $screenHeight');
+    camera = flame_camera.CameraComponent.withFixedResolution(
+        width: screenWidth * 1.2,
+        height: screenHeight * 1.2,
+        world: world,
+        viewfinder: flame_camera.Viewfinder()
+          ..position = ball!.body.position
+        );
     camera.viewport.size = Vector2(screenWidth, screenHeight);
-    camera.viewport.position = (Vector2.all(500));
-    print(camera.visibleWorldRect);
+    // camera.viewport.position = (Vector2.all(500));
+
+
+    w = flame_camera.World();
+    await add (w);
+    w.add(ball!);
+    w.add(levelMap);
+    camera.world = w;
 
     camera.follow(ball!);
-    // camera.viewfinder
   }
+
+  @override
+  void update(double dt){
+    super.update(dt * 2);
+
+    // Vector2 p = ball!.position;
+    // camera.moveTo(p); 
+    // print(ball!.position);
+    // print(camera.viewport.position);
+
+  } 
 
   void resume() {
     print('resumed!');

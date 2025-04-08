@@ -7,7 +7,7 @@ import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 import 'level_selector_screen.dart';
-import '../game_logic_experimental.dart';
+import '../game_logic.dart';
 
 class GameScreen extends StatefulWidget {
   final int levelNum;
