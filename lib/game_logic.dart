@@ -20,6 +20,7 @@ import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // // ----------------- HOMEBREW WORLD -----------------
 // class WorldWithCamera extends Forge2DWorld implements CoordinateTransform {
@@ -49,7 +50,8 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   static GenequestGame? instance; // Singleton for UI interaction
   int levelNum;
   String? levelName;
-  final double timeScale = 100.0;
+  final double timeScale = 1.0;
+  final double g = 10.0;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
   Vector2 goalPosition = Vector2.zero();
@@ -69,10 +71,12 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
     required this.context,
     required this.levelNum,
     this.levelName,
-  }) : super(gravity: Vector2(0, 1.0),); // Pass gravity to the super class
+  }) : super(
+          gravity: Vector2(0, 20.0),
+        ); // Pass gravity to the super class
 
   @override
-  bool get debugMode => true; // depends if flutter is in debug
+  bool get debugMode => kDebugMode; // depends if flutter is in debug
 
   @override
   Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
@@ -80,8 +84,18 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    debugMode = false;
-    await add(world);
+
+    add(FpsTextComponent(
+      anchor: Anchor.topRight,
+      position: Vector2(size.x - 10, 10),
+      textRenderer: TextPaint(
+        style: GoogleFonts.robotoMono(
+          color: const Color.fromARGB(159, 0, 0, 0),
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ));
 
     await Flame.images.loadAll([
       'chromatid2.png',
@@ -101,7 +115,7 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
           : gameState.getLevelName(levelNum),
       Vector2.all(64), // Tile size
     );
-    add(levelMap);
+    world.add(levelMap);
 
     final spawnPointLayer =
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
@@ -116,14 +130,15 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
           size: Vector2(object.width, object.height),
         );
         add(collisionBlock);
+        // world.add(collisionBlock);
       }
     }
 
     if (spawnPointLayer != null) {
       for (final spawn in spawnPointLayer.objects) {
         if (spawn.name == 'Spawn') {
-
           avatar = Avatar(spawnPoint: spawn.position);
+          // await world.add(avatar); // await to load body
           await add(avatar); // await to load body
         }
         // // spawn sister chromatid
@@ -146,7 +161,6 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
       }
     }
 
-
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
@@ -156,19 +170,17 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
         width: screenWidth * 1.2,
         height: screenHeight * 1.2,
         world: world,
-        viewfinder: flame_camera.Viewfinder()
-          ..position = avatar.body.position
-        );
+        viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
     camera.viewport.size = Vector2(screenWidth, screenHeight);
 
     // workaround for camera
 
-    final cameraWorld = flame_camera.World();
-    await add (cameraWorld);
+    // final cameraWorld = flame_camera.World();
+    // await add(cameraWorld);
     // await add (avatar);
-    cameraWorld.add(avatar);
-    cameraWorld.add(levelMap);
-    camera.world = cameraWorld;
+    world.add(avatar);
+    world.add(levelMap);
+    // camera.world = cameraWorld;
     camera.follow(avatar);
   }
 
@@ -274,8 +286,8 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
   KeyEventResult onKeyEvent(
       KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     if (event is KeyDownEvent) {
-        if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          avatar.jump();
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        avatar.jump();
       }
     }
 
@@ -286,8 +298,7 @@ class GenequestGame extends Forge2DGame with KeyboardEvents {
       if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         avatar.movingForward = true;
       }
-    }
-    else if (event is KeyUpEvent) {
+    } else if (event is KeyUpEvent) {
       if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
         avatar.movingBackward = false;
       }
@@ -383,6 +394,7 @@ class CollisionBlock extends BodyComponent {
   @override
   Body createBody() {
     paint = Paint()..color = Colors.transparent;
+    // paint = Paint()..color = const Color.fromARGB(0, 255, 255, 255);
 
     final shape = PolygonShape();
     shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
@@ -418,6 +430,7 @@ class Avatar extends BodyComponent {
   @override
   Body createBody() {
     paint = Paint()..color = Colors.transparent;
+    // paint = Paint()..color = const Color.fromARGB(255, 255, 255, 255);
 
     sprite = Sprite(Flame.images.fromCache('chromatid2.png'));
 
@@ -431,14 +444,16 @@ class Avatar extends BodyComponent {
 
     final bodyDef = BodyDef()
       ..type = BodyType.dynamic
-      ..position = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+      ..position = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2)
+      ..linearDamping = 1.2
+      ..gravityScale = Vector2(0, 10);
 
     final body = world.createBody(bodyDef);
 
     final shape = PolygonShape();
     shape.setAsBox(size.x / 2, size.y / 2, Vector2.all(0), 0);
 
-    jumpStrength = -1000.0 * (size.y);
+    jumpStrength = -3.0 * (size.y);
 
     final fixtureDef = FixtureDef(shape)
       ..density = 0.01
@@ -459,23 +474,29 @@ class Avatar extends BodyComponent {
   }
 
   @override
-  void update(double dt){
+  void update(double dt) {
     super.update(dt);
+
+    double yVelocity = body.linearVelocity.y;
+
     if (movingForward) {
-      body.applyForce(Vector2(100.0, 0.0), point: body.worldCenter);
+      body.linearVelocity = Vector2(100, yVelocity);
     }
     if (movingBackward) {
-      body.applyForce(Vector2(-100.0, 0.0), point: body.worldCenter);
+      body.linearVelocity = Vector2(-100, yVelocity);
     }
 
     if (impulseFramesRemaining > 0) {
-      applyUpwardImpulse();
+      body.applyLinearImpulse(Vector2(0, jumpStrength),
+          point: body.worldCenter);
       impulseFramesRemaining--;
     }
   }
 
   void jump() {
-    impulseFramesRemaining = 50;
+    double xVelocity = body.linearVelocity.x;
+    double yVelocity = body.linearVelocity.y;
+    body.linearVelocity = Vector2(xVelocity, yVelocity + jumpStrength);
   }
 
   void applyUpwardImpulse() {
