@@ -103,7 +103,7 @@ class GenequestGame extends Forge2DGame
     ));
 
     await Flame.images.loadAll([
-      'chromatid2.png',
+      'chromatid5.png',
       'sister_chromatid.png',
       'mob.png',
     ]);
@@ -130,6 +130,8 @@ class GenequestGame extends Forge2DGame
     if (collisionsLayer != null) {
       // Iterate through each object in the 'Floor' layer and create CollisionBlocks
       for (var object in collisionsLayer.objects) {
+        print(object.polygon);
+        print(object.polyline);
         var collisionBlock = CollisionBlock(
           position: Vector2(object.x, object.y),
           size: Vector2(object.width, object.height),
@@ -145,7 +147,7 @@ class GenequestGame extends Forge2DGame
           await add(avatar); // await to load body
         } else if (spawn.name == 'Finish') {
           goal = Goal(spawnPoint: spawn.position);
-          await add(goal); // await to load body
+          await world.add(goal); // await to load body
         }
       }
     }
@@ -210,7 +212,7 @@ class GenequestGame extends Forge2DGame
         }
       }
       gameState.incrementLevel();
-      Flame.images.clear('chromatid2.png');
+      Flame.images.clear('chromatid5.png');
       Flame.images.clear('sister_chromatid.png');
       Flame.images.clear('mob.png');
 
@@ -399,7 +401,7 @@ class Avatar extends BodyComponent {
     // remove default white paint
     paint = Paint()..color = Colors.transparent;
 
-    sprite = Sprite(Flame.images.fromCache('chromatid2.png'));
+    sprite = Sprite(Flame.images.fromCache('chromatid5.png'));
 
     size = sprite.srcSize;
 
@@ -478,7 +480,7 @@ class Avatar extends BodyComponent {
   }
 
   void jump() {
-    jumpFuel = 5; // will jump for n frames
+    jumpFuel = 6; // will jump for n frames
   }
 }
 
