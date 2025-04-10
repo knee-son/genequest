@@ -31,13 +31,9 @@ class MyCollisionListener extends ContactListener {
     final userDataA = fixtureA.userData;
     final userDataB = fixtureB.userData;
 
-    if (userDataA == 'avatar' && userDataB == 'goal') {
+    if (userDataA == 'avatar' && userDataB == 'goal' ||
+        userDataA == 'goal' && userDataB == 'avatar') {
       // Avatar reached the Goal
-      print("Avatar reached the Goal!");
-      // Trigger actions like scoring
-    }
-    if (userDataA == 'goal' && userDataB == 'avatar') {
-      // Goal reached by Avatar
       print("Avatar reached the Goal!");
       // Trigger actions like scoring
     }
@@ -90,17 +86,19 @@ class GenequestGame extends Forge2DGame
   Future<void> onLoad() async {
     super.onLoad();
 
-    add(FpsTextComponent(
-      anchor: Anchor.topRight,
-      position: Vector2(size.x - 10, 10),
-      textRenderer: TextPaint(
-        style: GoogleFonts.robotoMono(
-          color: const Color.fromARGB(159, 0, 0, 0),
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
+    if (debugMode) {
+      add(FpsTextComponent(
+        anchor: Anchor.topCenter,
+        position: Vector2(size.x - 10, 10),
+        textRenderer: TextPaint(
+          style: GoogleFonts.robotoMono(
+            color: const Color.fromARGB(159, 0, 0, 0),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-    ));
+      ));
+    }
 
     await Flame.images.loadAll([
       'chromatid5.png',
@@ -130,12 +128,17 @@ class GenequestGame extends Forge2DGame
     if (collisionsLayer != null) {
       // Iterate through each object in the 'Floor' layer and create CollisionBlocks
       for (var object in collisionsLayer.objects) {
-        print(object.polygon);
-        print(object.polyline);
-        var collisionBlock = CollisionBlock(
-          position: Vector2(object.x, object.y),
-          size: Vector2(object.width, object.height),
-        );
+        var collisionBlock = object.polygon.isNotEmpty
+            ? CollisionBlock(
+                position: Vector2(object.x, object.y),
+                size: Vector2(object.width, object.height),
+                polygon: object.polygon,
+              )
+            : CollisionBlock(
+                position: Vector2(object.x, object.y),
+                size: Vector2(object.width, object.height),
+              );
+
         add(collisionBlock);
       }
     }
@@ -144,7 +147,7 @@ class GenequestGame extends Forge2DGame
       for (final spawn in spawnPointLayer.objects) {
         if (spawn.name == 'Spawn') {
           avatar = Avatar(spawnPoint: spawn.position);
-          await add(avatar); // await to load body
+          await world.add(avatar); // await to load body
         } else if (spawn.name == 'Finish') {
           goal = Goal(spawnPoint: spawn.position);
           await world.add(goal); // await to load body
@@ -277,8 +280,8 @@ class GenequestGame extends Forge2DGame
   }
 
   void reset() {
-    print('reset!');
     avatar.resetPosition();
+    goal.resetPosition();
 
     // avatar.velocityX = 0; // Stop horizontal movement
     // avatar.velocityY = 0; // Stop vertical movement
@@ -296,8 +299,6 @@ class Goal extends BodyComponent {
   Vector2 spawnPoint;
   late Vector2 size;
   late Sprite sprite;
-
-  final String type = "goal";
 
   Goal({required this.spawnPoint});
 
@@ -333,7 +334,8 @@ class Goal extends BodyComponent {
 
     final fixtureDef = FixtureDef(shape)
       ..friction = 0.1
-      ..density = 0.01;
+      ..density = 0.005
+      ..userData = 'goal';
 
     body.createFixture(fixtureDef);
 
@@ -351,10 +353,12 @@ class CollisionBlock extends BodyComponent {
   @override
   Vector2 position;
   Vector2 size;
+  final List<flameTiled.Point>? polygon;
 
   CollisionBlock({
     required this.position,
     required this.size,
+    this.polygon,
   });
 
   @override
@@ -366,7 +370,14 @@ class CollisionBlock extends BodyComponent {
     paint = Paint()..color = Colors.transparent;
 
     final shape = PolygonShape();
-    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+    if (polygon != null) {
+      // Convert your polygon points to Vector2 if needed
+      shape.set(_convertToVector2List(polygon!));
+    } else {
+      // Use default box shape
+      shape.setAsBox(
+          size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+    }
 
     final bodyDef = BodyDef()
       ..position = position
@@ -377,6 +388,12 @@ class CollisionBlock extends BodyComponent {
       ..friction = 0.5;
 
     return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+
+  List<Vector2> _convertToVector2List(List<flameTiled.Point> points) {
+    return points
+        .map((p) => Vector2(p.x.toDouble() / 10, p.y.toDouble() / 10))
+        .toList();
   }
 }
 
@@ -431,7 +448,8 @@ class Avatar extends BodyComponent {
 
     final fixtureDef = FixtureDef(shape)
       ..friction = 0.1
-      ..density = 0.01;
+      ..density = 0.01
+      ..userData = 'avatar';
 
     body.createFixture(fixtureDef);
 
@@ -444,7 +462,9 @@ class Avatar extends BodyComponent {
   }
 
   void resetPosition() {
-    body.position.setAll(5);
+    print(position);
+    body.setTransform(spawnPoint, body.angle);
+    print(position);
   }
 
   @override
