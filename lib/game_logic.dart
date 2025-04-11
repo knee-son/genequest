@@ -82,7 +82,7 @@ class GenequestGame extends Forge2DGame
   bool get debugMode => kDebugMode; // depends if flutter is in debug
 
   @override
-  Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
+  Color backgroundColor() => const Color(0xFF2185d5); // sky background
 
   @override
   Future<void> onLoad() async {
@@ -103,7 +103,7 @@ class GenequestGame extends Forge2DGame
     }
 
     await Flame.images.loadAll([
-      'chromatid5.png',
+      'chromatid6.png',
       'sister_chromatid.png',
       'mob.png',
     ]);
@@ -490,7 +490,7 @@ class Avatar extends BodyComponent {
     // remove default white paint
     paint = Paint()..color = Colors.transparent;
 
-    sprite = Sprite(Flame.images.fromCache('chromatid5.png'));
+    sprite = Sprite(Flame.images.fromCache('chromatid6.png'));
 
     size = sprite.srcSize;
 
