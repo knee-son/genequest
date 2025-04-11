@@ -31,11 +31,13 @@ class MyCollisionListener extends ContactListener {
     final userDataA = fixtureA.userData;
     final userDataB = fixtureB.userData;
 
-    if (userDataA == 'avatar' && userDataB == 'goal' ||
+    if (userDataA == 'avatar' && userDataB == 'enemy' ||
+        userDataA == 'enemy' && userDataB == 'avatar') {
+      GenequestGame.instance!.avatar.applyDamage();
+      print('ouch!');
+    } else if (userDataA == 'avatar' && userDataB == 'goal' ||
         userDataA == 'goal' && userDataB == 'avatar') {
-      // Avatar reached the Goal
-      print("Avatar reached the Goal!");
-      // Trigger actions like scoring
+      GenequestGame.instance?.saveTrait();
     }
   }
 }
@@ -88,7 +90,7 @@ class GenequestGame extends Forge2DGame
 
     if (debugMode) {
       add(FpsTextComponent(
-        anchor: Anchor.topCenter,
+        anchor: Anchor.topRight,
         position: Vector2(size.x - 10, 10),
         textRenderer: TextPaint(
           style: GoogleFonts.robotoMono(
@@ -118,7 +120,7 @@ class GenequestGame extends Forge2DGame
           : gameState.getLevelName(levelNum),
       Vector2.all(64 / 10), // Tile size
     );
-    world.add(levelMap);
+    await world.add(levelMap);
 
     final spawnPointLayer =
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
@@ -127,30 +129,43 @@ class GenequestGame extends Forge2DGame
 
     if (collisionsLayer != null) {
       // Iterate through each object in the 'Floor' layer and create CollisionBlocks
-      for (var object in collisionsLayer.objects) {
-        var collisionBlock = object.polygon.isNotEmpty
-            ? CollisionBlock(
-                position: Vector2(object.x, object.y),
-                size: Vector2(object.width, object.height),
-                polygon: object.polygon,
-              )
-            : CollisionBlock(
-                position: Vector2(object.x, object.y),
-                size: Vector2(object.width, object.height),
-              );
-
-        add(collisionBlock);
+      for (flameTiled.TiledObject object in collisionsLayer.objects) {
+        switch (object.name) {
+          case 'Spike':
+            add(CollisionBlock(
+              position: object.position,
+              size: Vector2(object.width, object.height),
+            )..body.userData = 'spike');
+          default: // floor
+            add(object.polygon.isNotEmpty
+                ? CollisionBlock(
+                    position: object.position,
+                    size: object.size,
+                    polygon: object.polygon,
+                  )
+                : CollisionBlock(
+                    position: object.position,
+                    size: object.size,
+                  ));
+        }
       }
     }
 
     if (spawnPointLayer != null) {
       for (final spawn in spawnPointLayer.objects) {
-        if (spawn.name == 'Spawn') {
-          avatar = Avatar(spawnPoint: spawn.position);
-          await world.add(avatar); // await to load body
-        } else if (spawn.name == 'Finish') {
-          goal = Goal(spawnPoint: spawn.position);
-          await world.add(goal); // await to load body
+        switch (spawn.name) {
+          case 'Enemy':
+            await world.add(Enemy(spawnPoint: spawn.position));
+          case 'Spawn':
+            {
+              avatar = Avatar(spawnPoint: spawn.position);
+              await world.add(avatar);
+            }
+          case 'Finish':
+            {
+              goal = Goal(spawnPoint: spawn.position);
+              await world.add(goal);
+            }
         }
       }
     }
@@ -161,8 +176,8 @@ class GenequestGame extends Forge2DGame
     add(KeyboardListenerComponent());
 
     camera = flame_camera.CameraComponent.withFixedResolution(
-        width: screenWidth * .12,
-        height: screenHeight * .12,
+        width: screenWidth / 10 * 1.2,
+        height: screenHeight / 10 * 1.2,
         world: world,
         viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
     camera.viewport.size = Vector2(screenWidth, screenHeight);
@@ -178,64 +193,6 @@ class GenequestGame extends Forge2DGame
 
   void pause() {
     isPaused = true;
-  }
-
-  void saveTrait() {
-    if (gameState.currentLevel == 0) {
-      // Ensure there are traits available before proceeding
-      if (gameState.traits.isNotEmpty) {
-        String dominantTrait =
-            gameState.traits[gameState.currentLevel].defaultTrait;
-        String nonDominantTrait =
-            gameState.traits[gameState.currentLevel].traits.last;
-
-        Trait newTrait = Trait(
-            name: gameState.traits[gameState.currentLevel].name,
-            traits: gameState.traits[gameState.currentLevel].traits,
-            difficulty: gameState.traits[gameState.currentLevel].difficulty,
-            selectedTrait: dominantTrait,
-            level: gameState.traits[gameState.currentLevel].level);
-
-        // if (goal.size == goal.regularSize) {
-        //   newTrait.selectedTrait = nonDominantTrait;
-        // } else {
-        //   newTrait.selectedTrait = dominantTrait;
-        // }
-
-        // Check for an existing trait where the level matches gameState.level
-        var existingTraitIndex = gameState.savedTraits.indexWhere(
-          (trait) => trait.level == gameState.currentLevel,
-        );
-
-        if (existingTraitIndex != -1) {
-          // Update the existing trait instance if found and selectedTrait is not empty
-          gameState.savedTraits[gameState.currentLevel] = newTrait;
-        } else {
-          gameState.savedTraits.add(newTrait);
-        }
-      }
-      gameState.incrementLevel();
-      Flame.images.clear('chromatid5.png');
-      Flame.images.clear('sister_chromatid.png');
-      Flame.images.clear('mob.png');
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
-      );
-      gameState.incrementLevel();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
-      );
-    } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                MiniGameScreenTransition(levelNum: gameState.currentLevel)),
-      );
-    }
   }
 
   void resume() {
@@ -274,22 +231,69 @@ class GenequestGame extends Forge2DGame
     }
   }
 
-  void avatarFallsOffChasm() {
-    avatar.resetPosition();
-    // avatar.applyDamageWithImmunity();
-  }
-
   void reset() {
     avatar.resetPosition();
-    goal.resetPosition();
+    avatar.health = 6;
 
-    // avatar.velocityX = 0; // Stop horizontal movement
-    // avatar.velocityY = 0; // Stop vertical movement
-    // avatar.isInAir = false; // Ensure avatar is grounded
-    // avatar.jumpCount = 0; // Reset jump count
-    // avatar.health = 6;
-    // GenequestGame.instance?.updateHealth(avatar.health);
-    // If you have additional game state variables (e.g., score, level), reset them here
+    goal.resetPosition();
+  }
+
+  void saveTrait() {
+    if (gameState.currentLevel == 0) {
+      // Ensure there are traits available before proceeding
+      if (gameState.traits.isNotEmpty) {
+        String dominantTrait =
+            gameState.traits[gameState.currentLevel].defaultTrait;
+        String nonDominantTrait =
+            gameState.traits[gameState.currentLevel].traits.last;
+
+        Trait newTrait = Trait(
+            name: gameState.traits[gameState.currentLevel].name,
+            traits: gameState.traits[gameState.currentLevel].traits,
+            difficulty: gameState.traits[gameState.currentLevel].difficulty,
+            selectedTrait: dominantTrait,
+            level: gameState.traits[gameState.currentLevel].level);
+
+        if (goal.size == goal.size) {
+          newTrait.selectedTrait = nonDominantTrait;
+        } else {
+          newTrait.selectedTrait = dominantTrait;
+        }
+
+        // Check for an existing trait where the level matches gameState.level
+        var existingTraitIndex = gameState.savedTraits.indexWhere(
+          (trait) => trait.level == gameState.currentLevel,
+        );
+
+        if (existingTraitIndex != -1) {
+          // Update the existing trait instance if found and selectedTrait is not empty
+          gameState.savedTraits[gameState.currentLevel] = newTrait;
+        } else {
+          gameState.savedTraits.add(newTrait);
+        }
+      }
+      gameState.incrementLevel();
+      Flame.images.clear('chromatid.png');
+      Flame.images.clear('sister_chromatid.png');
+      Flame.images.clear('mob.png');
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      );
+      gameState.incrementLevel();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                MiniGameScreenTransition(levelNum: gameState.currentLevel)),
+      );
+    }
   }
 }
 
@@ -399,6 +403,72 @@ class CollisionBlock extends BodyComponent {
 
 // ------------------- ENEMY LOGIC --------------------
 
+class Enemy extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+
+  int _framesWalked = 0;
+  final int _maxFramesWalking = 110;
+  final double _walkSpeed = 120;
+
+  Enemy({required this.spawnPoint});
+
+  @override
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('mob.png'));
+    size = sprite.srcSize;
+    size /= 10;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.kinematic
+      ..position = spawnPoint
+      ..linearDamping = 1.2
+      ..linearVelocity.x = _walkSpeed;
+
+    final body = world.createBody(bodyDef);
+    final shape = CircleShape();
+    shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
+
+    final fixtureDef = FixtureDef(shape)..userData = 'enemy';
+
+    body.createFixture(fixtureDef);
+
+    return body;
+  }
+
+  void resetPosition() {
+    body.position.setFrom(spawnPoint);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    _framesWalked += 1;
+    if (_framesWalked > _maxFramesWalking) {
+      body.linearVelocity.x = -body.linearVelocity.x;
+      spriteComponent.flipHorizontally();
+      _framesWalked = 0;
+    }
+  }
+}
+
 // ------------------- AVATAR LOGIC -------------------
 
 class Avatar extends BodyComponent {
@@ -409,6 +479,8 @@ class Avatar extends BodyComponent {
   late final double walkSpeed;
   bool movingForward = false;
   bool movingBackward = false;
+  bool isImmune = false;
+  int health = 6;
   int jumpFuel = 0;
 
   Avatar({required this.spawnPoint});
@@ -456,15 +528,62 @@ class Avatar extends BodyComponent {
     return body;
   }
 
+  void applyDamage() {
+    if (!isImmune) {
+      health -= 1; // Reduce health
+      GenequestGame.instance?.updateHealth(health); // Update health bar
+      isImmune = true; // Grant immunity
+      paint.color = const Color(
+          0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
+      // Start blinking effect
+      int blinkCount = 0;
+      async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
+        if (blinkCount >= 5) {
+          timer.cancel(); // Stop blinking
+          isImmune = false; // End immunity
+          paint.color = const Color(0xFFFFFFFF); // Restore full opacity
+        } else {
+          // Play audio on each blink
+          if (blinkCount == 0) {
+            FlameAudio.play('oof.mp3');
+          }
+          // Alternate opacity between semi-transparent and fully transparent
+          paint.color = paint.color.a == 0.0
+              ? const Color(0x88FFFFFF) // Semi-transparent
+              : const Color(0x00FFFFFF); // Fully transparent
+          blinkCount++;
+        }
+      });
+    }
+
+    if (health <= 0) {
+      // Game Over logic
+
+      gameState.setLevel(gameState.currentLevel - 1);
+      // pause();
+      GenequestGame.instance?.pause();
+
+      if (!isDialogShowing) {
+        isDialogShowing = true;
+        showDialog(
+          context: GenequestGame.instance!.context,
+          barrierDismissible: false,
+          builder: (context) {
+            return DialogOverlayModal(
+                title: "Game Over", action: "Gameover"); // Pause menu dialog
+          },
+        );
+      }
+    }
+  }
+
   // Method to update the position
   void setPosition(Vector2 newPosition) {
     body.position.setFrom(newPosition - size);
   }
 
   void resetPosition() {
-    print(position);
     body.setTransform(spawnPoint, body.angle);
-    print(position);
   }
 
   @override
@@ -500,6 +619,7 @@ class Avatar extends BodyComponent {
   }
 
   void jump() {
+    FlameAudio.play('jump.wav');
     jumpFuel = 6; // will jump for n frames
   }
 }
@@ -572,7 +692,7 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromARGB(0, 0, 0, 0),
       body: Center(
         child: AnimatedBuilder(
             animation: _controller,
