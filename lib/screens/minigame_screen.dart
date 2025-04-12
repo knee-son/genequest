@@ -81,11 +81,12 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     int nonDomiWins = 0;
     int isFinishFlags = 0;
     // for level 1 and 2
+    print("checkvalid");
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
         _droppedBlockFirst.toString() ==
             _droppedBlockSecond.reversed.toList().toString()) {
-
+      print("OH NO");
       if (_droppedBlockFirst.contains("red")) {
           domiWins++;
       } else {
@@ -120,7 +121,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       isFinishFlags++;
     }
 
-    if (isFinishFlags == gameState.currentLevel - 1 ||
+    if (isFinishFlags == gameState.currentLevel - 1 &&
+        gameState.currentLevel >= 3 ||
         (isFinishFlags == 1 && gameState.currentLevel == 1) ||
         (isFinishFlags == 1 && gameState.currentLevel == 2)) {
 
@@ -134,7 +136,6 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           difficulty: gameState.traits[gameState.currentLevel].difficulty,
           selectedTrait: dominantTrait,
           level: gameState.traits[gameState.currentLevel].level);
-
 
       if (domiWins >= nonDomiWins){
         newTrait.selectedTrait = dominantTrait;
@@ -151,6 +152,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       } else {
         gameState.savedTraits.add(newTrait);
       }
+
       showDialog(
         context: context,
         builder: (BuildContext context) {
