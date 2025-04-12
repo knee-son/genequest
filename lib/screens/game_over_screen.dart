@@ -84,41 +84,61 @@ class _GameOverScreenState extends State<GameOverScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Game Over'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Wrap Image.asset in Flexible to adjust to the screen dynamically
-            Flexible(
-              child: fullImagePath != null
-                  ? Image(
-                image: fullImagePath,
-                width: 200,
-                height: 200,
-              )
-                  : const Center(
-                child: Text(
-                  'Error: Image not available',
-                  style: TextStyle(fontSize: 16, color: Colors.red),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TitleScreen(),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/congratulations_game_over.png'),
+            fit: BoxFit.cover, // Ensures the image covers the entire screen
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Stack to layer the image and the overlay text
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // The image background
+                  fullImagePath != null
+                      ? Image(
+                    image: fullImagePath,
+                    width: 200,
+                    height: 200,
+                  )
+                      : const Center(
+                    child: Text(
+                      'Error: Image not available',
+                      style: TextStyle(fontSize: 16, color: Colors.red),
+                    ),
                   ),
-                );
-              },
-              child: const Text('Back to Main Menu'),
-            ),
-          ],
+                  // Positioned "Congratulations!" text on top of the image
+
+                ],
+              ),
+              const Text(
+                'Congratulations!',
+                style: TextStyle(
+                  fontSize: 46,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontFamily: 'Ribeye',
+                  // Adding a shadow or background will improve readability if needed:
+                  // shadows: [Shadow(blurRadius: 3, color: Colors.black45, offset: Offset(2, 2))],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => TitleScreen()),
+                  );
+                },
+                child: const Text('Back to Main Menu'),
+              ),
+            ],
+          ),
         ),
       ),
     );
