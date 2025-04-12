@@ -2,7 +2,6 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
-import 'package:genequest_app/screens/game_over_screen.dart';
 import 'package:genequest_app/screens/game_over_transition_screen.dart';
 import 'level_selector_screen.dart';
 

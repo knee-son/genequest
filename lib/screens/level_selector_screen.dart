@@ -56,6 +56,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: const Color(0xFFB55022),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -187,7 +188,6 @@ class LevelButton extends StatelessWidget {
         }
             : null, // Disable when not enabled
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12), // Round corners for the image
           child: Image.asset(
             iconPath,
             fit: BoxFit.fill,
