@@ -2,6 +2,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
+import 'game_over_transition_screen.dart';
 import 'game_screen.dart';
 import 'level_selector_screen.dart';
 import 'minigame_screen.dart'; // Import the GameScreen
@@ -221,13 +222,14 @@ class TitleScreenState extends State<TitleScreen>
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => GameOverScreen()),
+                              builder: (context) => GameOverTransitionScreen()),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 15),
-                        textStyle: const TextStyle(fontSize: 20),
+                        textStyle: const TextStyle(
+                          fontSize: 20,
+                          fontFamily: 'WinkySans',
+                        ),
                       ),
                       child: const Text('Game Over Screen'),
                     ),

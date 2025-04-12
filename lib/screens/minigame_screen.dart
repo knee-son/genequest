@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
+import 'package:genequest_app/screens/game_over_transition_screen.dart';
 import 'level_selector_screen.dart';
 
 void main() async {
@@ -165,7 +166,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => GameOverScreen(),
+                        builder: (context) => GameOverTransitionScreen(),
                       ),
                           (Route<dynamic> route) => false, // Removes all previous routes
                     );
