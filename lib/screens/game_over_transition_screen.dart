@@ -11,8 +11,9 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
   int currentStage = 0;
 
   final List<String> stages = [
-    'AFTER COMPLETING the gene codes, YOUR GENETICAL TRAITS ARE INHERITED.',
-    'YOU ARE NOW BORN.'
+    'The chromatid has now finally been merged with its sister.',
+    'The chromatid\'s great adventure has come to an end. All its traits have been acquired.',
+    'You are now born!'
   ];
 
   void goToNextStage() {
@@ -37,6 +38,7 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
         onTap: goToNextStage,
         child: Container(
           color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
           // Ensures the Container fills the screen
           width: double.infinity,
           height: double.infinity,
@@ -45,7 +47,7 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
             stages[currentStage],
             style: const TextStyle(
               fontSize: 36,
-              fontWeight: FontWeight.bold,
+              fontFamily: 'OpenSans'
             ),
             textAlign: TextAlign.center,
           ),

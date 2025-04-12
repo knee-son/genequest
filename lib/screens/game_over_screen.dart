@@ -95,28 +95,44 @@ class _GameOverScreenState extends State<GameOverScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
-                child: fullImagePath != null
-                    ? Image(
-                  image: fullImagePath,
-                  width: 200,
-                  height: 200,
-                )
-                    : const Center(
-                  child: Text(
-                    'Error: Image not available',
-                    style: TextStyle(fontSize: 16, color: Colors.red),
+              // Stack to layer the image and the overlay text
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // The image background
+                  fullImagePath != null
+                      ? Image(
+                    image: fullImagePath,
+                    width: 200,
+                    height: 200,
+                  )
+                      : const Center(
+                    child: Text(
+                      'Error: Image not available',
+                      style: TextStyle(fontSize: 16, color: Colors.red),
+                    ),
                   ),
-                ),
+                  // Positioned "Congratulations!" text on top of the image
+
+                ],
               ),
-              const SizedBox(height: 20),
+              const Text(
+                'Congratulations!',
+                style: TextStyle(
+                  fontSize: 46,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontFamily: 'Ribeye',
+                  // Adding a shadow or background will improve readability if needed:
+                  // shadows: [Shadow(blurRadius: 3, color: Colors.black45, offset: Offset(2, 2))],
+                ),
+                textAlign: TextAlign.center,
+              ),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => TitleScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => TitleScreen()),
                   );
                 },
                 child: const Text('Back to Main Menu'),
