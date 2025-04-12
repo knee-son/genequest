@@ -81,12 +81,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     int nonDomiWins = 0;
     int isFinishFlags = 0;
     // for level 1 and 2
-    print("checkvalid");
     if (_droppedBlockFirst.length == 2 &&
         _droppedBlockSecond.length == 2 &&
         _droppedBlockFirst.toString() ==
             _droppedBlockSecond.reversed.toList().toString()) {
-      print("OH NO");
       if (_droppedBlockFirst.contains("red")) {
           domiWins++;
       } else {
