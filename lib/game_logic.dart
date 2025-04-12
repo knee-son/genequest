@@ -239,50 +239,62 @@ class GenequestGame extends FlameGame
   void saveTrait() {
     if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
-      if (gameState.traits.isNotEmpty) {
-        String dominantTrait =
-            gameState.traits[gameState.currentLevel].defaultTrait;
-        String nonDominantTrait =
-            gameState.traits[gameState.currentLevel].traits.last;
+      String dominantTrait =
+          gameState.traits[gameState.currentLevel].defaultTrait;
+      String nonDominantTrait =
+          gameState.traits[gameState.currentLevel].traits.last;
 
-        Trait newTrait = Trait(
-            name: gameState.traits[gameState.currentLevel].name,
-            traits: gameState.traits[gameState.currentLevel].traits,
-            difficulty: gameState.traits[gameState.currentLevel].difficulty,
-            selectedTrait: dominantTrait,
-            level: gameState.traits[gameState.currentLevel].level);
+      Trait newTrait = Trait(
+          name: gameState.traits[gameState.currentLevel].name,
+          traits: gameState.traits[gameState.currentLevel].traits,
+          difficulty: gameState.traits[gameState.currentLevel].difficulty,
+          selectedTrait: dominantTrait,
+          level: gameState.traits[gameState.currentLevel].level);
 
-        if (goal.size == goal.regularSize) {
-          newTrait.selectedTrait = nonDominantTrait;
-        } else {
-          newTrait.selectedTrait = dominantTrait;
-        }
-
-        // Check for an existing trait where the level matches gameState.level
-        var existingTraitIndex = gameState.savedTraits.indexWhere(
-          (trait) => trait.level == gameState.currentLevel,
-        );
-
-        if (existingTraitIndex != -1) {
-          // Update the existing trait instance if found and selectedTrait is not empty
-          gameState.savedTraits[gameState.currentLevel] = newTrait;
-        } else {
-          gameState.savedTraits.add(newTrait);
-        }
+      if (goal.size == goal.regularSize) {
+        newTrait.selectedTrait = nonDominantTrait;
+      } else {
+        newTrait.selectedTrait = dominantTrait;
       }
-      gameState.incrementLevel();
-      Flame.images.clear('chromatid.png');
-      Flame.images.clear('sister_chromatid.png');
-      Flame.images.clear('mob.png');
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      // Check for an existing trait where the level matches gameState.level
+      var existingTraitIndex = gameState.savedTraits.indexWhere(
+        (trait) => trait.level == gameState.currentLevel,
       );
-      gameState.incrementLevel();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+
+      if (existingTraitIndex != -1) {
+        // Update the existing trait instance if found and selectedTrait is not empty
+        gameState.savedTraits[gameState.currentLevel] = newTrait;
+      } else {
+        gameState.savedTraits.add(newTrait);
+      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Trait Acquired'),
+            content: Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                  gameState.incrementLevel();
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                  );
+                  gameState.incrementLevel();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                  );
+                },
+                child: const Text('Dismiss'),
+              ),
+            ],
+          );
+        },
       );
     } else {
       Navigator.pushReplacement(
@@ -292,6 +304,10 @@ class GenequestGame extends FlameGame
                 MiniGameScreenTransition(levelNum: gameState.currentLevel)),
       );
     }
+
+    Flame.images.clear('chromatid.png');
+    Flame.images.clear('sister_chromatid.png');
+    Flame.images.clear('mob.png');
   }
 
   void resume() {

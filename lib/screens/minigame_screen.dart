@@ -183,12 +183,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           );
         },
       );
-
-
-
     }
-
-
   }
 
   @override
