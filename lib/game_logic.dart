@@ -639,7 +639,7 @@ class Enemy extends BodyComponent {
     double currentPosition = body.position.x;
 
     if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition) {
+        currentPosition < originalPosition - 0.1) {
       body.linearVelocity.x = -body.linearVelocity.x;
       spriteComponent.flipHorizontally();
     }
@@ -708,7 +708,7 @@ class Fire extends BodyComponent {
     double currentPosition = body.position.y;
 
     if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition) {
+        currentPosition < originalPosition - 0.1) {
       body.linearVelocity.y = -body.linearVelocity.y;
     }
   }
