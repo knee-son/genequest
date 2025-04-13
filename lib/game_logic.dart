@@ -82,6 +82,7 @@ class GenequestGame extends Forge2DGame
       'chromatid7.png',
       'sister_chromatid.png',
       'mob.png',
+      'flame.png'
     ]);
 
     await FlameAudio.audioCache.load('jump.wav');
@@ -143,6 +144,8 @@ class GenequestGame extends Forge2DGame
         switch (spawn.name) {
           case 'Enemy':
             await world.add(Enemy(spawnPoint: spawn.position));
+          case 'Fire':
+            await world.add(Fire(spawnPoint: spawn.position));
           case 'Spawn':
             {
               avatar = Avatar(spawnPoint: spawn.position);
@@ -324,6 +327,7 @@ class GenequestGame extends Forge2DGame
     Flame.images.clear('chromatid.png');
     Flame.images.clear('sister_chromatid.png');
     Flame.images.clear('mob.png');
+    Flame.images.clear('flame.png');
   }
 }
 
@@ -355,8 +359,6 @@ class MyCollisionListener extends ContactListener {
     final userDataA = contact.fixtureA.userData;
     final userDataB = contact.fixtureB.userData;
 
-    // print(userDataA);
-    // print(userDataB);
 
     final worldManifold = WorldManifold();
     contact.getWorldManifold(worldManifold);
@@ -378,10 +380,11 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.resetPosition();
     }
 
-    if ((userDataA == 'enemy' || userDataA == 'spike') &&
+    if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
             userDataB == 'avatar' ||
         userDataA == 'avatar' &&
-            (userDataB == 'enemy' || userDataB == 'spike')) {
+            (userDataB == 'enemy' || userDataB == 'spike' || userDataB == 'fire')
+    ) {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
@@ -639,6 +642,74 @@ class Enemy extends BodyComponent {
         currentPosition < originalPosition) {
       body.linearVelocity.x = -body.linearVelocity.x;
       spriteComponent.flipHorizontally();
+    }
+  }
+}
+
+// ------------------- ENEMY LOGIC --------------------
+
+class Fire extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+
+  final int _maxDistance = 50;
+  final double _walkSpeed = 120;
+
+  Fire({required this.spawnPoint});
+
+  @override
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('flame.png'));
+    size = sprite.srcSize;
+    size /= 50;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.kinematic
+      ..position = spawnPoint
+      ..linearDamping = 1.2
+      ..linearVelocity.y = _walkSpeed;
+
+    final body = world.createBody(bodyDef);
+    final shape = CircleShape();
+    shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
+
+    final fixtureDef = FixtureDef(shape)..userData = 'fire';
+
+    body.createFixture(fixtureDef);
+
+    return body;
+  }
+
+  void resetPosition() {
+    body.position.setFrom(spawnPoint);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    double originalPosition = spawnPoint.y;
+    double currentPosition = body.position.y;
+
+    if (currentPosition > originalPosition + _maxDistance ||
+        currentPosition < originalPosition) {
+      body.linearVelocity.y = -body.linearVelocity.y;
     }
   }
 }
