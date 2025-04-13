@@ -372,7 +372,8 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance?.avatar.resetJumps();
     }
 
-    if (userDataA == 'chasm' && userDataB == 'avatar') {
+    if (userDataA == 'chasm' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'chasm') {
       GenequestGame.instance!.avatar.applyDamage();
       GenequestGame.instance!.avatar.resetPosition();
     }
