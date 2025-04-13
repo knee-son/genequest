@@ -378,7 +378,9 @@ class MyCollisionListener extends ContactListener {
     }
 
     if ((userDataA == 'enemy' || userDataA == 'spike') &&
-        userDataB == 'avatar') {
+            userDataB == 'avatar' ||
+        userDataA == 'avatar' &&
+            (userDataB == 'enemy' || userDataB == 'spike')) {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
