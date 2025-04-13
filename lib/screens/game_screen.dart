@@ -146,10 +146,10 @@ class _GameScreenState extends State<GameScreen> {
                       child: Row(
                         children: [
                           InkWell(
-                            // onTapDown: (_) =>
-                            //     GenequestGame.instance?.startMovingAvatarBack(),
-                            // onTapUp: (_) =>
-                            //     GenequestGame.instance?.stopMovingAvatar(),
+                            onTapDown: (_) => GenequestGame
+                                .instance?.avatar.movingBackward = true,
+                            onTapUp: (_) => GenequestGame
+                                .instance?.avatar.movingBackward = false,
                             child: Transform(
                               alignment: Alignment.center,
                               transform: Matrix4.rotationY(3.14159),
@@ -161,10 +161,10 @@ class _GameScreenState extends State<GameScreen> {
                           ),
                           const SizedBox(width: 20),
                           InkWell(
-                            // onTapDown: (_) =>
-                            //     GenequestGame.instance?.startMovingAvatar(),
-                            // onTapUp: (_) =>
-                            //     GenequestGame.instance?.stopMovingAvatar(),
+                            onTapDown: (_) => GenequestGame
+                                .instance?.avatar.movingForward = true,
+                            onTapUp: (_) => GenequestGame
+                                .instance?.avatar.movingForward = false,
                             child: Image(
                                 image: forwardButtonImage,
                                 width: 60,
@@ -174,11 +174,11 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
 
-                    // Right movement button
+                    // jump button
                     Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: InkWell(
-                        // onTapDown: (_) => GenequestGame.instance?.startJump(),
+                        onTapDown: (_) => GenequestGame.instance?.avatar.jump(),
                         child: Transform(
                           alignment: Alignment.center,
                           transform: Matrix4.rotationZ(-1.5708),
@@ -208,7 +208,7 @@ class _GameScreenState extends State<GameScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TitleScreen(),
+                            builder: (context) => LevelSelectorScreen(),
                           ),
                         );
                       },

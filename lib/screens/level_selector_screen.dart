@@ -44,6 +44,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 255, 242, 179),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -62,13 +63,6 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       letterSpacing: 2,
                     ),
                   ),
-                  // mainAxisAlignment: MainAxisAlignment.center,
-                  // children: [
-                  // Image(
-                  //   image: selectALevel,
-                  //   fit: BoxFit.contain, // Ensure the image scales properly
-                  // ),
-                  // ],
                 ),
               ),
               // Right Side: Levels Column with reduced spacing

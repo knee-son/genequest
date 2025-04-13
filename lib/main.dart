@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
     if (kDebugMode) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: GameScreen(3), // Your home screen widget
+        home: GameScreen(1), // Your home screen widget
       );
     } else if (kIsWeb) {
       return const MaterialApp(

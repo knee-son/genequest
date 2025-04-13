@@ -1,14 +1,10 @@
 import 'dart:async' as async;
 
 import 'package:flame/camera.dart' as flame_camera;
-import 'package:flame/effects.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
-import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
@@ -22,29 +18,8 @@ import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class MyCollisionListener extends ContactListener {
-  @override
-  void beginContact(Contact contact) {
-    final fixtureA = contact.fixtureA;
-    final fixtureB = contact.fixtureB;
-
-    final userDataA = fixtureA.userData;
-    final userDataB = fixtureB.userData;
-
-    if (userDataA == 'avatar' && userDataB == 'enemy' ||
-        userDataA == 'enemy' && userDataB == 'avatar') {
-      GenequestGame.instance!.avatar.applyDamage();
-      print('ouch!');
-    } else if (userDataA == 'avatar' && userDataB == 'goal' ||
-        userDataA == 'goal' && userDataB == 'avatar') {
-      GenequestGame.instance?.saveTrait();
-    }
-  }
-}
-
 // ------------------- GAME LOGIC -------------------
 
-// CoordinateTransform helps with camera movement
 class GenequestGame extends Forge2DGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
@@ -113,7 +88,7 @@ class GenequestGame extends Forge2DGame
 
     overlays.add('HealthBar');
 
-    // Load the Tiled map (handles rendering of the map)
+    // add levelMap to world, so it can be rendered by camera
     levelMap = await flameTiled.TiledComponent.load(
       levelName?.isNotEmpty == true
           ? levelName!
@@ -128,16 +103,21 @@ class GenequestGame extends Forge2DGame
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
     if (collisionsLayer != null) {
-      // Iterate through each object in the 'Floor' layer and create CollisionBlocks
+      // a CollisionBlock may be a spike, chasm, lava, or plain floor
       for (flameTiled.TiledObject object in collisionsLayer.objects) {
         switch (object.name) {
           case 'Spike':
-            add(CollisionBlock(
+            await add(CollisionBlock(
               position: object.position,
-              size: Vector2(object.width, object.height),
-            )..body.userData = 'spike');
+              size: object.size,
+              userData: 'spike',
+            ));
+            break;
+          case 'Chasm':
+            // implement chasm logic here (not a solid object)
+            break;
           default: // floor
-            add(object.polygon.isNotEmpty
+            await add(object.polygon.isNotEmpty
                 ? CollisionBlock(
                     position: object.position,
                     size: object.size,
@@ -147,10 +127,12 @@ class GenequestGame extends Forge2DGame
                     position: object.position,
                     size: object.size,
                   ));
+            break;
         }
       }
     }
 
+    // spawn may be avatar, enemy, or the goal
     if (spawnPointLayer != null) {
       for (final spawn in spawnPointLayer.objects) {
         switch (spawn.name) {
@@ -175,9 +157,10 @@ class GenequestGame extends Forge2DGame
 
     add(KeyboardListenerComponent());
 
+    // too much fuckery with scaling. aiming to make it global
     camera = flame_camera.CameraComponent.withFixedResolution(
-        width: screenWidth / 10 * 1.2,
-        height: screenHeight / 10 * 1.2,
+        width: screenWidth / 10 * 1.4,
+        height: screenHeight / 10 * 1.4,
         world: world,
         viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
     camera.viewport.size = Vector2(screenWidth, screenHeight);
@@ -239,6 +222,7 @@ class GenequestGame extends Forge2DGame
   }
 
   void saveTrait() {
+    // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
       if (gameState.traits.isNotEmpty) {
@@ -297,7 +281,106 @@ class GenequestGame extends Forge2DGame
   }
 }
 
-// ------------------- GOAL LOGIC -------------------
+/*
+collision objects are now migrated to Forge2D's BodyComponent.
+it has collision detection dictated by our ContactListener.
+the avatar's movements are all in the Avatar object. tweak it to
+your liking.
+
+TODO:
+- there's a case where the avatar is still colliding with a
+damaging object so it should still be in a hurt state.
+- implement a different BodyComponent for Chasm and Lava.
+- Chasm should not collide with avatar but is a sensor.
+- same goes for Lava but just implement infinite jumping to
+the avatar. apply linear damping along with damage so the
+avatar gets punished
+- the sister chromatid should have an alternating state between
+'male' and 'female in peaceful level
+- maybe change the sky backdrop to a gradient?
+- the animation is bugged and needs fixing
+*/
+
+// ---------------- COLLISION DETECTION ---------------
+
+class MyCollisionListener extends ContactListener {
+  @override
+  void beginContact(Contact contact) {
+    final fixtureA = contact.fixtureA;
+    final fixtureB = contact.fixtureB;
+
+    final userDataA = fixtureA.userData;
+    final userDataB = fixtureB.userData;
+
+    if (userDataA == 'avatar' && userDataB == 'enemy' ||
+        userDataA == 'enemy' && userDataB == 'avatar') {
+      GenequestGame.instance!.avatar.applyDamage();
+    } else if (userDataA == 'avatar' && userDataB == 'spike' ||
+        userDataA == 'spike' && userDataB == 'avatar') {
+      GenequestGame.instance!.avatar.applyDamage();
+    } else if (userDataA == 'avatar' && userDataB == 'goal' ||
+        userDataA == 'goal' && userDataB == 'avatar') {
+      GenequestGame.instance?.saveTrait();
+    }
+  }
+}
+
+// ----------------- COLLISION BLOCKS -----------------
+
+class CollisionBlock extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+  final List<flameTiled.Point>? polygon;
+  final String? userData;
+
+  CollisionBlock({
+    required this.position,
+    required this.size,
+    this.polygon,
+    this.userData,
+  });
+
+  @override
+  Body createBody() {
+    position /= 10;
+    size /= 10;
+
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    if (polygon != null) {
+      // Convert your polygon points to Vector2 if needed
+      shape.set(_convertToVector2List(polygon!));
+    } else {
+      // Use default box shape
+      shape.setAsBox(
+          size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+    }
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.5;
+
+    if (userData != null) {
+      fixtureDef.userData = userData;
+    }
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+
+  List<Vector2> _convertToVector2List(List<flameTiled.Point> points) {
+    return points
+        .map((p) => Vector2(p.x.toDouble() / 10, p.y.toDouble() / 10))
+        .toList();
+  }
+}
+
+// ------------------- GOAL LOGIC ---------------------
 
 class Goal extends BodyComponent {
   Vector2 spawnPoint;
@@ -348,56 +431,6 @@ class Goal extends BodyComponent {
 
   void resetPosition() {
     body.position.setFrom(spawnPoint);
-  }
-}
-
-// ----------------- COLLISION BLOCKS -----------------
-
-class CollisionBlock extends BodyComponent {
-  @override
-  Vector2 position;
-  Vector2 size;
-  final List<flameTiled.Point>? polygon;
-
-  CollisionBlock({
-    required this.position,
-    required this.size,
-    this.polygon,
-  });
-
-  @override
-  Body createBody() {
-    position /= 10;
-    size /= 10;
-
-    // paint = Paint()..color = const Color.fromARGB(255, 255, 255, 255);
-    paint = Paint()..color = Colors.transparent;
-
-    final shape = PolygonShape();
-    if (polygon != null) {
-      // Convert your polygon points to Vector2 if needed
-      shape.set(_convertToVector2List(polygon!));
-    } else {
-      // Use default box shape
-      shape.setAsBox(
-          size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
-    }
-
-    final bodyDef = BodyDef()
-      ..position = position
-      ..type = BodyType.static;
-
-    final fixtureDef = FixtureDef(shape)
-      ..density = 1.0
-      ..friction = 0.5;
-
-    return world.createBody(bodyDef)..createFixture(fixtureDef);
-  }
-
-  List<Vector2> _convertToVector2List(List<flameTiled.Point> points) {
-    return points
-        .map((p) => Vector2(p.x.toDouble() / 10, p.y.toDouble() / 10))
-        .toList();
   }
 }
 
@@ -475,6 +508,7 @@ class Avatar extends BodyComponent {
   Vector2 spawnPoint;
   late Vector2 size;
   late Sprite sprite;
+  late SpriteComponent spriteComponent;
   late final double jumpSpeed;
   late final double walkSpeed;
   bool movingForward = false;
@@ -493,17 +527,18 @@ class Avatar extends BodyComponent {
     sprite = Sprite(Flame.images.fromCache('chromatid6.png'));
 
     size = sprite.srcSize;
-
-    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
-
     size /= 10;
-    spawnPoint /= 10;
 
-    add(SpriteComponent(
+    spriteComponent = SpriteComponent(
       sprite: sprite,
       size: size,
       anchor: Anchor.center,
-    ));
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
 
     final bodyDef = BodyDef()
       ..type = BodyType.dynamic
@@ -516,7 +551,7 @@ class Avatar extends BodyComponent {
     shape.setAsBox(size.x / 2, size.y / 2, Vector2.all(0), 0);
 
     jumpSpeed = -1.0 * (size.y);
-    walkSpeed = 20;
+    walkSpeed = 15;
 
     final fixtureDef = FixtureDef(shape)
       ..friction = 0.1
@@ -530,27 +565,26 @@ class Avatar extends BodyComponent {
 
   void applyDamage() {
     if (!isImmune) {
-      health -= 1; // Reduce health
-      GenequestGame.instance?.updateHealth(health); // Update health bar
-      isImmune = true; // Grant immunity
-      paint.color = const Color(
-          0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
-      // Start blinking effect
+      health -= 1;
+      GenequestGame.instance?.updateHealth(health);
+      isImmune = true;
+
       int blinkCount = 0;
+      spriteComponent.opacity = 0.4;
+
       async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
         if (blinkCount >= 5) {
-          timer.cancel(); // Stop blinking
-          isImmune = false; // End immunity
-          paint.color = const Color(0xFFFFFFFF); // Restore full opacity
+          timer.cancel();
+          isImmune = false;
+          spriteComponent.opacity = 1.0; // Fully visible again
         } else {
-          // Play audio on each blink
           if (blinkCount == 0) {
             FlameAudio.play('oof.mp3');
           }
-          // Alternate opacity between semi-transparent and fully transparent
-          paint.color = paint.color.a == 0.0
-              ? const Color(0x88FFFFFF) // Semi-transparent
-              : const Color(0x00FFFFFF); // Fully transparent
+
+          // Alternate between 0.5 and 0.0 opacity
+          spriteComponent.opacity = spriteComponent.opacity == 0.0 ? 0.5 : 0.0;
+
           blinkCount++;
         }
       });
@@ -560,7 +594,6 @@ class Avatar extends BodyComponent {
       // Game Over logic
 
       gameState.setLevel(gameState.currentLevel - 1);
-      // pause();
       GenequestGame.instance?.pause();
 
       if (!isDialogShowing) {
