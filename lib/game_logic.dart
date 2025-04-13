@@ -170,21 +170,31 @@ class GenequestGame extends Forge2DGame
         viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
     camera.viewport.size = Vector2(screenWidth, screenHeight);
 
-    world.add(avatar);
     world.add(levelMap);
+    world.add(avatar);
     camera.follow(avatar);
   }
 
-  void updateHealth(int newHealth) {
-    healthNotifier.value = newHealth;
-  }
+  @override
+  void render(Canvas canvas) {
+    // Draw sky gradient first
 
-  void pause() {
-    isPaused = true;
-  }
+    final rect = Rect.fromLTWH(0, 0, screenWidth, screenHeight);
+    final gradient = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFF87CEEB), // Light Sky Blue
+        Color(0xFF4682B4), // Steel Blue
+      ],
+    );
 
-  void resume() {
-    isPaused = false;
+    final paint = Paint()..shader = gradient.createShader(rect);
+
+    canvas.drawRect(rect, paint);
+
+    // Then let Forge2D render everything else on top
+    super.render(canvas);
   }
 
   @override
@@ -219,14 +229,27 @@ class GenequestGame extends Forge2DGame
     }
   }
 
+  void updateHealth(int newHealth) {
+    healthNotifier.value = newHealth;
+  }
+
+  void pause() {
+    isPaused = true;
+  }
+
+  void resume() {
+    isPaused = false;
+  }
+
   void reset() {
     avatar.resetPosition();
-    avatar.health = 6;
-
     goal.resetPosition();
+
+    avatar.health = 6;
   }
 
   void saveTrait() {
+    pause();
     // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
@@ -333,8 +356,8 @@ class MyCollisionListener extends ContactListener {
     final userDataA = contact.fixtureA.userData;
     final userDataB = contact.fixtureB.userData;
 
-    print(userDataA);
-    print(userDataB);
+    // print(userDataA);
+    // print(userDataB);
 
     final worldManifold = WorldManifold();
     contact.getWorldManifold(worldManifold);
@@ -346,19 +369,20 @@ class MyCollisionListener extends ContactListener {
     // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
 
     if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
+      debugPrint("jumps have been reset!");
       GenequestGame.instance?.avatar.resetJumps();
     }
 
-    if (userDataA == 'avatar' && userDataB == 'chasm') {
-      GenequestGame.instance!.avatar.resetPosition();
+    if (userDataA == 'chasm' && userDataB == 'avatar') {
       GenequestGame.instance!.avatar.applyDamage();
+      GenequestGame.instance!.avatar.resetPosition();
     }
 
-    if (userDataA == 'avatar' &&
-        (userDataB == 'enemy' || userDataB == 'spike')) {
+    if ((userDataA == 'enemy' || userDataA == 'spike') &&
+        userDataB == 'avatar') {
       GenequestGame.instance!.avatar.applyDamage();
-    } else if (userDataA == 'avatar' && userDataB == 'goal' ||
-        userDataA == 'goal' && userDataB == 'avatar') {
+    } else if (userDataA == 'goal' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'goal') {
       GenequestGame.instance?.saveTrait();
     }
   }
@@ -462,7 +486,9 @@ class Goal extends BodyComponent {
   Vector2 spawnPoint;
   late Vector2 size;
   late Sprite sprite;
-  late Vector2 regularSize;
+  late SpriteComponent spriteComponent;
+  late final Vector2 halfSize;
+  late final Vector2 regularSize;
 
   Goal({required this.spawnPoint});
 
@@ -481,12 +507,14 @@ class Goal extends BodyComponent {
     spawnPoint /= 10;
 
     regularSize = size;
+    halfSize = size * 0.7;
 
-    add(SpriteComponent(
+    spriteComponent = SpriteComponent(
       sprite: sprite,
       size: size,
       anchor: Anchor.center,
-    ));
+    );
+    add(spriteComponent);
 
     final bodyDef = BodyDef()
       ..type = BodyType.dynamic
@@ -505,7 +533,38 @@ class Goal extends BodyComponent {
 
     body.createFixture(fixtureDef);
 
+    if (gameState.currentLevel == 0) {
+      async.Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (size == regularSize) {
+          _resize(halfSize);
+        } else {
+          _resize(regularSize);
+        }
+      });
+    }
+
     return body;
+  }
+
+  void _resize(newSize) {
+    size = newSize;
+    spriteComponent.size = newSize;
+
+    // Remove existing fixtures
+    for (final fixture in List.from(body.fixtures)) {
+      body.destroyFixture(fixture);
+    }
+
+    // Create new shape and fixture
+    final shape = PolygonShape();
+    shape.setAsBox(newSize.x / 2, newSize.y / 2, Vector2.zero(), 0);
+
+    final fixtureDef = FixtureDef(shape)
+      ..friction = 0.1
+      ..density = 0.005
+      ..userData = 'goal';
+
+    body.createFixture(fixtureDef);
   }
 
   void resetPosition() {

@@ -46,7 +46,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: const Color(0xFFB55022),
+        backgroundColor: const Color.fromARGB(255, 206, 129, 87),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
