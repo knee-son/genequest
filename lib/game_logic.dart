@@ -1,4 +1,5 @@
 import 'dart:async' as async;
+import 'dart:math';
 
 import 'package:flame/camera.dart' as flame_camera;
 import 'package:flutter/services.dart';
@@ -78,7 +79,7 @@ class GenequestGame extends Forge2DGame
     }
 
     await Flame.images.loadAll([
-      'chromatid6.png',
+      'chromatid7.png',
       'sister_chromatid.png',
       'mob.png',
     ]);
@@ -114,7 +115,11 @@ class GenequestGame extends Forge2DGame
             ));
             break;
           case 'Chasm':
-            // implement chasm logic here (not a solid object)
+            print('chasm!');
+            await add(Chasm(
+              position: object.position,
+              size: object.size,
+            ));
             break;
           default: // floor
             await add(object.polygon.isNotEmpty
@@ -225,50 +230,65 @@ class GenequestGame extends Forge2DGame
     // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
-      if (gameState.traits.isNotEmpty) {
-        String dominantTrait =
-            gameState.traits[gameState.currentLevel].defaultTrait;
-        String nonDominantTrait =
-            gameState.traits[gameState.currentLevel].traits.last;
+      String dominantTrait =
+          gameState.traits[gameState.currentLevel].defaultTrait;
+      String nonDominantTrait =
+          gameState.traits[gameState.currentLevel].traits.last;
 
-        Trait newTrait = Trait(
-            name: gameState.traits[gameState.currentLevel].name,
-            traits: gameState.traits[gameState.currentLevel].traits,
-            difficulty: gameState.traits[gameState.currentLevel].difficulty,
-            selectedTrait: dominantTrait,
-            level: gameState.traits[gameState.currentLevel].level);
+      Trait newTrait = Trait(
+          name: gameState.traits[gameState.currentLevel].name,
+          traits: gameState.traits[gameState.currentLevel].traits,
+          difficulty: gameState.traits[gameState.currentLevel].difficulty,
+          selectedTrait: dominantTrait,
+          level: gameState.traits[gameState.currentLevel].level);
 
-        if (goal.size == goal.size) {
-          newTrait.selectedTrait = nonDominantTrait;
-        } else {
-          newTrait.selectedTrait = dominantTrait;
-        }
-
-        // Check for an existing trait where the level matches gameState.level
-        var existingTraitIndex = gameState.savedTraits.indexWhere(
-          (trait) => trait.level == gameState.currentLevel,
-        );
-
-        if (existingTraitIndex != -1) {
-          // Update the existing trait instance if found and selectedTrait is not empty
-          gameState.savedTraits[gameState.currentLevel] = newTrait;
-        } else {
-          gameState.savedTraits.add(newTrait);
-        }
+      if (goal.size == goal.regularSize) {
+        newTrait.selectedTrait = nonDominantTrait;
+      } else {
+        newTrait.selectedTrait = dominantTrait;
       }
-      gameState.incrementLevel();
-      Flame.images.clear('chromatid.png');
-      Flame.images.clear('sister_chromatid.png');
-      Flame.images.clear('mob.png');
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+      // Check for an existing trait where the level matches gameState.level
+      var existingTraitIndex = gameState.savedTraits.indexWhere(
+        (trait) => trait.level == gameState.currentLevel,
       );
-      gameState.incrementLevel();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+
+      if (existingTraitIndex != -1) {
+        // Update the existing trait instance if found and selectedTrait is not empty
+        gameState.savedTraits[gameState.currentLevel] = newTrait;
+      } else {
+        gameState.savedTraits.add(newTrait);
+      }
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Trait Acquired'),
+            content:
+                Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Dismiss the dialog
+                  gameState.incrementLevel();
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => LevelSelectorScreen()),
+                  );
+                  gameState.incrementLevel();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => LevelSelectorScreen()),
+                  );
+                },
+                child: const Text('Dismiss'),
+              ),
+            ],
+          );
+        },
       );
     } else {
       Navigator.pushReplacement(
@@ -278,6 +298,10 @@ class GenequestGame extends Forge2DGame
                 MiniGameScreenTransition(levelNum: gameState.currentLevel)),
       );
     }
+
+    Flame.images.clear('chromatid.png');
+    Flame.images.clear('sister_chromatid.png');
+    Flame.images.clear('mob.png');
   }
 }
 
@@ -306,17 +330,32 @@ avatar gets punished
 class MyCollisionListener extends ContactListener {
   @override
   void beginContact(Contact contact) {
-    final fixtureA = contact.fixtureA;
-    final fixtureB = contact.fixtureB;
+    final userDataA = contact.fixtureA.userData;
+    final userDataB = contact.fixtureB.userData;
 
-    final userDataA = fixtureA.userData;
-    final userDataB = fixtureB.userData;
+    print(userDataA);
+    print(userDataB);
 
-    if (userDataA == 'avatar' && userDataB == 'enemy' ||
-        userDataA == 'enemy' && userDataB == 'avatar') {
+    final worldManifold = WorldManifold();
+    contact.getWorldManifold(worldManifold);
+
+    // This is the normal vector at the point of contact
+    final normalY = worldManifold.normal.y;
+
+    // negative y means fixture A is contacting upwards
+    // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
+
+    if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
+      GenequestGame.instance?.avatar.resetJumps();
+    }
+
+    if (userDataA == 'avatar' && userDataB == 'chasm') {
+      GenequestGame.instance!.avatar.resetPosition();
       GenequestGame.instance!.avatar.applyDamage();
-    } else if (userDataA == 'avatar' && userDataB == 'spike' ||
-        userDataA == 'spike' && userDataB == 'avatar') {
+    }
+
+    if (userDataA == 'avatar' &&
+        (userDataB == 'enemy' || userDataB == 'spike')) {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'avatar' && userDataB == 'goal' ||
         userDataA == 'goal' && userDataB == 'avatar') {
@@ -380,12 +419,50 @@ class CollisionBlock extends BodyComponent {
   }
 }
 
+// ---------------- SPOOKY SCARY CHASM ----------------
+
+class Chasm extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+
+  Chasm({
+    required this.position,
+    required this.size,
+  });
+
+  @override
+  Body createBody() {
+    position /= 10;
+    size /= 10;
+
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    // Use default box shape
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.5
+      ..userData = 'chasm'
+      ..isSensor = true;
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+}
+
 // ------------------- GOAL LOGIC ---------------------
 
 class Goal extends BodyComponent {
   Vector2 spawnPoint;
   late Vector2 size;
   late Sprite sprite;
+  late Vector2 regularSize;
 
   Goal({required this.spawnPoint});
 
@@ -402,6 +479,8 @@ class Goal extends BodyComponent {
 
     size /= 10;
     spawnPoint /= 10;
+
+    regularSize = size;
 
     add(SpriteComponent(
       sprite: sprite,
@@ -442,8 +521,7 @@ class Enemy extends BodyComponent {
   late Sprite sprite;
   late SpriteComponent spriteComponent;
 
-  int _framesWalked = 0;
-  final int _maxFramesWalking = 110;
+  final int _maxDistance = 50;
   final double _walkSpeed = 120;
 
   Enemy({required this.spawnPoint});
@@ -493,11 +571,13 @@ class Enemy extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    _framesWalked += 1;
-    if (_framesWalked > _maxFramesWalking) {
+    double originalPosition = spawnPoint.x;
+    double currentPosition = body.position.x;
+
+    if (currentPosition > originalPosition + _maxDistance ||
+        currentPosition < originalPosition) {
       body.linearVelocity.x = -body.linearVelocity.x;
       spriteComponent.flipHorizontally();
-      _framesWalked = 0;
     }
   }
 }
@@ -516,6 +596,7 @@ class Avatar extends BodyComponent {
   bool isImmune = false;
   int health = 6;
   int jumpFuel = 0;
+  int jumpsRemaining = 2;
 
   Avatar({required this.spawnPoint});
 
@@ -524,7 +605,7 @@ class Avatar extends BodyComponent {
     // remove default white paint
     paint = Paint()..color = Colors.transparent;
 
-    sprite = Sprite(Flame.images.fromCache('chromatid6.png'));
+    sprite = Sprite(Flame.images.fromCache('chromatid7.png'));
 
     size = sprite.srcSize;
     size /= 10;
@@ -652,8 +733,15 @@ class Avatar extends BodyComponent {
   }
 
   void jump() {
-    FlameAudio.play('jump.wav');
-    jumpFuel = 6; // will jump for n frames
+    if (jumpsRemaining > 0) {
+      FlameAudio.play('jump.wav');
+      jumpFuel = 6; // will jump for n frames
+      jumpsRemaining -= 1;
+    }
+  }
+
+  void resetJumps() {
+    jumpsRemaining = 2;
   }
 }
 

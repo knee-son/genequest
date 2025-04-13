@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
-import 'package:genequest_app/screens/game_over_screen.dart';
+import 'package:genequest_app/screens/game_over_transition_screen.dart';
 import 'level_selector_screen.dart';
 
 void main() async {
@@ -85,7 +85,6 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         _droppedBlockSecond.length == 2 &&
         _droppedBlockFirst.toString() ==
             _droppedBlockSecond.reversed.toList().toString()) {
-
       if (_droppedBlockFirst.contains("red")) {
           domiWins++;
       } else {
@@ -120,7 +119,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       isFinishFlags++;
     }
 
-    if (isFinishFlags == gameState.currentLevel - 1 ||
+    if (isFinishFlags == gameState.currentLevel - 1 &&
+        gameState.currentLevel >= 3 ||
         (isFinishFlags == 1 && gameState.currentLevel == 1) ||
         (isFinishFlags == 1 && gameState.currentLevel == 2)) {
 
@@ -134,7 +134,6 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           difficulty: gameState.traits[gameState.currentLevel].difficulty,
           selectedTrait: dominantTrait,
           level: gameState.traits[gameState.currentLevel].level);
-
 
       if (domiWins >= nonDomiWins){
         newTrait.selectedTrait = dominantTrait;
@@ -151,6 +150,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       } else {
         gameState.savedTraits.add(newTrait);
       }
+
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -165,7 +165,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => GameOverScreen(),
+                        builder: (context) => GameOverTransitionScreen(),
                       ),
                           (Route<dynamic> route) => false, // Removes all previous routes
                     );
@@ -183,12 +183,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           );
         },
       );
-
-
-
     }
-
-
   }
 
   @override

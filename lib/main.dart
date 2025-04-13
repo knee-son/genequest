@@ -24,12 +24,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (kDebugMode) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: GameScreen(1), // Your home screen widget
-      );
-    } else if (kIsWeb) {
+    if (kIsWeb) {
       return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: TitleScreen(), // Your home screen widget

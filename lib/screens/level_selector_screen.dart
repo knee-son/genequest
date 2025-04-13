@@ -42,9 +42,11 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
     final screenHeight =
         MediaQuery.of(context).size.height; // Get screen height
 
+    final screenWidth = MediaQuery.of(context).size.width; // Get screen height
+
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 255, 242, 179),
+        backgroundColor: const Color(0xFFB55022),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -77,7 +79,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                         title: "Peaceful",
                         iconPath: 'assets/images/peaceful_level.png',
                         level: 0,
-                        backgroundColor: Colors.lightBlueAccent,
+                        buttonWidth: screenWidth * 0.6,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
                         enabled: gameState.level >= 0,
@@ -88,7 +90,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                         title: "Easy",
                         iconPath: 'assets/images/easy_level.png',
                         level: 1,
-                        backgroundColor: Colors.green,
+                        buttonWidth: screenWidth * 0.6,
                         buttonHeight:
                             screenHeight * 0.2, // Responsive button height
                         enabled: gameState.level >= 1,
@@ -98,7 +100,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                         title: "Medium",
                         iconPath: 'assets/images/medium_level.png',
                         level: 2,
-                        backgroundColor: Colors.orange,
+                        buttonWidth: screenWidth * 0.6,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 2,
                       ),
@@ -107,7 +109,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                         title: "Hard",
                         iconPath: 'assets/images/hard_level.png',
                         level: 3,
-                        backgroundColor: Colors.red,
+                        buttonWidth: screenWidth * 0.6,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 3,
                       ),
@@ -116,7 +118,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                         title: "Expert",
                         iconPath: 'assets/images/expert_level.png',
                         level: 4,
-                        backgroundColor: Colors.purple,
+                        buttonWidth: screenWidth * 0.6,
                         buttonHeight: screenHeight * 0.2,
                         enabled: gameState.level >= 4,
                       ),
@@ -136,52 +138,45 @@ class LevelButton extends StatelessWidget {
   final String title;
   final String iconPath;
   final int level;
-  final Color backgroundColor;
   final double buttonHeight;
   final bool enabled;
+  final double buttonWidth;
 
-  const LevelButton({
-    super.key,
-    required this.title,
-    required this.iconPath,
-    required this.level,
-    required this.backgroundColor,
-    required this.buttonHeight,
-    required this.enabled,
-  });
+  const LevelButton(
+      {super.key,
+      required this.title,
+      required this.iconPath,
+      required this.level,
+      required this.buttonHeight,
+      required this.enabled,
+      required this.buttonWidth});
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: enabled ? 1.0 : 0.5, // Dim when disabled
-      child: SizedBox(
-        height: buttonHeight,
-        child: ElevatedButton(
-          onPressed: enabled
-              ? () {
-                  gameState.currentLevel = level;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GameScreen(level),
-                    ),
-                  );
-                  debugDumpApp();
-                }
-              : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: backgroundColor,
-            disabledBackgroundColor: Colors.grey,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+      child: InkWell(
+        borderRadius:
+            BorderRadius.circular(12), // Add ripple effect with rounded corners
+        onTap: enabled
+            ? () {
+                gameState.currentLevel = level;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(level),
+                  ),
+                );
+                debugDumpApp();
+              }
+            : null, // Disable when not enabled
+        child: ClipRRect(
           child: Image.asset(
             iconPath,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-          ), // Icon
+            fit: BoxFit.fill,
+            width: buttonWidth,
+            height: buttonHeight,
+          ),
         ),
       ),
     );

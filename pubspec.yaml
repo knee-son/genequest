@@ -77,3 +77,10 @@ flutter:
         - asset: assets/fonts/WinkySans-Italic-VariableFont_wght.ttf
         - asset: assets/fonts/WinkySans-VariableFont_wght.ttf
           weight: 700
+    - family: Ribeye
+      fonts:
+        - asset: assets/fonts/Ribeye-Regular.ttf
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/OpenSans-Italic-VariableFont_wdth,wght.ttf
