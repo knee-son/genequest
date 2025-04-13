@@ -850,6 +850,9 @@ class Avatar extends BodyComponent {
           Vector2(body.linearVelocity.x, yVelocity + jumpSpeed);
       jumpFuel -= 1;
     }
+    else {
+      body.linearVelocity = Vector2(xVelocity, yVelocity + GenequestGame.instance!.g * dt);
+    }
 
     // 🔧 Rotation correction logic
     const double rotationCorrectionSpeed = 5.0; // tune this
