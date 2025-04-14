@@ -691,7 +691,7 @@ class Fire extends BodyComponent {
     final shape = CircleShape();
     shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
 
-    final fixtureDef = FixtureDef(shape)..userData = 'fire';
+    final fixtureDef = FixtureDef(shape)..userData = 'fire'..isSensor = true;
 
     body.createFixture(fixtureDef);
 
