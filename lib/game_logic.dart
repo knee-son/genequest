@@ -168,7 +168,9 @@ class GenequestGame extends Forge2DGame
         height: screenHeight / 10 * 1.4,
         world: world,
         viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
-    camera.viewport.size = Vector2(screenWidth, screenHeight);
+    // camera.viewport.size =
+    //     Vector2(screenWidth / 10 * 1.4, screenWidth / 10 * 1.4);
+    // camera.snap();
 
     world.add(avatar);
     camera.follow(avatar);
