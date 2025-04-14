@@ -78,12 +78,8 @@ class GenequestGame extends Forge2DGame
       ));
     }
 
-    await Flame.images.loadAll([
-      'chromatid7.png',
-      'sister_chromatid.png',
-      'mob.png',
-      'flame.png'
-    ]);
+    await Flame.images.loadAll(
+        ['chromatid7.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
 
     await FlameAudio.audioCache.load('jump.wav');
     await FlameAudio.audioCache.load('oof.mp3');
@@ -116,13 +112,19 @@ class GenequestGame extends Forge2DGame
             ));
             break;
           case 'Chasm':
-            print('chasm!');
             await add(Chasm(
               position: object.position,
               size: object.size,
             ));
             break;
+          case 'Lava':
+            await add(Lava(
+              position: object.position,
+              size: object.size,
+            ));
+            break;
           default: // floor
+            print(object.name);
             await add(object.polygon.isNotEmpty
                 ? CollisionBlock(
                     position: object.position,
@@ -361,18 +363,20 @@ class MyCollisionListener extends ContactListener {
     final userDataA = contact.fixtureA.userData;
     final userDataB = contact.fixtureB.userData;
 
-
     final worldManifold = WorldManifold();
     contact.getWorldManifold(worldManifold);
 
     // This is the normal vector at the point of contact
     final normalY = worldManifold.normal.y;
 
+    print(userDataA);
+    print(userDataB);
+
     // negative y means fixture A is contacting upwards
     // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
 
     if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
-      debugPrint("jumps have been reset!");
+      // debugPrint("jumps have been reset!");
       GenequestGame.instance?.avatar.resetJumps();
     }
 
@@ -380,17 +384,46 @@ class MyCollisionListener extends ContactListener {
         userDataA == 'avatar' && userDataB == 'chasm') {
       GenequestGame.instance!.avatar.applyDamage();
       GenequestGame.instance!.avatar.resetPosition();
+      GenequestGame.instance!.avatar.stopDamage();
+    }
+
+    if (userDataA == 'lava' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'lava') {
+      GenequestGame.instance!.avatar.applyDamage();
+      GenequestGame.instance!.avatar.body.linearDamping = 10.0;
     }
 
     if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
             userDataB == 'avatar' ||
         userDataA == 'avatar' &&
-            (userDataB == 'enemy' || userDataB == 'spike' || userDataB == 'fire')
-    ) {
+            (userDataB == 'enemy' ||
+                userDataB == 'spike' ||
+                userDataB == 'fire')) {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
       GenequestGame.instance?.saveTrait();
+    }
+  }
+
+  @override
+  void endContact(Contact contact) {
+    final userDataA = contact.fixtureA.userData;
+    final userDataB = contact.fixtureB.userData;
+
+    if (userDataA == 'lava' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'lava') {
+      GenequestGame.instance!.avatar.stopDamage();
+      GenequestGame.instance!.avatar.body.linearDamping = 1.2;
+    }
+
+    if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
+            userDataB == 'avatar' ||
+        userDataA == 'avatar' &&
+            (userDataB == 'enemy' ||
+                userDataB == 'spike' ||
+                userDataB == 'fire')) {
+      GenequestGame.instance!.avatar.stopDamage();
     }
   }
 }
@@ -691,7 +724,9 @@ class Fire extends BodyComponent {
     final shape = CircleShape();
     shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
 
-    final fixtureDef = FixtureDef(shape)..userData = 'fire'..isSensor = true;
+    final fixtureDef = FixtureDef(shape)
+      ..userData = 'fire'
+      ..isSensor = true;
 
     body.createFixture(fixtureDef);
 
@@ -716,6 +751,41 @@ class Fire extends BodyComponent {
   }
 }
 
+// ---------------- SPOOKY SCARY CHASM ----------------
+
+class Lava extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+
+  Lava({
+    required this.position,
+    required this.size,
+  });
+
+  @override
+  Body createBody() {
+    position /= 10;
+    size /= 10;
+
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    // Use default box shape
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..userData = 'lava'
+      ..isSensor = true;
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+}
+
 // ------------------- AVATAR LOGIC -------------------
 
 class Avatar extends BodyComponent {
@@ -727,6 +797,7 @@ class Avatar extends BodyComponent {
   late final double walkSpeed;
   bool movingForward = false;
   bool movingBackward = false;
+  bool isBeingDamaged = false;
   bool isImmune = false;
   int health = 6;
   int jumpFuel = 0;
@@ -778,32 +849,34 @@ class Avatar extends BodyComponent {
     return body;
   }
 
-  void applyDamage() {
-    if (!isImmune) {
-      health -= 1;
-      GenequestGame.instance?.updateHealth(health);
-      isImmune = true;
+  void _updateDamage() {
+    if (isImmune) return;
 
-      int blinkCount = 0;
-      spriteComponent.opacity = 0.4;
+    health -= 1;
+    GenequestGame.instance?.updateHealth(health);
+    isImmune = true;
 
-      async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
-        if (blinkCount >= 5) {
-          timer.cancel();
-          isImmune = false;
-          spriteComponent.opacity = 1.0; // Fully visible again
-        } else {
-          if (blinkCount == 0) {
-            FlameAudio.play('oof.mp3');
-          }
+    int blinkCount = 0;
+    spriteComponent.opacity = 0.4;
 
-          // Alternate between 0.5 and 0.0 opacity
-          spriteComponent.opacity = spriteComponent.opacity == 0.0 ? 0.5 : 0.0;
-
-          blinkCount++;
+    async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      if (blinkCount >= 5) {
+        timer.cancel();
+        isImmune = false;
+        spriteComponent.opacity = 1.0; // Fully visible again
+      } else {
+        if (blinkCount == 0) {
+          FlameAudio.play('oof.mp3');
         }
-      });
-    }
+
+        // Alternate between 0.5 and 0.0 opacity
+        spriteComponent.opacity = spriteComponent.opacity == 0.0 ? 0.5 : 0.0;
+
+        blinkCount++;
+      }
+    });
+
+    if (kDebugMode) return;
 
     if (health <= 0) {
       // Game Over logic
@@ -825,6 +898,14 @@ class Avatar extends BodyComponent {
     }
   }
 
+  void applyDamage() {
+    isBeingDamaged = true;
+  }
+
+  void stopDamage() {
+    isBeingDamaged = false;
+  }
+
   // Method to update the position
   void setPosition(Vector2 newPosition) {
     body.position.setFrom(newPosition - size);
@@ -837,6 +918,8 @@ class Avatar extends BodyComponent {
   @override
   void update(double dt) {
     super.update(dt);
+
+    if (isBeingDamaged) _updateDamage();
 
     double yVelocity = body.linearVelocity.y;
     double xVelocity = body.linearVelocity.x;
@@ -851,9 +934,9 @@ class Avatar extends BodyComponent {
       body.linearVelocity =
           Vector2(body.linearVelocity.x, yVelocity + jumpSpeed);
       jumpFuel -= 1;
-    }
-    else {
-      body.linearVelocity = Vector2(xVelocity, yVelocity + GenequestGame.instance!.g * dt);
+    } else {
+      body.linearVelocity =
+          Vector2(xVelocity, yVelocity + GenequestGame.instance!.g * dt);
     }
 
     // 🔧 Rotation correction logic
@@ -873,7 +956,12 @@ class Avatar extends BodyComponent {
     if (jumpsRemaining > 0) {
       FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
+      print(body.linearDamping);
+      print(jumpsRemaining);
       jumpsRemaining -= 1;
+      if (body.linearDamping > 1.2) {
+        jumpsRemaining = 2;
+      }
     }
   }
 
