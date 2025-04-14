@@ -178,7 +178,8 @@ class GenequestGame extends Forge2DGame
     // camera.snap();
 
     world.add(avatar);
-    camera.follow(avatar);
+    camera.moveTo(goal.position, speed: 200);
+
   }
 
   @override
@@ -802,6 +803,7 @@ class Avatar extends BodyComponent {
   int health = 6;
   int jumpFuel = 0;
   int jumpsRemaining = 2;
+  bool isFollowingAvatar = false;
 
   Avatar({required this.spawnPoint});
 
@@ -925,9 +927,11 @@ class Avatar extends BodyComponent {
     double xVelocity = body.linearVelocity.x;
 
     if (movingForward) {
+      followAvatar();
       body.applyForce(Vector2(20, 0));
     }
     if (movingBackward) {
+      followAvatar();
       body.applyForce(Vector2(-20, 0));
     }
     if (jumpFuel > 0) {
@@ -951,8 +955,14 @@ class Avatar extends BodyComponent {
         -angle * rotationCorrectionSpeed - angularVelocity * rotationDamping;
     body.applyTorque(torque);
   }
-
+  void followAvatar() {
+      if (!isFollowingAvatar) {
+        GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
+        isFollowingAvatar = true;
+      }
+  }
   void jump() {
+    followAvatar();
     if (jumpsRemaining > 0) {
       FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
