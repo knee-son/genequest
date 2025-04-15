@@ -28,7 +28,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   final List<String?> _droppedBlockThird = [];
   final List<String?> _droppedBlockFourth = [];
   final List<String?> _droppedBlockFifth = [];
-  final List<String?> _droppedBlockSixth = [];// Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
+  final List<String?> _droppedBlockSixth = [
+  ]; // Tracks the block dropped into the first drop zone// Tracks the block dropped into the second drop zone
   final AssetImage combinedChromatid =
   const AssetImage('assets/images/combined_chromatid_new.png');
   final AssetImage redButton =
@@ -86,9 +87,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         _droppedBlockFirst.toString() ==
             _droppedBlockSecond.reversed.toList().toString()) {
       if (_droppedBlockFirst.contains("red")) {
-          domiWins++;
+        domiWins++;
       } else {
-          nonDomiWins++;
+        nonDomiWins++;
       }
       isFinishFlags++;
     }
@@ -97,7 +98,6 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         _droppedBlockFourth.length == 2 &&
         _droppedBlockThird.toString() ==
             _droppedBlockFourth.reversed.toList().toString()) {
-
       if (_droppedBlockThird.contains("red")) {
         domiWins++;
       } else {
@@ -106,11 +106,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       isFinishFlags++;
     }
     // for level 4
-    if (gameState.currentLevel >=4 && _droppedBlockFifth.length == 2 &&
+    if (gameState.currentLevel >= 4 && _droppedBlockFifth.length == 2 &&
         _droppedBlockSixth.length == 2 &&
         _droppedBlockFifth.toString() ==
             _droppedBlockSixth.reversed.toList().toString()) {
-
       if (_droppedBlockFifth.contains("red")) {
         domiWins++;
       } else {
@@ -123,11 +122,11 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         gameState.currentLevel >= 3 ||
         (isFinishFlags == 1 && gameState.currentLevel == 1) ||
         (isFinishFlags == 1 && gameState.currentLevel == 2)) {
-
       String dominantTrait =
           gameState.traits[gameState.currentLevel].defaultTrait;
       String nonDomi = gameState.traits[gameState.currentLevel].traits.last;
-
+      // Purpose of newTempTrait is to add the necessary description after the trait
+      String newTemptrait = "";
       Trait newTrait = Trait(
           name: gameState.traits[gameState.currentLevel].name,
           traits: gameState.traits[gameState.currentLevel].traits,
@@ -135,7 +134,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           selectedTrait: dominantTrait,
           level: gameState.traits[gameState.currentLevel].level);
 
-      if (domiWins >= nonDomiWins){
+      if (domiWins >= nonDomiWins) {
         newTrait.selectedTrait = dominantTrait;
       } else {
         newTrait.selectedTrait = nonDomi;
@@ -151,12 +150,24 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         gameState.savedTraits.add(newTrait);
       }
 
+      if (gameState.currentLevel == 1) {
+        newTemptrait = "${newTrait.selectedTrait} Skin";
+      } else if (gameState.currentLevel == 2) {
+        newTemptrait = "${newTrait.selectedTrait} Eyes";
+      } else if (gameState.currentLevel == 3) {
+        newTemptrait = "${newTrait.selectedTrait} Height";
+      } else if (gameState.currentLevel == 4) {
+        newTemptrait = "${newTrait.selectedTrait} Hair";
+      } else {
+        newTemptrait = newTrait.selectedTrait;
+      }
+
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Trait Acquired'),
-            content: Text('Acquired Trait: ${newTrait.selectedTrait}'),
+            content: Text('Acquired Trait: $newTemptrait'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -167,13 +178,15 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                       MaterialPageRoute(
                         builder: (context) => GameOverTransitionScreen(),
                       ),
-                          (Route<dynamic> route) => false, // Removes all previous routes
+                          (Route<
+                          dynamic> route) => false, // Removes all previous routes
                     );
                   } else {
                     gameState.incrementLevel();
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => LevelSelectorScreen()),
                     );
                   }
                 },
@@ -193,6 +206,15 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         appBar: AppBar(
           title:
           kDebugMode ? Text('Mini Game - ${gameState.levelName}') : SizedBox(),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline), // "?" icon
+              onPressed: () {
+                // Handle help action, e.g., show a dialog
+                _showMultiStepDialog(context);
+              },
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -218,21 +240,25 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                         children: [
                           // Row containing Reset and Red buttons
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.center, // Aligns buttons horizontally
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            // Aligns buttons horizontally
                             children: [
                               // Reset button
                               GestureDetector(
-                                onTap: onResetPressed, // Trigger the logic to spawn a block
+                                onTap: onResetPressed,
+                                // Trigger the logic to spawn a block
                                 child: Image(
                                   image: resetButton,
                                   width: 80,
                                   height: 100,
                                 ),
                               ),
-                              const SizedBox(width: 10), // Adds spacing between the buttons
+                              const SizedBox(width: 10),
+                              // Adds spacing between the buttons
                               // Red button
                               GestureDetector(
-                                onTap: onButtonPressed, // Trigger the logic to spawn a block
+                                onTap: onButtonPressed,
+                                // Trigger the logic to spawn a block
                                 child: Image(
                                   image: redButton,
                                   width: 100,
@@ -241,7 +267,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20), // Adds spacing between the Row and Draggable
+                          const SizedBox(height: 20),
+                          // Adds spacing between the Row and Draggable
                           // Draggable widget
                           if (_blockColor != null)
                             Draggable(
@@ -251,19 +278,25 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Image(
-                                    image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                    image: _blockColor == 'blue'
+                                        ? pillBlue
+                                        : pillRed,
                                     width: spawnPillWidth,
                                     height: spawnPillHeight,
                                   ),
                                   Image(
-                                    image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                    image: _blockColor == 'blue'
+                                        ? pillBlue
+                                        : pillRed,
                                     width: spawnPillWidth,
                                     height: spawnPillHeight,
                                   ),
                                 ],
                               )
                                   : Image(
-                                image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                image: _blockColor == 'blue'
+                                    ? pillBlue
+                                    : pillRed,
                                 width: spawnPillWidth,
                                 height: spawnPillHeight,
                               ),
@@ -274,19 +307,25 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Image(
-                                      image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                      image: _blockColor == 'blue'
+                                          ? pillBlue
+                                          : pillRed,
                                       width: spawnPillWidth,
                                       height: spawnPillHeight,
                                     ),
                                     Image(
-                                      image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                      image: _blockColor == 'blue'
+                                          ? pillBlue
+                                          : pillRed,
                                       width: spawnPillWidth,
                                       height: spawnPillHeight,
                                     ),
                                   ],
                                 )
                                     : Image(
-                                  image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                  image: _blockColor == 'blue'
+                                      ? pillBlue
+                                      : pillRed,
                                   width: spawnPillWidth,
                                   height: spawnPillHeight,
                                 ),
@@ -296,19 +335,25 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Image(
-                                    image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                    image: _blockColor == 'blue'
+                                        ? pillBlue
+                                        : pillRed,
                                     width: spawnPillWidth,
                                     height: spawnPillHeight,
                                   ),
                                   Image(
-                                    image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                    image: _blockColor == 'blue'
+                                        ? pillBlue
+                                        : pillRed,
                                     width: spawnPillWidth,
                                     height: spawnPillHeight,
                                   ),
                                 ],
                               )
                                   : Image(
-                                image: _blockColor == 'blue' ? pillBlue : pillRed,
+                                image: _blockColor == 'blue'
+                                    ? pillBlue
+                                    : pillRed,
                                 width: spawnPillWidth,
                                 height: spawnPillHeight,
                               ),
@@ -322,18 +367,22 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
             ),
             // First drop zone (bottom-left)
             Positioned(
-              left: leftDropZonePosition1.dx, // Dynamically calculated x-position
-              top: leftDropZonePosition1.dy,  // Dynamically calculated y-position
+              left: leftDropZonePosition1.dx,
+              // Dynamically calculated x-position
+              top: leftDropZonePosition1.dy,
+              // Dynamically calculated y-position
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
                     if (_droppedBlockFirst.length < 2) {
                       if (gameState.currentLevel > 1) {
                         // Allow up to 2 blocks
-                        _droppedBlockFirst.add(data); // Add the new block to the list
+                        _droppedBlockFirst.add(
+                            data); // Add the new block to the list
                         _blockColor = null; // Clear the draggable block's state
-                      } else{
-                        _droppedBlockFirst.add(data); // Add the new block to the list twice
+                      } else {
+                        _droppedBlockFirst.add(
+                            data); // Add the new block to the list twice
                         _droppedBlockFirst.add(data);
                         _blockColor = null; // Clear the draggable block's state
                       }
@@ -370,18 +419,22 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
 // Second drop zone (beside the first one)
             Positioned(
-              left: rightDropZonePosition1.dx, // Dynamically calculated x-position
-              top: rightDropZonePosition1.dy,  // Dynamically calculated y-position
+              left: rightDropZonePosition1.dx,
+              // Dynamically calculated x-position
+              top: rightDropZonePosition1.dy,
+              // Dynamically calculated y-position
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
                     if (_droppedBlockSecond.length < 2) {
                       if (gameState.currentLevel > 1) {
                         // Allow up to 2 blocks
-                        _droppedBlockSecond.add(data); // Add the new block to the list
+                        _droppedBlockSecond.add(
+                            data); // Add the new block to the list
                         _blockColor = null; // Clear the draggable block's state
                       } else {
-                        _droppedBlockSecond.add(data); // Add the new block to the list twice
+                        _droppedBlockSecond.add(
+                            data); // Add the new block to the list twice
                         _droppedBlockSecond.add(data);
                         _blockColor = null; // Clear the draggable block's state
                       }
@@ -419,23 +472,28 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
             if (gameState.currentLevel >= 3)
               Positioned(
-                left: leftDropZonePosition2.dx, // Dynamically calculated x-position
-                top: leftDropZonePosition2.dy,  // Dynamically calculated y-position
+                left: leftDropZonePosition2.dx,
+                // Dynamically calculated x-position
+                top: leftDropZonePosition2.dy,
+                // Dynamically calculated y-position
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
-                        // Allow up to 2 blocks
-                        if (_droppedBlockThird.length < 2) {
-                          _droppedBlockThird.add(data); // Add the new block to the list
-                          _blockColor = null; // Clear the draggable block's state
-                        }
+                      // Allow up to 2 blocks
+                      if (_droppedBlockThird.length < 2) {
+                        _droppedBlockThird.add(
+                            data); // Add the new block to the list
+                        _blockColor = null; // Clear the draggable block's state
+                      }
                       checkIfValid(); // Validate the current arrangement
                     });
                   },
                   builder: (context, accepted, rejected) {
                     return Container(
-                      width: dropZoneWidth, // Width accommodates up to two blocks
-                      height: dropZoneHeight, // Maintain consistent height
+                      width: dropZoneWidth,
+                      // Width accommodates up to two blocks
+                      height: dropZoneHeight,
+                      // Maintain consistent height
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: Colors.black, // Outline color
@@ -460,13 +518,16 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               ),
             if (gameState.currentLevel >= 3)
               Positioned(
-                left: rightDropZonePosition2.dx, // Dynamically calculated x-position
-                top: rightDropZonePosition2.dy,  // Dynamically calculated y-position
+                left: rightDropZonePosition2.dx,
+                // Dynamically calculated x-position
+                top: rightDropZonePosition2.dy,
+                // Dynamically calculated y-position
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
                       if (_droppedBlockFourth.length < 2) {
-                        _droppedBlockFourth.add(data); // Add the new block to the list
+                        _droppedBlockFourth.add(
+                            data); // Add the new block to the list
                         _blockColor = null;
                       }
                       checkIfValid(); // Validate the current arrangement
@@ -474,8 +535,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   },
                   builder: (context, accepted, rejected) {
                     return Container(
-                      width: dropZoneWidth, // Width accommodates up to two blocks
-                      height: dropZoneHeight, // Maintain consistent height
+                      width: dropZoneWidth,
+                      // Width accommodates up to two blocks
+                      height: dropZoneHeight,
+                      // Maintain consistent height
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: Colors.black, // Outline color
@@ -500,13 +563,16 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               ),
             if (gameState.currentLevel >= 4)
               Positioned(
-                left: leftDropZonePosition3.dx, // Dynamically calculated x-position
-                top: leftDropZonePosition3.dy,  // Dynamically calculated y-position
+                left: leftDropZonePosition3.dx,
+                // Dynamically calculated x-position
+                top: leftDropZonePosition3.dy,
+                // Dynamically calculated y-position
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
                       if (_droppedBlockFifth.length < 2) {
-                        _droppedBlockFifth.add(data); // Add the new block to the list
+                        _droppedBlockFifth.add(
+                            data); // Add the new block to the list
                         _blockColor = null;
                       }
                       checkIfValid(); // Validate the current arrangement
@@ -514,8 +580,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   },
                   builder: (context, accepted, rejected) {
                     return Container(
-                      width: dropZoneWidth, // Width accommodates up to two blocks
-                      height: dropZoneHeight, // Maintain consistent height
+                      width: dropZoneWidth,
+                      // Width accommodates up to two blocks
+                      height: dropZoneHeight,
+                      // Maintain consistent height
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: Colors.black, // Outline color
@@ -540,13 +608,16 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               ),
             if (gameState.currentLevel >= 4)
               Positioned(
-                left: rightDropZonePosition3.dx, // Dynamically calculated x-position
-                top: rightDropZonePosition3.dy,  // Dynamically calculated y-position
+                left: rightDropZonePosition3.dx,
+                // Dynamically calculated x-position
+                top: rightDropZonePosition3.dy,
+                // Dynamically calculated y-position
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
                       if (_droppedBlockSixth.length < 2) {
-                        _droppedBlockSixth.add(data); // Add the new block to the list
+                        _droppedBlockSixth.add(
+                            data); // Add the new block to the list
                         _blockColor = null;
                       }
                       checkIfValid(); // Validate the current arrangement
@@ -554,8 +625,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   },
                   builder: (context, accepted, rejected) {
                     return Container(
-                      width: dropZoneWidth, // Width accommodates up to two blocks
-                      height: dropZoneHeight, // Maintain consistent height
+                      width: dropZoneWidth,
+                      // Width accommodates up to two blocks
+                      height: dropZoneHeight,
+                      // Maintain consistent height
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: Colors.black, // Outline color
@@ -590,6 +663,80 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateDropZonePositions(); // Calculate chromatid position
     });
+  }
+
+  int _currentDialogIndex = 0; // Tracks the current dialog
+
+  List<String> dialogContents = [
+    "Welcome to the minigame! Here's how to play...",
+    "Tap on the red button to generate a pill. \nYou can tap it multiple times until you generate the color that you want",
+    "Drag items to place them in the rectangle boxes.",
+    "Make sure that the pills mirror each other",
+    "If ever you make a mistake, you can tap on the reset button to clear everything and start over"
+  ];
+
+  List<String> imageContent = [
+    "",
+    "assets/images/red_button.png",
+    "assets/images/drag_tutorial.png",
+    "assets/images/mirror_pill_tutorial.png",
+    "assets/images/button_reset.png",
+  ];
+
+  void _showMultiStepDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("How to play"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min, // Ensures dialog fits content size
+            children: [
+              Text(dialogContents[_currentDialogIndex]), // Text content
+              const SizedBox(height: 10), // Adds spacing
+              if (imageContent[_currentDialogIndex]
+                  .isNotEmpty) // Conditional image display
+                Expanded( // Makes the image fill available space
+                  child: Image.asset(
+                      imageContent[_currentDialogIndex], fit: BoxFit.fitHeight),
+                ),
+            ],
+          ),
+          actions: [
+            // Previous button (disabled if at the first dialog)
+            TextButton(
+              onPressed: _currentDialogIndex > 0
+                  ? () {
+                _currentDialogIndex--;
+                Navigator.pop(context);
+                _showMultiStepDialog(context);
+              }
+                  : null,
+              child: Text("Previous"),
+            ),
+            // Next button (disabled if at the last dialog)
+            TextButton(
+              onPressed: _currentDialogIndex < dialogContents.length - 1
+                  ? () {
+                _currentDialogIndex++;
+                Navigator.pop(context);
+                _showMultiStepDialog(context);
+              }
+                  : null,
+              child: Text("Next"),
+            ),
+            // Close button
+            TextButton(
+              onPressed: () {
+                _currentDialogIndex = 0;
+                Navigator.pop(context);
+              },
+              child: Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void updateDropZonePositions() {
