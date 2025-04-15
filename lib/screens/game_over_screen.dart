@@ -34,6 +34,7 @@ class _GameOverScreenState extends State<GameOverScreen> {
       mSelectedTraits = List.from(selectedTraits);
 
     } else {
+      // default portrait for testing purposes
       selectedTraits =
           gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
       mSelectedTraits = List.from(selectedTraits);
@@ -41,15 +42,7 @@ class _GameOverScreenState extends State<GameOverScreen> {
 
     // Append the trait descriptions
     mSelectedTraits.asMap().forEach((index, element) {
-      if (index == 1) {
-        mSelectedTraits[index] = "$element Skin";
-      } else if (index == 2) {
-        mSelectedTraits[index] = "$element Eyes";
-      } else if (index == 3) {
-        mSelectedTraits[index] = "$element Height";
-      } else if (index == 4) {
-        mSelectedTraits[index] = "$element Hair";
-      }
+      mSelectedTraits[index] = "$element ${gameState.traits[index].name[0].toUpperCase()}${gameState.traits[index].name.substring(1)}";
     });
 
     List<String> imageFiles = [

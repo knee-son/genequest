@@ -150,17 +150,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         gameState.savedTraits.add(newTrait);
       }
 
-      if (gameState.currentLevel == 1) {
-        newTemptrait = "${newTrait.selectedTrait} Skin";
-      } else if (gameState.currentLevel == 2) {
-        newTemptrait = "${newTrait.selectedTrait} Eyes";
-      } else if (gameState.currentLevel == 3) {
-        newTemptrait = "${newTrait.selectedTrait} Height";
-      } else if (gameState.currentLevel == 4) {
-        newTemptrait = "${newTrait.selectedTrait} Hair";
-      } else {
-        newTemptrait = newTrait.selectedTrait;
-      }
+      newTemptrait = "${newTrait.selectedTrait} ${newTrait.name[0].toUpperCase()}${newTrait.name.substring(1)}";
 
       showDialog(
         context: context,
