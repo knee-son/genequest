@@ -327,14 +327,16 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
-                    if (_droppedBlockFirst.length < 2 && gameState.currentLevel > 1) {
-                      // Allow up to 2 blocks
-                      _droppedBlockFirst.add(data); // Add the new block to the list
-                      _blockColor = null; // Clear the draggable block's state
-                    } else {
-                      _droppedBlockFirst.add(data); // Add the new block to the list twice
-                      _droppedBlockFirst.add(data);
-                      _blockColor = null; // Clear the draggable block's state
+                    if (_droppedBlockFirst.length < 2) {
+                      if (gameState.currentLevel > 1) {
+                        // Allow up to 2 blocks
+                        _droppedBlockFirst.add(data); // Add the new block to the list
+                        _blockColor = null; // Clear the draggable block's state
+                      } else{
+                        _droppedBlockFirst.add(data); // Add the new block to the list twice
+                        _droppedBlockFirst.add(data);
+                        _blockColor = null; // Clear the draggable block's state
+                      }
                     }
                     checkIfValid(); // Validate the current arrangement
                   });
@@ -373,15 +375,18 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               child: DragTarget<String>(
                 onAccept: (data) {
                   setState(() {
-                    if (_droppedBlockSecond.length < 2 && gameState.currentLevel > 1) {
-                      // Allow up to 2 blocks
-                      _droppedBlockSecond.add(data); // Add the new block to the list
-                      _blockColor = null; // Clear the draggable block's state
-                    } else {
-                      _droppedBlockSecond.add(data); // Add the new block to the list twice
-                      _droppedBlockSecond.add(data);
-                      _blockColor = null; // Clear the draggable block's state
+                    if (_droppedBlockSecond.length < 2) {
+                      if (gameState.currentLevel > 1) {
+                        // Allow up to 2 blocks
+                        _droppedBlockSecond.add(data); // Add the new block to the list
+                        _blockColor = null; // Clear the draggable block's state
+                      } else {
+                        _droppedBlockSecond.add(data); // Add the new block to the list twice
+                        _droppedBlockSecond.add(data);
+                        _blockColor = null; // Clear the draggable block's state
+                      }
                     }
+
                     checkIfValid(); // Validate the current arrangement
                   });
                 },
@@ -420,8 +425,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   onAccept: (data) {
                     setState(() {
                         // Allow up to 2 blocks
-                        _droppedBlockThird.add(data); // Add the new block to the list
-                        _blockColor = null; // Clear the draggable block's state
+                        if (_droppedBlockThird.length < 2) {
+                          _droppedBlockThird.add(data); // Add the new block to the list
+                          _blockColor = null; // Clear the draggable block's state
+                        }
                       checkIfValid(); // Validate the current arrangement
                     });
                   },
@@ -458,8 +465,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
-                      _droppedBlockFourth.add(data); // Add the new block to the list
-                      _blockColor = null;
+                      if (_droppedBlockFourth.length < 2) {
+                        _droppedBlockFourth.add(data); // Add the new block to the list
+                        _blockColor = null;
+                      }
                       checkIfValid(); // Validate the current arrangement
                     });
                   },
@@ -496,8 +505,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
-                      _droppedBlockFifth.add(data); // Add the new block to the list
-                      _blockColor = null;
+                      if (_droppedBlockFifth.length < 2) {
+                        _droppedBlockFifth.add(data); // Add the new block to the list
+                        _blockColor = null;
+                      }
                       checkIfValid(); // Validate the current arrangement
                     });
                   },
@@ -534,8 +545,10 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                 child: DragTarget<String>(
                   onAccept: (data) {
                     setState(() {
-                      _droppedBlockSixth.add(data); // Add the new block to the list
-                      _blockColor = null;
+                      if (_droppedBlockSixth.length < 2) {
+                        _droppedBlockSixth.add(data); // Add the new block to the list
+                        _blockColor = null;
+                      }
                       checkIfValid(); // Validate the current arrangement
                     });
                   },

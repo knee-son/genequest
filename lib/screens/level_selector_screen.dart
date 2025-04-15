@@ -13,14 +13,6 @@ class LevelSelectorScreen extends StatefulWidget {
   LevelSelectorScreenState createState() => LevelSelectorScreenState();
 }
 
-void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
-
-  // // No need to load images here; FlameGame will handle it
-  // runApp(GameWidget(
-  //     game: LevelSelector())); // Use Flame's GameWidget to run the game
-}
-
 class LevelSelectorScreenState extends State<LevelSelectorScreen> {
   // final AssetImage selectALevel =
   //     const AssetImage('assets/images/select_a_level_text.png');
@@ -41,7 +33,6 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
   @override
   void dispose() {
-    debugPrint('level screen disposed');
     FlameAudio.bgm.stop();
     super.dispose();
   }
@@ -51,12 +42,11 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
     final screenHeight =
         MediaQuery.of(context).size.height; // Get screen height
 
-    final screenWidth =
-        MediaQuery.of(context).size.width; // Get screen height
+    final screenWidth = MediaQuery.of(context).size.width; // Get screen height
 
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: const Color(0xFFB55022),
+        backgroundColor: const Color.fromARGB(255, 206, 129, 87),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -75,13 +65,6 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
                       letterSpacing: 2,
                     ),
                   ),
-                  // mainAxisAlignment: MainAxisAlignment.center,
-                  // children: [
-                  // Image(
-                  //   image: selectALevel,
-                  //   fit: BoxFit.contain, // Ensure the image scales properly
-                  // ),
-                  // ],
                 ),
               ),
               // Right Side: Levels Column with reduced spacing
@@ -159,33 +142,33 @@ class LevelButton extends StatelessWidget {
   final bool enabled;
   final double buttonWidth;
 
-  const LevelButton({
-    super.key,
-    required this.title,
-    required this.iconPath,
-    required this.level,
-    required this.buttonHeight,
-    required this.enabled,
-    required this.buttonWidth
-  });
+  const LevelButton(
+      {super.key,
+      required this.title,
+      required this.iconPath,
+      required this.level,
+      required this.buttonHeight,
+      required this.enabled,
+      required this.buttonWidth});
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
       opacity: enabled ? 1.0 : 0.5, // Dim when disabled
       child: InkWell(
-        borderRadius: BorderRadius.circular(12), // Add ripple effect with rounded corners
+        borderRadius:
+            BorderRadius.circular(12), // Add ripple effect with rounded corners
         onTap: enabled
             ? () {
-          gameState.currentLevel = level;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => GameScreen(level),
-            ),
-          );
-          debugDumpApp();
-        }
+                gameState.currentLevel = level;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GameScreen(level),
+                  ),
+                );
+                debugDumpApp();
+              }
             : null, // Disable when not enabled
         child: ClipRRect(
           child: Image.asset(

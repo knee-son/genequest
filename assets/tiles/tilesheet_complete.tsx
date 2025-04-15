@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.11.2" name="tilesheet_complete" tilewidth="64" tileheight="64" tilecount="312" columns="26">
+ <grid orientation="orthogonal" width="32" height="32"/>
  <image source="../images/tilesheet_complete.png" width="1664" height="768"/>
  <tile id="0">
   <objectgroup draworder="index" id="2">

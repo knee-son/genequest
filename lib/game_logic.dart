@@ -1,231 +1,239 @@
 import 'dart:async' as async;
+import 'dart:math';
 
-import 'package:flame/camera.dart';
-import 'package:flame/collisions.dart';
-import 'package:flame/components.dart';
-import 'package:flame/flame.dart';
-import 'package:flame/game.dart';
-import 'package:flame/input.dart';
-import 'package:flame_audio/flame_audio.dart';
-import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
-import 'package:flutter/material.dart';
+import 'package:flame/camera.dart' as flame_camera;
 import 'package:flutter/services.dart';
+import 'package:flame/components.dart';
+import 'package:flame/events.dart';
+import 'package:flame/flame.dart';
+import 'package:flame_audio/flame_audio.dart';
+import 'package:flame_forge2d/flame_forge2d.dart';
+import 'package:flame_tiled/flame_tiled.dart' as flameTiled;
+import 'package:flutter/foundation.dart';
+
+// Other imports
+import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_screen.dart';
-import 'package:flutter/foundation.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ------------------- GAME LOGIC -------------------
 
-class GenequestGame extends FlameGame
+class GenequestGame extends Forge2DGame
     with KeyboardEvents, HasCollisionDetection {
   static GenequestGame? instance; // Singleton for UI interaction
   int levelNum;
   String? levelName;
-  late Avatar avatar;
-  late Goal goal;
-  final double containerHeight;
-  late BuildContext context;
-  late double chasmHeight;
+  final double timeScale = 1.0;
+  final double g = 10.0;
   bool isPaused = false;
   Vector2 spawnPosition = Vector2.zero();
   Vector2 goalPosition = Vector2.zero();
   List<CollisionBlock> collisionBlocks = [];
   ValueNotifier<int> healthNotifier = ValueNotifier(6);
+
+  late final Avatar avatar;
+  late Goal goal;
+  late BuildContext context;
+  late double chasmHeight;
   late flameTiled.TiledComponent levelMap;
   late double screenWidth;
   late double screenHeight;
 
-  GenequestGame(
-      {required this.containerHeight,
-      required this.context,
-      required this.levelNum,
-      this.levelName}) {
+  // Constructor
+  GenequestGame({
+    required this.context,
+    required this.levelNum,
+    this.levelName,
+  }) : super(
+          gravity: Vector2(0, 50.0),
+          contactListener: MyCollisionListener(),
+        ) {
     instance = this;
-    // context = context;
-    // levelNum = levelNum;
   }
 
   @override
   bool get debugMode => kDebugMode; // depends if flutter is in debug
 
   @override
-  Color backgroundColor() => const Color(0xFF2185d5); // Light gray background
+  Color backgroundColor() => const Color(0xFF2185d5); // sky background
 
   @override
   Future<void> onLoad() async {
-    await Flame.images.loadAll([
-      'chromatid.png',
-      'sister_chromatid.png',
-      'mob.png',
-    ]);
+    super.onLoad();
+
+    if (debugMode) {
+      add(FpsTextComponent(
+        anchor: Anchor.topRight,
+        position: Vector2(size.x - 10, 10),
+        textRenderer: TextPaint(
+          style: GoogleFonts.robotoMono(
+            color: const Color.fromARGB(159, 0, 0, 0),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ));
+    }
+
+    await Flame.images.loadAll(
+        ['chromatid7.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
+
+    await FlameAudio.audioCache.load('jump.wav');
+    await FlameAudio.audioCache.load('oof.mp3');
+
     overlays.add('HealthBar');
 
-    // Load the level
+    // add levelMap to world, so it can be rendered by camera
     levelMap = await flameTiled.TiledComponent.load(
       levelName?.isNotEmpty == true
           ? levelName!
           : gameState.getLevelName(levelNum),
-      Vector2.all(64),
+      Vector2.all(64 / 10), // Tile size
     );
+    await world.add(levelMap);
 
     final spawnPointLayer =
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('SpawnPoint');
-
-    // Create the avatar and set its spawn point dynamically
-    final chromatidSprite = Sprite(Flame.images.fromCache('chromatid.png'));
-    final sisterChromatid =
-        Sprite(Flame.images.fromCache('sister_chromatid.png'));
-    avatar =
-        Avatar(sprite: chromatidSprite, context: context, levelNum: levelNum);
-    goal = Goal(sprite: sisterChromatid, context: context);
-
-    // Initialize the world
-    final world = World();
-    // Find the spawn object in the SpawnPoint layer
-    if (spawnPointLayer != null) {
-      for (final spawn in spawnPointLayer.objects) {
-        if (spawn.name == 'Spawn') {
-          spawnPosition = Vector2(spawn.x, spawn.y);
-          spawnPosition.y -= avatar.size.y; // Adjust to align avatar
-          final floor = CollisionBlock(
-              position: Vector2(spawn.x, spawn.y),
-              size: Vector2(spawn.width, spawn.height),
-              isSolid: true, // This is a floor, not a wall
-              isEnemy: false,
-              isFinish: false)
-            ..priority = 1; // Render above the map;
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
-          add(floor);
-          collisionBlocks.add(floor);
-        }
-        // spawn sister chromatid
-        else if (spawn.name == 'Finish') {
-          goalPosition = Vector2(spawn.x, spawn.y);
-          goalPosition.y -= goal.size.y; // Adjust to align avatar
-
-          final floor = CollisionBlock(
-              position: Vector2(spawn.x, spawn.y),
-              size: Vector2(spawn.width, spawn.height),
-              isSolid: false, // This is a floor, not a wall
-              isEnemy: false,
-              isFinish: true)
-            ..priority = 1; // Render above the map;
-          collisionBlocks.add(floor);
-          Future.delayed(Duration.zero, () {
-            add(floor);
-          });
-          add(floor);
-          collisionBlocks.add(floor);
-          break;
-        }
-      }
-    }
-
     final collisionsLayer =
         levelMap.tileMap.getLayer<flameTiled.ObjectGroup>('Floor');
 
     if (collisionsLayer != null) {
-      for (final collision in collisionsLayer.objects) {
-        switch (collision.name) {
-          case 'Floor':
-            final floor = CollisionBlock(
-                position: Vector2(collision.x, collision.y),
-                size: Vector2(collision.width, collision.height),
-                isSolid: true, // This is a floor, not a wall
-                isEnemy: false,
-                isFinish: false)
-              ..priority = 1;
-            collisionBlocks.add(floor);
-            add(floor);
-
-          case 'Enemy':
-            // Load the mob.png sprite
-            final mobSprite = Sprite(Flame.images.fromCache('mob.png'));
-
-            // Create a new enemy instance
-            final enemy = CollisionBlock(
-              position: Vector2(collision.x, collision.y), // Enemy position
-              size: Vector2(collision.width, collision.height), // Enemy size
-              isSolid: false, // Not a solid block
-              isEnemy: true, // Mark as enemy
-              isFinish: false, // Not a finish block
-            )..priority = 1; // Ensure enemy has higher rendering priority
-
-            // Add the enemy to the collision blocks list
-            collisionBlocks.add(enemy);
-
-            // Add a mob image for every enemy
-            final mobImage = SpriteComponent(
-              sprite: mobSprite, // mob.png sprite
-              size: Vector2(50, 50), // Adjust size as needed
-              position: Vector2(
-                  collision.x, collision.y), // Spawn on the enemy's position
-            )..priority = 2; // Ensure mob is rendered above the enemy
-
-            // Add the mob image to the game world
-            mobImage.position = Vector2(enemy.x, enemy.y);
-            world.add(mobImage);
-          case 'Trap':
-            final floor = CollisionBlock(
-                position: Vector2(collision.x, collision.y),
-                size: Vector2(collision.width, collision.height),
-                isSolid: true, // This is a floor, not a wall
-                isEnemy: true,
-                isFinish: false)
-              ..priority = 1;
-            collisionBlocks.add(floor);
-            add(floor);
-          default:
+      // a CollisionBlock may be a spike, chasm, lava, or plain floor
+      for (flameTiled.TiledObject object in collisionsLayer.objects) {
+        switch (object.name) {
+          case 'Spike':
+            await add(CollisionBlock(
+              position: object.position,
+              size: object.size,
+              userData: 'spike',
+            ));
+            break;
+          case 'Chasm':
+            await add(Chasm(
+              position: object.position,
+              size: object.size,
+            ));
+            break;
+          case 'Lava':
+            await add(Lava(
+              position: object.position,
+              size: object.size,
+            ));
+            break;
+          default: // floor
+            print(object.name);
+            await add(object.polygon.isNotEmpty
+                ? CollisionBlock(
+                    position: object.position,
+                    size: object.size,
+                    polygon: object.polygon,
+                  )
+                : CollisionBlock(
+                    position: object.position,
+                    size: object.size,
+                  ));
             break;
         }
       }
     }
 
-    // Add collision blocks first to ensure they render above the tilemap
-    for (final block in collisionBlocks) {
-      world.add(block);
+    // spawn may be avatar, enemy, or the goal
+    if (spawnPointLayer != null) {
+      for (final spawn in spawnPointLayer.objects) {
+        switch (spawn.name) {
+          case 'Enemy':
+            await world.add(Enemy(spawnPoint: spawn.position));
+          case 'Fire':
+            await world.add(Fire(spawnPoint: spawn.position));
+          case 'Spawn':
+            {
+              avatar = Avatar(spawnPoint: spawn.position);
+              await world.add(avatar);
+            }
+          case 'Finish':
+            {
+              goal = Goal(spawnPoint: spawn.position);
+              await world.add(goal);
+            }
+        }
+      }
     }
-
-    // Add the level (tilemap) after collision blocks
-    world.add(levelMap);
-
-    add(world);
-
-    // How far from chasm damage. adjust to prevent camera off bounds
-    int chasmPadding = 1;
-    chasmHeight = levelMap.size.y - chasmPadding * 64;
-
-    // Calculate the spawn point based on the map height (ground level)
-    avatar.position = spawnPosition;
-    goal.position = goalPosition;
-
-    // Add the avatar to the world
-    world.add(avatar);
-    world.add(goal);
 
     screenWidth = MediaQuery.of(context).size.width;
     screenHeight = MediaQuery.of(context).size.height;
 
-    // Create the camera
-    camera = CameraComponent.withFixedResolution(
-        width: screenWidth * 2,
-        height: screenHeight * 2,
-        world: world,
-        viewfinder: Viewfinder()
-          ..position = avatar.position // Define the starting position
-        );
-    // Assuming `camera` is already declared and added to the game
-
     add(KeyboardListenerComponent());
 
-    // Add the camera to the game
-    add(camera);
-    camera.moveTo(goalPosition, speed: 1000);
+    // too much fuckery with scaling. aiming to make it global
+    camera = flame_camera.CameraComponent.withFixedResolution(
+        width: screenWidth / 10 * 1.4,
+        height: screenHeight / 10 * 1.4,
+        world: world,
+        viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
+    // camera.viewport.size =
+    //     Vector2(screenWidth / 10 * 1.4, screenWidth / 10 * 1.4);
+    // camera.snap();
+
+    world.add(avatar);
+    camera.moveTo(goal.position, speed: 200);
+
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Draw sky gradient first
+
+    final rect = Rect.fromLTWH(0, 0, screenWidth, screenHeight);
+    final gradient = const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFF87CEEB), // Light Sky Blue
+        Color(0xFF4682B4), // Steel Blue
+      ],
+    );
+
+    final paint = Paint()..shader = gradient.createShader(rect);
+
+    canvas.drawRect(rect, paint);
+
+    // Then let Forge2D render everything else on top
+    super.render(canvas);
+  }
+
+  @override
+  KeyEventResult onKeyEvent(
+      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        avatar.jump();
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        avatar.movingBackward = true;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        avatar.movingForward = true;
+      }
+    } else if (event is KeyUpEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        avatar.movingBackward = false;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+        avatar.movingForward = false;
+      }
+    }
+
+    return super.onKeyEvent(event, keysPressed);
+  }
+
+  @override
+  void update(double dt) {
+    if (!isPaused) {
+      super.update(dt * timeScale);
+    }
   }
 
   void updateHealth(int newHealth) {
@@ -236,7 +244,20 @@ class GenequestGame extends FlameGame
     isPaused = true;
   }
 
+  void resume() {
+    isPaused = false;
+  }
+
+  void reset() {
+    avatar.resetPosition();
+    goal.resetPosition();
+
+    avatar.health = 6;
+  }
+
   void saveTrait() {
+    pause();
+    // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
       // Ensure there are traits available before proceeding
       String dominantTrait =
@@ -273,7 +294,8 @@ class GenequestGame extends FlameGame
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Trait Acquired'),
-            content: Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+            content:
+                Text('Congratulations, you are: ${newTrait.selectedTrait}'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -282,12 +304,14 @@ class GenequestGame extends FlameGame
 
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => LevelSelectorScreen()),
                   );
                   gameState.incrementLevel();
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => LevelSelectorScreen()),
                   );
                 },
                 child: const Text('Dismiss'),
@@ -308,240 +332,564 @@ class GenequestGame extends FlameGame
     Flame.images.clear('chromatid.png');
     Flame.images.clear('sister_chromatid.png');
     Flame.images.clear('mob.png');
-  }
-
-  void resume() {
-    isPaused = false;
-  }
-
-  void startJump() {
-    if (avatar.jumpCount < 2) {
-      avatar.velocityY = -300; // Upward velocity
-      avatar.isInAir = true; // Set mid-air state
-      // play jump sound
-      FlameAudio.play('jump.wav');
-      avatar.jumpCount += 1;
-    }
-  }
-
-  void startMovingAvatar() {
-    avatar.horizontalMoveAxis = 1;
-    avatar.velocityX = 300; // Move right
-    camera.follow(avatar);
-  }
-
-  void startMovingAvatarBack() {
-    avatar.horizontalMoveAxis = -1;
-    avatar.velocityX = -300; // Move left
-  }
-
-  void stopMovingAvatar() {
-    avatar.horizontalMoveAxis = 0;
-    avatar.velocityX = 0; // Stop movement
-  }
-
-  @override
-  KeyEventResult onKeyEvent(
-      KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.space ||
-        event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      startJump();
-    }
-
-    if (keysPressed.contains(LogicalKeyboardKey.arrowLeft) &&
-        keysPressed.contains(LogicalKeyboardKey.arrowRight)) {
-      stopMovingAvatar();
-    } else {
-      if (event is KeyDownEvent &&
-          event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        startMovingAvatarBack();
-      } else if (event is KeyDownEvent &&
-          event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        startMovingAvatar();
-      }
-    }
-
-    if (event is KeyUpEvent &&
-        event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-      stopMovingAvatar();
-    } else if (event is KeyUpEvent &&
-        event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      stopMovingAvatar();
-    }
-
-    return super.onKeyEvent(event, keysPressed);
-  }
-
-  @override
-  void update(double dt) {
-    if (!isPaused) {
-      super.update(dt);
-      dt = dt * 1.2;
-      avatar.applyGravity(dt);
-      avatar.updatePosition(dt);
-    }
-    if (avatar.position.y > chasmHeight) {
-      avatarFallsOffChasm();
-    }
-  }
-
-  void avatarFallsOffChasm() {
-    avatar.position = spawnPosition;
-    avatar.applyDamageWithImmunity();
-  }
-
-  void reset() {
-    avatar.position = spawnPosition;
-    avatar.velocityX = 0; // Stop horizontal movement
-    avatar.velocityY = 0; // Stop vertical movement
-    avatar.isInAir = false; // Ensure avatar is grounded
-    avatar.jumpCount = 0; // Reset jump count
-    avatar.health = 6;
-    GenequestGame.instance?.updateHealth(avatar.health);
-    // If you have additional game state variables (e.g., score, level), reset them here
+    Flame.images.clear('flame.png');
   }
 }
 
-// ------------------- GOAL LOGIC -------------------
+/*
+collision objects are now migrated to Forge2D's BodyComponent.
+it has collision detection dictated by our ContactListener.
+the avatar's movements are all in the Avatar object. tweak it to
+your liking.
 
-class Goal extends SpriteComponent with CollisionCallbacks {
-  final BuildContext context;
-  final Vector2 regularSize = Vector2(60, 100);
-  final Vector2 halfSize = Vector2(60, 100) / 2;
+TODO:
+- there's a case where the avatar is still colliding with a
+damaging object so it should still be in a hurt state.
+- implement a different BodyComponent for Chasm and Lava.
+- Chasm should not collide with avatar but is a sensor.
+- same goes for Lava but just implement infinite jumping to
+the avatar. apply linear damping along with damage so the
+avatar gets punished
+- the sister chromatid should have an alternating state between
+'male' and 'female in peaceful level
+- maybe change the sky backdrop to a gradient?
+- the animation is bugged and needs fixing
+*/
 
-  Goal({required Sprite sprite, required this.context})
-      : super(
-          sprite: sprite,
-          size: Vector2(60, 100), // Avatar size
-          position: Vector2(200, 300), // Starting position above the border
-        );
+// ---------------- COLLISION DETECTION ---------------
 
+class MyCollisionListener extends ContactListener {
   @override
-  Future<void> onLoad() async {
-    super.onLoad();
+  void beginContact(Contact contact) {
+    final userDataA = contact.fixtureA.userData;
+    final userDataB = contact.fixtureB.userData;
 
-    await FlameAudio.audioCache.load('jump.wav');
-    await FlameAudio.audioCache.load('oof.mp3');
+    final worldManifold = WorldManifold();
+    contact.getWorldManifold(worldManifold);
 
-    add(RectangleHitbox());
+    // This is the normal vector at the point of contact
+    final normalY = worldManifold.normal.y;
 
-    if (gameState.currentLevel == 0) {
-      async.Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (size == regularSize) {
-          resize(halfSize);
-        } else {
-          resize(regularSize);
-        }
-      });
+    print(userDataA);
+    print(userDataB);
+
+    // negative y means fixture A is contacting upwards
+    // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
+
+    if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
+      // debugPrint("jumps have been reset!");
+      GenequestGame.instance?.avatar.resetJumps();
+    }
+
+    if (userDataA == 'chasm' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'chasm') {
+      GenequestGame.instance!.avatar.applyDamage();
+      GenequestGame.instance!.avatar.resetPosition();
+      GenequestGame.instance!.avatar.stopDamage();
+    }
+
+    if (userDataA == 'lava' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'lava') {
+      GenequestGame.instance!.avatar.applyDamage();
+      GenequestGame.instance!.avatar.body.linearDamping = 10.0;
+    }
+
+    if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
+            userDataB == 'avatar' ||
+        userDataA == 'avatar' &&
+            (userDataB == 'enemy' ||
+                userDataB == 'spike' ||
+                userDataB == 'fire')) {
+      GenequestGame.instance!.avatar.applyDamage();
+    } else if (userDataA == 'goal' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'goal') {
+      GenequestGame.instance?.saveTrait();
     }
   }
 
-  void resize(Vector2 newSize) {
-    size = newSize;
+  @override
+  void endContact(Contact contact) {
+    final userDataA = contact.fixtureA.userData;
+    final userDataB = contact.fixtureB.userData;
+
+    if (userDataA == 'lava' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'lava') {
+      GenequestGame.instance!.avatar.stopDamage();
+      GenequestGame.instance!.avatar.body.linearDamping = 1.2;
+    }
+
+    if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
+            userDataB == 'avatar' ||
+        userDataA == 'avatar' &&
+            (userDataB == 'enemy' ||
+                userDataB == 'spike' ||
+                userDataB == 'fire')) {
+      GenequestGame.instance!.avatar.stopDamage();
+    }
   }
 }
 
 // ----------------- COLLISION BLOCKS -----------------
 
-class CollisionBlock extends PositionComponent with CollisionCallbacks {
-  final bool isSolid;
-  final bool isEnemy;
-  final bool isFinish;
+class CollisionBlock extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+  final List<flameTiled.Point>? polygon;
+  final String? userData;
 
   CollisionBlock({
-    required Vector2 position,
-    required Vector2 size,
-    required this.isSolid,
-    required this.isEnemy,
-    required this.isFinish,
-  }) : super(position: position, size: size);
+    required this.position,
+    required this.size,
+    this.polygon,
+    this.userData,
+  });
 
   @override
-  Future<void> onLoad() async {
-    // Hitbox for collision detection
-    add(RectangleHitbox());
+  Body createBody() {
+    position /= 10;
+    size /= 10;
 
-    return super.onLoad(); // Call at the end
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    if (polygon != null) {
+      // Convert your polygon points to Vector2 if needed
+      shape.set(_convertToVector2List(polygon!));
+    } else {
+      // Use default box shape
+      shape.setAsBox(
+          size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+    }
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.5;
+
+    if (userData != null) {
+      fixtureDef.userData = userData;
+    }
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+
+  List<Vector2> _convertToVector2List(List<flameTiled.Point> points) {
+    return points
+        .map((p) => Vector2(p.x.toDouble() / 10, p.y.toDouble() / 10))
+        .toList();
+  }
+}
+
+// ---------------- SPOOKY SCARY CHASM ----------------
+
+class Chasm extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+
+  Chasm({
+    required this.position,
+    required this.size,
+  });
+
+  @override
+  Body createBody() {
+    position /= 10;
+    size /= 10;
+
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    // Use default box shape
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 1.0
+      ..friction = 0.5
+      ..userData = 'chasm'
+      ..isSensor = true;
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
+  }
+}
+
+// ------------------- GOAL LOGIC ---------------------
+
+class Goal extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+  late final Vector2 halfSize;
+  late final Vector2 regularSize;
+
+  Goal({required this.spawnPoint});
+
+  @override
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('sister_chromatid.png'));
+
+    size = sprite.srcSize;
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+
+    size /= 10;
+    spawnPoint /= 10;
+
+    regularSize = size;
+    halfSize = size * 0.7;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.dynamic
+      ..position = spawnPoint
+      ..linearDamping = 1.2;
+
+    final body = world.createBody(bodyDef);
+
+    final shape = PolygonShape();
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2.all(0), 0);
+
+    final fixtureDef = FixtureDef(shape)
+      ..friction = 0.1
+      ..density = 0.005
+      ..userData = 'goal';
+
+    body.createFixture(fixtureDef);
+
+    if (gameState.currentLevel == 0) {
+      async.Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (size == regularSize) {
+          _resize(halfSize);
+        } else {
+          _resize(regularSize);
+        }
+      });
+    }
+
+    return body;
+  }
+
+  void _resize(newSize) {
+    size = newSize;
+    spriteComponent.size = newSize;
+
+    // Remove existing fixtures
+    for (final fixture in List.from(body.fixtures)) {
+      body.destroyFixture(fixture);
+    }
+
+    // Create new shape and fixture
+    final shape = PolygonShape();
+    shape.setAsBox(newSize.x / 2, newSize.y / 2, Vector2.zero(), 0);
+
+    final fixtureDef = FixtureDef(shape)
+      ..friction = 0.1
+      ..density = 0.005
+      ..userData = 'goal';
+
+    body.createFixture(fixtureDef);
+  }
+
+  void resetPosition() {
+    body.position.setFrom(spawnPoint);
+  }
+}
+
+// ------------------- ENEMY LOGIC --------------------
+
+class Enemy extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+
+  final int _maxDistance = 50;
+  final double _walkSpeed = 120;
+
+  Enemy({required this.spawnPoint});
+
+  @override
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('mob.png'));
+    size = sprite.srcSize;
+    size /= 10;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.kinematic
+      ..position = spawnPoint
+      ..linearDamping = 1.2
+      ..linearVelocity.x = _walkSpeed;
+
+    final body = world.createBody(bodyDef);
+    final shape = CircleShape();
+    shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
+
+    final fixtureDef = FixtureDef(shape)..userData = 'enemy';
+
+    body.createFixture(fixtureDef);
+
+    return body;
+  }
+
+  void resetPosition() {
+    body.position.setFrom(spawnPoint);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    double originalPosition = spawnPoint.x;
+    double currentPosition = body.position.x;
+
+    if (currentPosition > originalPosition + _maxDistance ||
+        currentPosition < originalPosition - 0.1) {
+      body.linearVelocity.x = -body.linearVelocity.x;
+      spriteComponent.flipHorizontally();
+    }
+  }
+}
+
+// ------------------- ENEMY LOGIC --------------------
+
+class Fire extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+
+  final int _maxDistance = 50;
+  final double _walkSpeed = 120;
+
+  Fire({required this.spawnPoint});
+
+  @override
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('flame.png'));
+    size = sprite.srcSize;
+    size /= 50;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.kinematic
+      ..position = spawnPoint
+      ..linearDamping = 1.2
+      ..linearVelocity.y = _walkSpeed;
+
+    final body = world.createBody(bodyDef);
+    final shape = CircleShape();
+    shape.radius = size.x / 2; // or use min(size.x, size.y) / 2 for non-square
+
+    final fixtureDef = FixtureDef(shape)
+      ..userData = 'fire'
+      ..isSensor = true;
+
+    body.createFixture(fixtureDef);
+
+    return body;
+  }
+
+  void resetPosition() {
+    body.position.setFrom(spawnPoint);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+
+    double originalPosition = spawnPoint.y;
+    double currentPosition = body.position.y;
+
+    if (currentPosition > originalPosition + _maxDistance ||
+        currentPosition < originalPosition - 0.1) {
+      body.linearVelocity.y = -body.linearVelocity.y;
+    }
+  }
+}
+
+// ---------------- SPOOKY SCARY CHASM ----------------
+
+class Lava extends BodyComponent {
+  @override
+  Vector2 position;
+  Vector2 size;
+
+  Lava({
+    required this.position,
+    required this.size,
+  });
+
+  @override
+  Body createBody() {
+    position /= 10;
+    size /= 10;
+
+    paint = Paint()..color = Colors.transparent;
+
+    final shape = PolygonShape();
+    // Use default box shape
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2(size.x / 2, size.y / 2), 0);
+
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.static;
+
+    final fixtureDef = FixtureDef(shape)
+      ..userData = 'lava'
+      ..isSensor = true;
+
+    return world.createBody(bodyDef)..createFixture(fixtureDef);
   }
 }
 
 // ------------------- AVATAR LOGIC -------------------
 
-class Avatar extends SpriteComponent
-    with CollisionCallbacks, HasGameRef<GenequestGame> {
-  double velocityX = 0; // Horizontal velocity
-  double velocityY = 0; // Vertical velocity
-  final double gravity = 300; // Downward acceleration
-  bool isInAir = false; // Tracks whether the avatar is airborne
-  int jumpCount = 0; // Tracks the number of jumps
+class Avatar extends BodyComponent {
+  Vector2 spawnPoint;
+  late Vector2 size;
+  late Sprite sprite;
+  late SpriteComponent spriteComponent;
+  late final double jumpSpeed;
+  late final double walkSpeed;
+  bool movingForward = false;
+  bool movingBackward = false;
+  bool isBeingDamaged = false;
+  bool isImmune = false;
   int health = 6;
-  bool isImmune = false; // Tracks whether the player is immune to damage
-  final BuildContext context;
-  int horizontalMoveAxis = 0;
-  int levelNum;
+  int jumpFuel = 0;
+  int jumpsRemaining = 2;
+  bool isFollowingAvatar = false;
 
-  Avatar(
-      {required Sprite sprite, required this.context, required this.levelNum})
-      : super(
-          sprite: sprite,
-          size: Vector2(60, 100), // Avatar size
-          position: Vector2(200, 300), // Starting position above the border
-        );
+  Avatar({required this.spawnPoint});
 
   @override
-  Future<void> onLoad() async {
-    add(RectangleHitbox());
-    return super.onLoad();
+  Body createBody() {
+    // remove default white paint
+    paint = Paint()..color = Colors.transparent;
+
+    sprite = Sprite(Flame.images.fromCache('chromatid7.png'));
+
+    size = sprite.srcSize;
+    size /= 10;
+
+    spriteComponent = SpriteComponent(
+      sprite: sprite,
+      size: size,
+      anchor: Anchor.center,
+    );
+
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint /= 10;
+
+    add(spriteComponent);
+
+    final bodyDef = BodyDef()
+      ..type = BodyType.dynamic
+      ..position = spawnPoint
+      ..linearDamping = 1.2;
+
+    final body = world.createBody(bodyDef);
+
+    final shape = PolygonShape();
+    shape.setAsBox(size.x / 2, size.y / 2, Vector2.all(0), 0);
+
+    jumpSpeed = -1.0 * (size.y);
+    walkSpeed = 15;
+
+    final fixtureDef = FixtureDef(shape)
+      ..friction = 0.1
+      ..density = 0.01
+      ..userData = 'avatar';
+
+    body.createFixture(fixtureDef);
+
+    return body;
   }
 
-  void applyGravity(double dt) {
-    // Apply gravity only while airborne
-    if (isInAir) {
-      velocityY += gravity * dt; // Gravity pulls the avatar down
-    } else {
-      velocityY = 0;
-    }
-  }
+  void _updateDamage() {
+    if (isImmune) return;
 
-  void applyDamageWithImmunity() {
-    if (!isImmune) {
-      health -= 1; // Reduce health
-      GenequestGame.instance?.updateHealth(health); // Update health bar
-      isImmune = true; // Grant immunity
-      paint.color = const Color(
-          0x88FFFFFF); // Make avatar semi-transparent (~50% opacity)
-      // Start blinking effect
-      int blinkCount = 0;
-      async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
-        if (blinkCount >= 5) {
-          timer.cancel(); // Stop blinking
-          isImmune = false; // End immunity
-          paint.color = const Color(0xFFFFFFFF); // Restore full opacity
-        } else {
-          // Play audio on each blink
-          if (blinkCount == 0) {
-            FlameAudio.play('oof.mp3');
-          }
-          // Alternate opacity between semi-transparent and fully transparent
-          paint.color = paint.color.a == 0.0
-              ? const Color(0x88FFFFFF) // Semi-transparent
-              : const Color(0x00FFFFFF); // Fully transparent
-          blinkCount++;
+    health -= 1;
+    GenequestGame.instance?.updateHealth(health);
+    isImmune = true;
+
+    int blinkCount = 0;
+    spriteComponent.opacity = 0.4;
+
+    async.Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      if (blinkCount >= 5) {
+        timer.cancel();
+        isImmune = false;
+        spriteComponent.opacity = 1.0; // Fully visible again
+      } else {
+        if (blinkCount == 0) {
+          FlameAudio.play('oof.mp3');
         }
-      });
-    }
+
+        // Alternate between 0.5 and 0.0 opacity
+        spriteComponent.opacity = spriteComponent.opacity == 0.0 ? 0.5 : 0.0;
+
+        blinkCount++;
+      }
+    });
+
+    if (kDebugMode) return;
 
     if (health <= 0) {
       // Game Over logic
 
-      gameState.setLevel(levelNum - 1);
-      // pause();
-      gameRef.pause();
+      gameState.setLevel(gameState.currentLevel - 1);
+      GenequestGame.instance?.pause();
 
       if (!isDialogShowing) {
         isDialogShowing = true;
         showDialog(
-          context: context,
+          context: GenequestGame.instance!.context,
           barrierDismissible: false,
           builder: (context) {
             return DialogOverlayModal(
@@ -552,89 +900,83 @@ class Avatar extends SpriteComponent
     }
   }
 
+  void applyDamage() {
+    isBeingDamaged = true;
+  }
+
+  void stopDamage() {
+    isBeingDamaged = false;
+  }
+
+  // Method to update the position
+  void setPosition(Vector2 newPosition) {
+    body.position.setFrom(newPosition - size);
+  }
+
+  void resetPosition() {
+    body.setTransform(spawnPoint, body.angle);
+  }
+
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
+  void update(double dt) {
+    super.update(dt);
 
-    final double avatarTop = position.y;
-    final double avatarBottom = position.y + size.y;
-    final double avatarRight = position.x + size.x;
-    final double avatarLeft = position.x;
-    final double floorTop = other.position.y;
-    final double floorBottom = other.position.y + size.y;
-    final double floorRight = other.position.x + other.size.x;
-    final double floorLeft = other.position.x;
+    if (isBeingDamaged) _updateDamage();
 
-    if (other is CollisionBlock) {
-      // Check if avatar is landed on top of the floor
-      if (other.isFinish) {
-        gameRef.pause();
-        gameRef.saveTrait();
-      } else if ((other.isSolid || other.isEnemy) && velocityY > 0) {
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
-        if (floorTop <= avatarBottom &&
-            avatarBottom <= floorTop + velocityY * 0.05) {
-          position.y = floorTop - size.y; // Align avatar to floor
-          isInAir = false; // Mark as grounded
-          jumpCount = 0; // Reset jump count
-        }
-      } else if (velocityY == 0) {
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
+    double yVelocity = body.linearVelocity.y;
+    double xVelocity = body.linearVelocity.x;
+
+    if (movingForward) {
+      followAvatar();
+      body.applyForce(Vector2(20, 0));
+    }
+    if (movingBackward) {
+      followAvatar();
+      body.applyForce(Vector2(-20, 0));
+    }
+    if (jumpFuel > 0) {
+      body.linearVelocity =
+          Vector2(body.linearVelocity.x, yVelocity + jumpSpeed);
+      jumpFuel -= 1;
+    } else {
+      body.linearVelocity =
+          Vector2(xVelocity, yVelocity + GenequestGame.instance!.g * dt);
+    }
+
+    // 🔧 Rotation correction logic
+    const double rotationCorrectionSpeed = 5.0; // tune this
+    const double rotationDamping = 1.0; // optional
+
+    double angle = body.angle;
+    double angularVelocity = body.angularVelocity;
+
+    // Apply torque to return to angle = 0
+    double torque =
+        -angle * rotationCorrectionSpeed - angularVelocity * rotationDamping;
+    body.applyTorque(torque);
+  }
+  void followAvatar() {
+      if (!isFollowingAvatar) {
+        GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
+        isFollowingAvatar = true;
       }
-      // Horizontal collisions
-      if ((other.isSolid || other.isEnemy) && position.y != floorTop - size.y) {
-        final allowance = (velocityX) * 0.1;
-        if (avatarRight >= floorLeft && avatarRight <= floorLeft + allowance) {
-          position.x = floorLeft - size.x;
-        } else if (floorRight >= avatarLeft &&
-            avatarLeft >= floorRight + allowance) {
-          position.x = floorRight;
-        }
-
-        if (other.isEnemy && !isImmune) {
-          applyDamageWithImmunity(); // Handle damage and grant immunity
-        }
-      }
-
-      // Check if avatar collides below the floor
-      if (other.isSolid &&
-          avatarTop <= floorBottom &&
-          avatarTop >= floorBottom + velocityY * 0.2 &&
-          velocityY < 0) {
-        velocityY = -velocityY; // Reverse vertical velocity
+  }
+  void jump() {
+    followAvatar();
+    if (jumpsRemaining > 0) {
+      FlameAudio.play('jump.wav');
+      jumpFuel = 6; // will jump for n frames
+      print(body.linearDamping);
+      print(jumpsRemaining);
+      jumpsRemaining -= 1;
+      if (body.linearDamping > 1.2) {
+        jumpsRemaining = 2;
       }
     }
   }
 
-  // [Unused] But may be useful for future reference
-  // void navigateToTitleScreen(BuildContext context) {
-  //   if (!isNavigatingToTitleScreen) {
-  //     isNavigatingToTitleScreen = true;
-  //     Navigator.pushAndRemoveUntil(
-  //       context,
-  //       MaterialPageRoute(
-  //         builder: (context) => TitleScreen(),
-  //       ),
-  //           (route) => false,
-  //     );
-  //   }
-  // }
-
-  @override
-  void onCollisionEnd(PositionComponent other) {
-    super.onCollisionEnd(other);
-    // surely hovering on air, duh
-    isInAir = true;
-  }
-
-  // Update the avatar's position based on velocities
-  void updatePosition(double dt) {
-    position.x += velocityX * dt;
-    position.y += velocityY * dt; // Debugging print
+  void resetJumps() {
+    jumpsRemaining = 2;
   }
 }
 
@@ -706,7 +1048,7 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color.fromARGB(0, 0, 0, 0),
       body: Center(
         child: AnimatedBuilder(
             animation: _controller,
@@ -714,16 +1056,16 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
               return Stack(
                 children: [
                   // Zoom & Shake
-                  Transform.scale(
-                    scale: _zoomAnimation.value,
-                    child: Transform.translate(
-                      offset: Offset(
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                      ),
-                      child: child,
-                    ),
-                  ),
+                  // Transform.scale(
+                  //   scale: _zoomAnimation.value,
+                  //   child: Transform.translate(
+                  //     offset: Offset(
+                  //       (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                  //       (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
+                  //     ),
+                  //     child: child,
+                  //   ),
+                  // ),
 
                   // White-Out Overlay
                   Opacity(
