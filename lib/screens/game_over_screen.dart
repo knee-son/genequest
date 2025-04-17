@@ -46,10 +46,6 @@ class _GameOverScreenState extends State<GameOverScreen> {
     });
 
     List<String> imageFiles = [
-      "Almond_Eyes_Trait.png",
-      "Black_Hair_Trait.png",
-      "Cartoon_Network_style_character_tall_and_large_body.png",
-      "Fair_Skin_Trait.png",
       "Female_Brown_Skin_Almond_Eyes_Average_Height_Black_Hair.png",
       "Female_Brown_Skin_Almond_Eyes_Tall_Height_Black_Hair.png",
       "Female_Brown_Skin_Almond_Eyes_Tall_Height_Blonde_Hair.png",

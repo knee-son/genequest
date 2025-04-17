@@ -78,43 +78,51 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   void checkIfValid() {
-    int domiWins = 0;
-    int nonDomiWins = 0;
     int isFinishFlags = 0;
+    int totalBlueCount = 0;
+    int totalRedCount = 0;
+    AssetImage fullImagePath = AssetImage('assets/images/portraits');
+    List<String> traitFilePathList = [
+      "Almond_Eyes_Trait.png",
+      "Black_Hair_Trait.png",
+      "Fair_Skin_Trait.png",
+      "Brown_Skin_Trait.png",
+      "Fair_Skin_Trait.png",
+      "Round_Eyes_Trait.png",
+      "Short_Height_Trait.png",
+      "Tall_Height_Trait.png"
+      "Male_Trait.png",
+      "Female_Trait.png"
+    ];
     // for level 1 and 2
     if (_droppedBlockFirst.length == 2 &&
-        _droppedBlockSecond.length == 2 &&
-        _droppedBlockFirst.toString() ==
-            _droppedBlockSecond.reversed.toList().toString()) {
-      if (_droppedBlockFirst.contains("red")) {
-        domiWins++;
-      } else {
-        nonDomiWins++;
-      }
+        _droppedBlockSecond.length == 2) {
+      int blueCount = _droppedBlockFirst.where((e) => e == "blue").length +
+          _droppedBlockSecond.where((e) => e == "blue").length;
+      int redCount = (_droppedBlockFirst.length + _droppedBlockSecond.length) - blueCount;
+      totalBlueCount += blueCount;
+      totalRedCount += redCount;
       isFinishFlags++;
     }
     // for level 3
     if (gameState.currentLevel >= 3 && _droppedBlockThird.length == 2 &&
-        _droppedBlockFourth.length == 2 &&
-        _droppedBlockThird.toString() ==
-            _droppedBlockFourth.reversed.toList().toString()) {
-      if (_droppedBlockThird.contains("red")) {
-        domiWins++;
-      } else {
-        nonDomiWins++;
-      }
+        _droppedBlockFourth.length == 2 ) {
+      int blueCount = _droppedBlockThird.where((e) => e == "blue").length +
+          _droppedBlockFourth.where((e) => e == "blue").length;
+      int redCount = (_droppedBlockThird.length + _droppedBlockFourth.length) - blueCount;
+      totalBlueCount += blueCount;
+      totalRedCount += redCount;
       isFinishFlags++;
     }
     // for level 4
     if (gameState.currentLevel >= 4 && _droppedBlockFifth.length == 2 &&
-        _droppedBlockSixth.length == 2 &&
-        _droppedBlockFifth.toString() ==
-            _droppedBlockSixth.reversed.toList().toString()) {
-      if (_droppedBlockFifth.contains("red")) {
-        domiWins++;
-      } else {
-        nonDomiWins++;
-      }
+        _droppedBlockSixth.length == 2 ) {
+      int blueCount = _droppedBlockFifth.where((e) => e == "blue").length +
+          _droppedBlockSixth.where((e) => e == "blue").length;
+      int redCount = (_droppedBlockFifth.length + _droppedBlockSixth.length) - blueCount;
+
+      totalBlueCount += blueCount;
+      totalRedCount += redCount;
       isFinishFlags++;
     }
 
@@ -134,7 +142,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           selectedTrait: dominantTrait,
           level: gameState.traits[gameState.currentLevel].level);
 
-      if (domiWins >= nonDomiWins) {
+      if (totalBlueCount >= totalRedCount) {
         newTrait.selectedTrait = dominantTrait;
       } else {
         newTrait.selectedTrait = nonDomi;
@@ -151,13 +159,34 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       }
 
       newTemptrait = "${newTrait.selectedTrait} ${newTrait.name[0].toUpperCase()}${newTrait.name.substring(1)}";
+      String? imageFilePath = findMatchingImage(newTrait.selectedTrait, traitFilePathList);
+      fullImagePath = AssetImage("assets/images/portraits/$imageFilePath");
 
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Trait Acquired'),
-            content: Text('Acquired Trait: $newTemptrait'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Acquired Trait: $newTemptrait'),
+                const SizedBox(height: 10), // Adds spacing
+                fullImagePath != null
+                    ? Image(
+                        image: fullImagePath,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.cover
+                      )
+                    : const Center(
+                        child: Text(
+                          'Error: Image not available',
+                          style: TextStyle(fontSize: 16, color: Colors.red),
+                        ),
+                      )
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -168,15 +197,15 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                       MaterialPageRoute(
                         builder: (context) => GameOverTransitionScreen(),
                       ),
-                          (Route<
-                          dynamic> route) => false, // Removes all previous routes
+                          (Route<dynamic> route) => false, // Removes all previous routes
                     );
                   } else {
                     gameState.incrementLevel();
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => LevelSelectorScreen()),
+                        builder: (context) => LevelSelectorScreen(),
+                      ),
                     );
                   }
                 },
@@ -187,6 +216,15 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         },
       );
     }
+  }
+
+  String? findMatchingImage(String selectedTrait, List<String> traitFilePathList) {
+    for (String fileName in traitFilePathList) {
+      if (fileName.contains(selectedTrait)) {
+        return fileName; // Return the matching file name
+      }
+    }
+    return null; // Return null if no match is found
   }
 
   @override

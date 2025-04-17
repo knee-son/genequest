@@ -294,8 +294,22 @@ class GenequestGame extends Forge2DGame
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Trait Acquired'),
-            content:
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 120, // Adjust width to fit your dialog
+                  height: 120, // Adjust height to fit your dialog
+                  child: Image.asset(
+                    newTrait.selectedTrait.contains('Female')
+                        ? 'assets/images/portraits/Female_Trait.png'
+                        : 'assets/images/portraits/Male_Trait.png',
+                    fit: BoxFit.contain, // Ensures the image scales properly
+                  ),
+                ),
                 Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -305,13 +319,8 @@ class GenequestGame extends Forge2DGame
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => LevelSelectorScreen()),
-                  );
-                  gameState.incrementLevel();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => LevelSelectorScreen()),
+                      builder: (context) => LevelSelectorScreen(),
+                    ),
                   );
                 },
                 child: const Text('Dismiss'),
