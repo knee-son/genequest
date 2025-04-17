@@ -90,7 +90,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
       "Fair_Skin_Trait.png",
       "Round_Eyes_Trait.png",
       "Short_Height_Trait.png",
-      "Tall_Height_Trait.png"
+      "Tall_Height_Trait.png",
       "Male_Trait.png",
       "Female_Trait.png"
     ];
@@ -697,18 +697,23 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
   List<String> dialogContents = [
     "Welcome to the minigame! Here's how to play...",
-    "Tap on the red button to generate a pill. \nYou can tap it multiple times until you generate the color that you want",
-    "Drag items to place them in the rectangle boxes.",
-    "Make sure that the pills mirror each other",
-    "If ever you make a mistake, you can tap on the reset button to clear everything and start over"
+    "Tap on the red button to generate an allele. \n"
+        "Colors are determined randomly.",
+    "Drag the allele to place them in the rectangle boxes.",
+    "If both blocks are the same color in the chromosome, a trait will be generated, if not the the trait will be generated randomly.",
+    "In the following levels, this will be the same mechanics \n"
+        "but the number of blocks generated will increase as well as the number of rectangle boxes.",
+    "If ever you make a mistake, you can tap on the reset button to clear everything and start over."
   ];
 
   List<String> imageContent = [
     "",
     "assets/images/red_button.png",
     "assets/images/drag_tutorial.png",
-    "assets/images/mirror_pill_tutorial.png",
-    "assets/images/button_reset.png",
+    "assets/images/dropzone_tutorial.png",
+    "assets/images/difficulty_tutorial.png",
+    "assets/images/button_reset.png"
+
   ];
 
   void _showMultiStepDialog(BuildContext context) {
