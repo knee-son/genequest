@@ -297,6 +297,7 @@ class GenequestGame extends Forge2DGame
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Text('Congratulations, you are: ${newTrait.selectedTrait}'),
                 SizedBox(
                   width: 120, // Adjust width to fit your dialog
                   height: 120, // Adjust height to fit your dialog
@@ -307,7 +308,6 @@ class GenequestGame extends Forge2DGame
                     fit: BoxFit.contain, // Ensures the image scales properly
                   ),
                 ),
-                Text('Congratulations, you are: ${newTrait.selectedTrait}'),
               ],
             ),
             actions: [

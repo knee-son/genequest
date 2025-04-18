@@ -713,7 +713,6 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     "assets/images/dropzone_tutorial.png",
     "assets/images/difficulty_tutorial.png",
     "assets/images/button_reset.png"
-
   ];
 
   void _showMultiStepDialog(BuildContext context) {
