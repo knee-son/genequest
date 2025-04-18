@@ -680,15 +680,14 @@ class Enemy extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    double originalPosition = spawnPoint.x;
-    double currentPosition = body.position.x;
+    final distance = body.position.x - spawnPoint.x;
 
-    if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition - 0.1) {
+    if (distance.abs() > _maxDistance) {
       body.linearVelocity.x = -body.linearVelocity.x;
       spriteComponent.flipHorizontally();
     }
   }
+
 }
 
 // ------------------- ENEMY LOGIC --------------------
@@ -751,11 +750,9 @@ class Fire extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    double originalPosition = spawnPoint.y;
-    double currentPosition = body.position.y;
+    final distance = body.position.y - spawnPoint.y;
 
-    if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition - 0.1) {
+    if (distance.abs() > _maxDistance) {
       body.linearVelocity.y = -body.linearVelocity.y;
     }
   }

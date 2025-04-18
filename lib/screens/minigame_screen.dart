@@ -84,11 +84,11 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     AssetImage fullImagePath = AssetImage('assets/images/portraits');
     List<String> traitFilePathList = [
       "Almond_Eyes_Trait.png",
+      "Round_Eyes_Trait.png",
       "Black_Hair_Trait.png",
+      "Blonde_Hair_Trait.png",
       "Fair_Skin_Trait.png",
       "Brown_Skin_Trait.png",
-      "Fair_Skin_Trait.png",
-      "Round_Eyes_Trait.png",
       "Short_Height_Trait.png",
       "Tall_Height_Trait.png",
       "Male_Trait.png",
