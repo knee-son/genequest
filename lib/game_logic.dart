@@ -294,8 +294,22 @@ class GenequestGame extends Forge2DGame
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Trait Acquired'),
-            content:
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+                SizedBox(
+                  width: 120, // Adjust width to fit your dialog
+                  height: 120, // Adjust height to fit your dialog
+                  child: Image.asset(
+                    newTrait.selectedTrait.contains('Female')
+                        ? 'assets/images/portraits/Female_Trait.png'
+                        : 'assets/images/portraits/Male_Trait.png',
+                    fit: BoxFit.contain, // Ensures the image scales properly
+                  ),
+                ),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () {
@@ -305,13 +319,8 @@ class GenequestGame extends Forge2DGame
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => LevelSelectorScreen()),
-                  );
-                  gameState.incrementLevel();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => LevelSelectorScreen()),
+                      builder: (context) => LevelSelectorScreen(),
+                    ),
                   );
                 },
                 child: const Text('Dismiss'),
@@ -671,15 +680,14 @@ class Enemy extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    double originalPosition = spawnPoint.x;
-    double currentPosition = body.position.x;
+    final distance = body.position.x - spawnPoint.x;
 
-    if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition - 0.1) {
+    if (distance.abs() > _maxDistance) {
       body.linearVelocity.x = -body.linearVelocity.x;
       spriteComponent.flipHorizontally();
     }
   }
+
 }
 
 // ------------------- ENEMY LOGIC --------------------
@@ -742,11 +750,9 @@ class Fire extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    double originalPosition = spawnPoint.y;
-    double currentPosition = body.position.y;
+    final distance = body.position.y - spawnPoint.y;
 
-    if (currentPosition > originalPosition + _maxDistance ||
-        currentPosition < originalPosition - 0.1) {
+    if (distance.abs() > _maxDistance) {
       body.linearVelocity.y = -body.linearVelocity.y;
     }
   }

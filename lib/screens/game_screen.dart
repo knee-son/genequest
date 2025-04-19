@@ -150,6 +150,8 @@ class _GameScreenState extends State<GameScreen> {
                                 .instance?.avatar.movingBackward = true,
                             onTapUp: (_) => GenequestGame
                                 .instance?.avatar.movingBackward = false,
+                            onTapCancel: () => GenequestGame
+                                .instance?.avatar.movingBackward = false,
                             child: Transform(
                               alignment: Alignment.center,
                               transform: Matrix4.rotationY(3.14159),
@@ -164,6 +166,8 @@ class _GameScreenState extends State<GameScreen> {
                             onTapDown: (_) => GenequestGame
                                 .instance?.avatar.movingForward = true,
                             onTapUp: (_) => GenequestGame
+                                .instance?.avatar.movingForward = false,
+                            onTapCancel: () => GenequestGame
                                 .instance?.avatar.movingForward = false,
                             child: Image(
                                 image: forwardButtonImage,

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/title_screen.dart';
@@ -19,8 +20,9 @@ class GameOverScreen extends StatefulWidget {
 
 class _GameOverScreenState extends State<GameOverScreen> {
   List<String> selectedTraits = [];
-  AssetImage fullImagePath = AssetImage('assets/images/portrait');
-  // AssetImage forwardButtonImage = const AssetImage('assets/images/portrait/');
+
+  List<String> mSelectedTraits = [];
+  AssetImage fullImagePath = AssetImage('assets/images/portraits');
   @override
   void initState() {
     super.initState();
@@ -29,16 +31,21 @@ class _GameOverScreenState extends State<GameOverScreen> {
     if (gameState.savedTraits.length == 5){
       selectedTraits =
           gameState.savedTraits.map((trait) => trait.selectedTrait).toList();
+      mSelectedTraits = List.from(selectedTraits);
+
     } else {
+      // default portrait for testing purposes
       selectedTraits =
           gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
+      mSelectedTraits = List.from(selectedTraits);
     }
 
+    // Append the trait descriptions
+    mSelectedTraits.asMap().forEach((index, element) {
+      mSelectedTraits[index] = "$element ${gameState.traits[index].name[0].toUpperCase()}${gameState.traits[index].name.substring(1)}";
+    });
+
     List<String> imageFiles = [
-      "Almond_Eyes_Trait.png",
-      "Black_Hair_Trait.png",
-      "Cartoon_Network_style_character_tall_and_large_body.png",
-      "Fair_Skin_Trait.png",
       "Female_Brown_Skin_Almond_Eyes_Average_Height_Black_Hair.png",
       "Female_Brown_Skin_Almond_Eyes_Tall_Height_Black_Hair.png",
       "Female_Brown_Skin_Almond_Eyes_Tall_Height_Blonde_Hair.png",
@@ -112,8 +119,6 @@ class _GameOverScreenState extends State<GameOverScreen> {
                       style: TextStyle(fontSize: 16, color: Colors.red),
                     ),
                   ),
-                  // Positioned "Congratulations!" text on top of the image
-
                 ],
               ),
               const Text(
@@ -125,6 +130,15 @@ class _GameOverScreenState extends State<GameOverScreen> {
                   fontFamily: 'Ribeye',
                   // Adding a shadow or background will improve readability if needed:
                   // shadows: [Shadow(blurRadius: 3, color: Colors.black45, offset: Offset(2, 2))],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 5), // Adds spacing between texts
+              Text(
+                'Acquired Traits: ${mSelectedTraits.join(', ')}', // Converts list into comma-separated string
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
