@@ -140,6 +140,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Trait Acquired'),
