@@ -141,12 +141,15 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
             children: [
               Text('Acquired Trait: ${gameState.getTrait()}'),
               const SizedBox(height: 10),
-              Image(
-                image: fullImagePath,
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Text('Image not available'),
+              Flexible(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30), // Apply rounded corners with a radius of 30
+                  child: Image(
+                    image: fullImagePath,
+                    fit: BoxFit.cover, // Ensures the image scales properly within the available space
+                    errorBuilder: (_, __, ___) => const Text('Image not available'),
+                  ),
+                ),
               ),
             ],
           ),
@@ -341,8 +344,24 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   int _currentDialogIndex = 0;
-  final List<String> _dialogContents = [];
-  final List<String> _imageContent = [];
+  List<String> _dialogContents = [
+    "Welcome to the minigame! Here's how to play...",
+    "Tap on the red button to generate an allele. \n"
+        "Colors are determined randomly.",
+    "Drag the allele to place them in the rectangle boxes.",
+    "If both blocks are the same color in the chromosome, a trait will be generated, if not the the trait will be generated randomly.",
+    "In the following levels, this will be the same mechanics \n"
+        "but the number of blocks generated will increase as well as the number of rectangle boxes.",
+    "If ever you make a mistake, you can tap on the reset button to clear everything and start over."
+  ];
+  List<String> _imageContent = [
+    "",
+    "assets/images/red_button.png",
+    "assets/images/drag_tutorial.png",
+    "assets/images/dropzone_tutorial.png",
+    "assets/images/difficulty_tutorial.png",
+    "assets/images/button_reset.png"
+  ];
 
   void _showMultiStepDialog(BuildContext context) {
     showDialog(
@@ -359,11 +378,14 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   Text(_dialogContents[_currentDialogIndex]),
                   const SizedBox(height: 10),
                   if (_imageContent[_currentDialogIndex].isNotEmpty)
-                    Image.asset(
-                      _imageContent[_currentDialogIndex],
-                      fit: BoxFit.fitHeight,
-                      cacheWidth: 300,
-                      cacheHeight: 300,
+                    Flexible(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(30), // Rounded corners
+                        child: Image.asset(
+                          _imageContent[_currentDialogIndex],
+                          fit: BoxFit.cover, // Ensures proper scaling
+                        ),
+                      ),
                     ),
                 ],
               ),

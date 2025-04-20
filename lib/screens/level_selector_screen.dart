@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
+import 'package:genequest_app/screens/title_screen.dart';
 
 import 'game_screen.dart';
 import '../globals.dart';
@@ -47,6 +48,19 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
     return MaterialApp(
       home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 206, 129, 87),
+        appBar: AppBar(
+          title: const Text("Back to menu"),
+          backgroundColor: const Color.fromARGB(255, 191, 93, 42),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => TitleScreen()),
+              );
+            },
+          ),
+        ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(

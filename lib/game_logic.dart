@@ -271,14 +271,16 @@ class GenequestGame extends Forge2DGame
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('Congratulations, you are: ${gameState.getTrait()}'),
-                SizedBox(
-                  width: 120, // Adjust width to fit your dialog
-                  height: 120, // Adjust height to fit your dialog
-                  child: Image.asset(
-                    gotDominant
-                        ? 'assets/images/portraits/Female_Trait.png'
-                        : 'assets/images/portraits/Male_Trait.png',
-                    fit: BoxFit.contain, // Ensures the image scales properly
+                const SizedBox(height: 10), // Add some spacing between text and image
+                Flexible(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30), // Apply rounded corners with a radius of 30
+                    child: Image.asset(
+                      gotDominant
+                          ? 'assets/images/portraits/Female_Trait.png'
+                          : 'assets/images/portraits/Male_Trait.png',
+                      fit: BoxFit.cover, // Ensures the image scales properly
+                    ),
                   ),
                 ),
               ],

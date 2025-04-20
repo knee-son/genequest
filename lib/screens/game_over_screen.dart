@@ -38,17 +38,21 @@ class GameOverScreenState extends State<GameOverScreen> {
                 children: [
                   // The image background
                   fullImagePath != null
-                      ? Image(
-                          image: fullImagePath,
-                          width: 200,
-                          height: 200,
-                        )
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(30), // Adjust the value for desired roundness
+                    child: Image(
+                      image: fullImagePath,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover, // Ensures the image fits within the rounded area
+                    ),
+                  )
                       : const Center(
-                          child: Text(
-                            'Error: Image not available',
-                            style: TextStyle(fontSize: 16, color: Colors.red),
-                          ),
-                        ),
+                    child: Text(
+                      'Error: Image not available',
+                      style: TextStyle(fontSize: 16, color: Colors.red),
+                    ),
+                  ),
                 ],
               ),
               const Text(
