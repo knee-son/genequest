@@ -253,7 +253,7 @@ class GenequestGame extends Forge2DGame
   }
 
   void finishLevel() {
-    // pause();
+    pause();
 
     bool gotDominant = goal.size == goal.regularSize;
 
@@ -288,7 +288,7 @@ class GenequestGame extends Forge2DGame
                   Navigator.of(context).pop(); // Dismiss the dialog
                   gameState.incrementLevel();
 
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => MiniGameScreenTransition(
@@ -302,7 +302,7 @@ class GenequestGame extends Forge2DGame
         },
       );
     } else {
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) =>
@@ -527,7 +527,8 @@ class Goal extends BodyComponent {
     final bodyDef = BodyDef()
       ..type = BodyType.dynamic
       ..position = spawnPoint
-      ..linearDamping = 1.2;
+      ..linearDamping = 1.2
+      ..fixedRotation = true;
 
     final body = world.createBody(bodyDef);
 

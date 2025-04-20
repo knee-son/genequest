@@ -44,7 +44,7 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
     );
 
     // White-out effect
-    _whiteOutAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
+    _whiteOutAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
@@ -52,17 +52,19 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
     _controller.forward().then((_) {
       // Play transition sound and navigate
       FlameAudio.play('tada.mp3');
+      print(widget.levelNum);
       if (widget.levelNum == 0) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
         );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MiniGameScreen(widget.levelNum)),
+        );
       }
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (context) => MiniGameScreen(widget.levelNum)),
-      );
     });
   }
 
