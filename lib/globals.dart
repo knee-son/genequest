@@ -17,7 +17,7 @@ class GameState {
   Future<void> loadState() async {
     final prefs = await SharedPreferences.getInstance();
     _maxLevelReached = prefs.getInt('_maxLevelReached') ?? _maxLevelReached;
-    _maxLevelReached = prefs.getInt('traitState') ?? traitState;
+    traitState = prefs.getInt('traitState') ?? traitState;
   }
 
   /// Save current state to shared_preferences
