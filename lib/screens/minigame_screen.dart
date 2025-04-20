@@ -30,11 +30,16 @@ class MiniGameScreen extends StatefulWidget {
 
 class _MiniGameScreenState extends State<MiniGameScreen> {
   // Cached assets
-  late final ImageProvider combinedChromatid = _getCachedAsset('assets/images/combined_chromatid_new.png');
-  late final ImageProvider redButton = _getCachedAsset('assets/images/red_button.png');
-  late final ImageProvider resetButton = _getCachedAsset('assets/images/button_reset.png');
-  late final ImageProvider pillBlue = _getCachedAsset('assets/images/pill_blue.png');
-  late final ImageProvider pillRed = _getCachedAsset('assets/images/pill_red.png');
+  late final ImageProvider combinedChromatid =
+      _getCachedAsset('assets/images/combined_chromatid_new.png');
+  late final ImageProvider redButton =
+      _getCachedAsset('assets/images/red_button.png');
+  late final ImageProvider resetButton =
+      _getCachedAsset('assets/images/button_reset.png');
+  late final ImageProvider pillBlue =
+      _getCachedAsset('assets/images/pill_blue.png');
+  late final ImageProvider pillRed =
+      _getCachedAsset('assets/images/pill_red.png');
 
   // Game state
   String? _blockColor;
@@ -81,19 +86,24 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     int totalRedCount = 0;
 
     final List<String> traitFilePathList = [
-      "Almond_Eyes_Trait.png", "Round_Eyes_Trait.png",
-      "Black_Hair_Trait.png", "Blonde_Hair_Trait.png",
-      "Fair_Skin_Trait.png", "Brown_Skin_Trait.png",
-      "Short_Height_Trait.png", "Tall_Height_Trait.png",
-      "Male_Trait.png", "Female_Trait.png"
+      "Almond_Eyes_Trait.png",
+      "Round_Eyes_Trait.png",
+      "Black_Hair_Trait.png",
+      "Blonde_Hair_Trait.png",
+      "Fair_Skin_Trait.png",
+      "Brown_Skin_Trait.png",
+      "Short_Height_Trait.png",
+      "Tall_Height_Trait.png",
+      "Male_Trait.png",
+      "Female_Trait.png"
     ];
 
     // Check completion for each level
     final levelChecks = [
-      [0, 1],  // Level 1 checks
-      [0, 1],  // Level 2 checks
-      [2, 3],  // Level 3 checks
-      [4, 5],  // Level 4 checks
+      [0, 1], // Level 1 checks
+      [0, 1], // Level 2 checks
+      [2, 3], // Level 3 checks
+      [4, 5], // Level 4 checks
     ];
 
     final currentLevel = gameState.currentLevel;
@@ -117,26 +127,9 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   void _showTraitDialog(int blueCount, int redCount, List<String> traitFiles) {
-    final dominantTrait = gameState.traits[gameState.currentLevel].defaultTrait;
-    final nonDomi = gameState.traits[gameState.currentLevel].traits.last;
-    final newTrait = Trait(
-      name: gameState.traits[gameState.currentLevel].name,
-      traits: gameState.traits[gameState.currentLevel].traits,
-      difficulty: gameState.traits[gameState.currentLevel].difficulty,
-      selectedTrait: blueCount >= redCount ? dominantTrait : nonDomi,
-      level: gameState.currentLevel,
-    );
-
-    // Update or add trait
-    final index = gameState.savedTraits.indexWhere((t) => t.level == gameState.currentLevel);
-    if (index != -1) {
-      gameState.savedTraits[index] = newTrait;
-    } else {
-      gameState.savedTraits.add(newTrait);
-    }
-
-    final imagePath = _findMatchingImage(newTrait.selectedTrait, traitFiles);
-    final fullImagePath = AssetImage("assets/images/portraits/$imagePath");
+    gameState.setTraitState(isDominant: blueCount >= redCount);
+    final fullImagePath = AssetImage(
+        "assets/images/portraits/${gameState.getTrait().replaceAll(' ', '_')}_Trait.png");
 
     showDialog(
       context: context,
@@ -146,7 +139,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Acquired Trait: ${newTrait.selectedTrait} ${newTrait.name[0].toUpperCase()}${newTrait.name.substring(1)}'),
+              Text('Acquired Trait: ${gameState.getTrait()}'),
               const SizedBox(height: 10),
               Image(
                 image: fullImagePath,
@@ -164,14 +157,16 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                 if (gameState.currentLevel == 4) {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => GameOverTransitionScreen()),
-                        (Route<dynamic> route) => false,
+                    MaterialPageRoute(
+                        builder: (context) => GameOverTransitionScreen()),
+                    (Route<dynamic> route) => false,
                   );
                 } else {
                   gameState.incrementLevel();
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LevelSelectorScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => LevelSelectorScreen()),
                   );
                 }
               },
@@ -183,19 +178,14 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     );
   }
 
-  String _findMatchingImage(String selectedTrait, List<String> files) {
-    return files.firstWhere(
-          (fileName) => fileName.contains(selectedTrait),
-      orElse: () => files.first,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: kDebugMode ? Text('Mini Game - ${gameState.levelName}') : const SizedBox(),
+          title: kDebugMode
+              ? Text('Mini Game - ${gameState.levelName}')
+              : const SizedBox(),
           actions: [
             IconButton(
               icon: const Icon(Icons.help_outline),
@@ -274,25 +264,25 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     final image = color == 'blue' ? pillBlue : pillRed;
     return gameState.currentLevel == 1
         ? Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Image(
-          image: image,
-          width: spawnPillWidth,
-          height: spawnPillHeight,
-        ),
-        Image(
-          image: image,
-          width: spawnPillWidth,
-          height: spawnPillHeight,
-        ),
-      ],
-    )
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image(
+                image: image,
+                width: spawnPillWidth,
+                height: spawnPillHeight,
+              ),
+              Image(
+                image: image,
+                width: spawnPillWidth,
+                height: spawnPillHeight,
+              ),
+            ],
+          )
         : Image(
-      image: image,
-      width: spawnPillWidth,
-      height: spawnPillHeight,
-    );
+            image: image,
+            width: spawnPillWidth,
+            height: spawnPillHeight,
+          );
   }
 
   List<Widget> _buildDropZones() {
@@ -405,7 +395,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   void updateDropZonePositions() {
-    final chromatidBox = chromatidKey.currentContext?.findRenderObject() as RenderBox?;
+    final chromatidBox =
+        chromatidKey.currentContext?.findRenderObject() as RenderBox?;
     if (chromatidBox == null) return;
 
     final position = chromatidBox.localToGlobal(Offset.zero);
@@ -413,16 +404,22 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
 
     setState(() {
       // First pair of drop zones
-      dropZonePositions[0] = Offset(position.dx, position.dy + (size.height / 2));
-      dropZonePositions[1] = Offset(position.dx + (size.width / 2), position.dy + (size.height / 2));
+      dropZonePositions[0] =
+          Offset(position.dx, position.dy + (size.height / 2));
+      dropZonePositions[1] = Offset(
+          position.dx + (size.width / 2), position.dy + (size.height / 2));
 
       // Second pair (levels 3+)
-      dropZonePositions[2] = Offset(position.dx, position.dy + (spawnPillHeight * 1.5));
-      dropZonePositions[3] = Offset(position.dx + (size.width / 2), position.dy + (spawnPillHeight * 1.5));
+      dropZonePositions[2] =
+          Offset(position.dx, position.dy + (spawnPillHeight * 1.5));
+      dropZonePositions[3] = Offset(position.dx + (size.width / 2),
+          position.dy + (spawnPillHeight * 1.5));
 
       // Third pair (level 4)
-      dropZonePositions[4] = Offset(position.dx, position.dy + (spawnPillHeight / 2));
-      dropZonePositions[5] = Offset(position.dx + (size.width / 2), position.dy + (spawnPillHeight / 2));
+      dropZonePositions[4] =
+          Offset(position.dx, position.dy + (spawnPillHeight / 2));
+      dropZonePositions[5] = Offset(
+          position.dx + (size.width / 2), position.dy + (spawnPillHeight / 2));
     });
   }
 }

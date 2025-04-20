@@ -124,7 +124,6 @@ class GenequestGame extends Forge2DGame
             ));
             break;
           default: // floor
-            print(object.name);
             await add(object.polygon.isNotEmpty
                 ? CollisionBlock(
                     position: object.position,
@@ -179,7 +178,6 @@ class GenequestGame extends Forge2DGame
 
     world.add(avatar);
     camera.moveTo(goal.position, speed: 200);
-
   }
 
   @override
@@ -255,54 +253,29 @@ class GenequestGame extends Forge2DGame
     avatar.health = 6;
   }
 
-  void saveTrait() {
+  void finishLevel() {
     pause();
+
+    bool gotDominant = goal.size == goal.regularSize;
+
     // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
-      // Ensure there are traits available before proceeding
-      String dominantTrait =
-          gameState.traits[gameState.currentLevel].defaultTrait;
-      String nonDominantTrait =
-          gameState.traits[gameState.currentLevel].traits.last;
+      gameState.setTraitState(isDominant: gotDominant);
 
-      Trait newTrait = Trait(
-          name: gameState.traits[gameState.currentLevel].name,
-          traits: gameState.traits[gameState.currentLevel].traits,
-          difficulty: gameState.traits[gameState.currentLevel].difficulty,
-          selectedTrait: dominantTrait,
-          level: gameState.traits[gameState.currentLevel].level);
-
-      if (goal.size == goal.regularSize) {
-        newTrait.selectedTrait = nonDominantTrait;
-      } else {
-        newTrait.selectedTrait = dominantTrait;
-      }
-
-      // Check for an existing trait where the level matches gameState.level
-      var existingTraitIndex = gameState.savedTraits.indexWhere(
-        (trait) => trait.level == gameState.currentLevel,
-      );
-
-      if (existingTraitIndex != -1) {
-        // Update the existing trait instance if found and selectedTrait is not empty
-        gameState.savedTraits[gameState.currentLevel] = newTrait;
-      } else {
-        gameState.savedTraits.add(newTrait);
-      }
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Trait Acquired'),
+            title: const Text('Trait Acquired!'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Congratulations, you are: ${newTrait.selectedTrait}'),
+                Text('Congratulations, you are: ${gameState.getTrait()}'),
                 SizedBox(
                   width: 120, // Adjust width to fit your dialog
                   height: 120, // Adjust height to fit your dialog
                   child: Image.asset(
-                    newTrait.selectedTrait.contains('Female')
+                    gotDominant
                         ? 'assets/images/portraits/Female_Trait.png'
                         : 'assets/images/portraits/Male_Trait.png',
                     fit: BoxFit.contain, // Ensures the image scales properly
@@ -352,16 +325,6 @@ the avatar's movements are all in the Avatar object. tweak it to
 your liking.
 
 TODO:
-- there's a case where the avatar is still colliding with a
-damaging object so it should still be in a hurt state.
-- implement a different BodyComponent for Chasm and Lava.
-- Chasm should not collide with avatar but is a sensor.
-- same goes for Lava but just implement infinite jumping to
-the avatar. apply linear damping along with damage so the
-avatar gets punished
-- the sister chromatid should have an alternating state between
-'male' and 'female in peaceful level
-- maybe change the sky backdrop to a gradient?
 - the animation is bugged and needs fixing
 */
 
@@ -379,14 +342,10 @@ class MyCollisionListener extends ContactListener {
     // This is the normal vector at the point of contact
     final normalY = worldManifold.normal.y;
 
-    print(userDataA);
-    print(userDataB);
-
     // negative y means fixture A is contacting upwards
     // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
 
     if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
-      // debugPrint("jumps have been reset!");
       GenequestGame.instance?.avatar.resetJumps();
     }
 
@@ -412,7 +371,7 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
-      GenequestGame.instance?.saveTrait();
+      GenequestGame.instance?.finishLevel();
     }
   }
 
@@ -687,7 +646,6 @@ class Enemy extends BodyComponent {
       spriteComponent.flipHorizontally();
     }
   }
-
 }
 
 // ------------------- ENEMY LOGIC --------------------
@@ -961,19 +919,19 @@ class Avatar extends BodyComponent {
         -angle * rotationCorrectionSpeed - angularVelocity * rotationDamping;
     body.applyTorque(torque);
   }
+
   void followAvatar() {
-      if (!isFollowingAvatar) {
-        GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
-        isFollowingAvatar = true;
-      }
+    if (!isFollowingAvatar) {
+      GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
+      isFollowingAvatar = true;
+    }
   }
+
   void jump() {
     followAvatar();
     if (jumpsRemaining > 0) {
       FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
-      print(body.linearDamping);
-      print(jumpsRemaining);
       jumpsRemaining -= 1;
       if (body.linearDamping > 1.2) {
         jumpsRemaining = 2;

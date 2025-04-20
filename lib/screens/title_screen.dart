@@ -165,7 +165,7 @@ class TitleScreenState extends State<TitleScreen>
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
                             builder: (context) => LevelSelectorScreen()),
@@ -188,7 +188,7 @@ class TitleScreenState extends State<TitleScreen>
                   if (kDebugMode) ...[
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) =>
@@ -204,7 +204,7 @@ class TitleScreenState extends State<TitleScreen>
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => MiniGameScreen(1)),
@@ -219,7 +219,7 @@ class TitleScreenState extends State<TitleScreen>
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                               builder: (context) => GameOverTransitionScreen()),

@@ -3,89 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  runApp(MaterialApp(
-    home: GameOverScreen(),
-  ));
-}
-
 class GameOverScreen extends StatefulWidget {
-  GameOverScreen({super.key});
+  const GameOverScreen({super.key});
 
   @override
-  _GameOverScreenState createState() => _GameOverScreenState();
+  GameOverScreenState createState() => GameOverScreenState();
 }
 
-class _GameOverScreenState extends State<GameOverScreen> {
-  List<String> selectedTraits = [];
+class GameOverScreenState extends State<GameOverScreen> {
+  AssetImage fullImagePath = AssetImage(gameState.getTraitPath());
 
-  List<String> mSelectedTraits = [];
-  AssetImage fullImagePath = AssetImage('assets/images/portraits');
   @override
   void initState() {
     super.initState();
-
-    // Extract all selectedTrait values from randomTraits
-    if (gameState.savedTraits.length == 5){
-      selectedTraits =
-          gameState.savedTraits.map((trait) => trait.selectedTrait).toList();
-      mSelectedTraits = List.from(selectedTraits);
-
-    } else {
-      // default portrait for testing purposes
-      selectedTraits =
-          gameState.randomTraits.map((trait) => trait.selectedTrait).toList();
-      mSelectedTraits = List.from(selectedTraits);
-    }
-
-    // Append the trait descriptions
-    mSelectedTraits.asMap().forEach((index, element) {
-      mSelectedTraits[index] = "$element ${gameState.traits[index].name[0].toUpperCase()}${gameState.traits[index].name.substring(1)}";
-    });
-
-    List<String> imageFiles = [
-      "Female_Brown_Skin_Almond_Eyes_Average_Height_Black_Hair.png",
-      "Female_Brown_Skin_Almond_Eyes_Tall_Height_Black_Hair.png",
-      "Female_Brown_Skin_Almond_Eyes_Tall_Height_Blonde_Hair.png",
-      "Female_Brown_Skin_Round_Eyes_Average_Height_Black_Hair.png",
-      "Female_Brown_Skin_Round_Eyes_Average_Height_Blonde_Hair.png",
-      "Female_Fair_Skin_Round_Eyes_Average_Height_Black_Hair.png",
-      "Female_Fair_Skin_Round_Eyes_Average_Height_Blonde_Hair.png",
-      "Female_Fair_Skin_Round_Eyes_Tall_Height_Black_Hair.png",
-      "Female_Fair_Skin_Round_Eyes_Tall_Height_Blonde_Hair.png",
-      "Male_Brown_Skin_Almond_Eyes_Average_Height_Black_Hair.png",
-      "Male_Brown_Skin_Almond_Eyes_Tall_Height_Black_Hair.png",
-      "Male_Brown_Skin_Almond_Eyes_Tall_Height_Blonde_Hair.png",
-      "Male_Brown_Skin_Round_Eyes_Average_Height_Black_Hair.png",
-      "Male_Brown_Skin_Round_Eyes_Average_Height_Blonde_Hair.png",
-      "Male_Fair_Skin_Almond_Eyes_Average_Height_Black_Hair.png",
-      "Male_Fair_Skin_Almond_Eyes_Average_Height_Blonde_Hair.png",
-      "Male_Fair_Skin_Almond_Eyes_Tall_Height_Black_Hair.png",
-      "Male_Fair_Skin_Almond_Eyes_Tall_Height_Blonde_Hair.png",
-      "Male_Fair_Skin_Round_Eyes_Average_Height_Black_Hair.png",
-      "Male_Fair_Skin_Round_Eyes_Average_Height_Blonde_Hair.png",
-      "Male_Fair_Skin_Round_Eyes_Tall_Height_Black_Hair.png",
-      "Male_Fair_Skin_Round_Eyes_Tall_Height_Blonde_Hair.png",
-    ];
-    // Find the matching image based on selectedTraits
-    String? imageFilePath = findMatchingImage(selectedTraits, imageFiles);
-    fullImagePath = AssetImage("assets/images/portraits/$imageFilePath");
-  }
-
-  String? findMatchingImage(
-      List<String> selectedTraits, List<String> imageFiles) {
-    // Iterate through all image file names
-    for (String fileName in imageFiles) {
-      // Check if the file name contains all selected traits
-      bool matchesAllTraits =
-          selectedTraits.every((trait) => fileName.contains(trait));
-      if (matchesAllTraits) {
-        return fileName; // Return the matching file name
-      }
-    }
-    return null; // Return null if no match is found
   }
 
   @override
@@ -109,16 +39,16 @@ class _GameOverScreenState extends State<GameOverScreen> {
                   // The image background
                   fullImagePath != null
                       ? Image(
-                    image: fullImagePath,
-                    width: 200,
-                    height: 200,
-                  )
+                          image: fullImagePath,
+                          width: 200,
+                          height: 200,
+                        )
                       : const Center(
-                    child: Text(
-                      'Error: Image not available',
-                      style: TextStyle(fontSize: 16, color: Colors.red),
-                    ),
-                  ),
+                          child: Text(
+                            'Error: Image not available',
+                            style: TextStyle(fontSize: 16, color: Colors.red),
+                          ),
+                        ),
                 ],
               ),
               const Text(
@@ -135,7 +65,7 @@ class _GameOverScreenState extends State<GameOverScreen> {
               ),
               const SizedBox(height: 5), // Adds spacing between texts
               Text(
-                'Acquired Traits: ${mSelectedTraits.join(', ')}', // Converts list into comma-separated string
+                'Acquired Traits: ${gameState.getTraitDescription()}', // Converts list into comma-separated string
                 style: const TextStyle(
                   fontSize: 20,
                   color: Colors.black,
