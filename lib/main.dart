@@ -10,6 +10,7 @@ void main() {
   // Ensure Flutter bindings are initialized before using system services
   WidgetsFlutterBinding.ensureInitialized();
   gameState.loadState();
+
   // Set the app to only allow landscape mode
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeRight,

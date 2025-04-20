@@ -226,7 +226,6 @@ class _GameScreenState extends State<GameScreen> {
                     // Reset button
                     GestureDetector(
                       onTap: () {
-                        print('gesture detected');
                         GenequestGame.instance?.reset(); // Reset game logic
                       },
                       child: Image(

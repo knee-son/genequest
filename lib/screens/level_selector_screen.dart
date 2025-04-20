@@ -161,13 +161,12 @@ class LevelButton extends StatelessWidget {
         onTap: enabled
             ? () {
                 gameState.currentLevel = level;
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => GameScreen(level),
                   ),
                 );
-                debugDumpApp();
               }
             : null, // Disable when not enabled
         child: ClipRRect(

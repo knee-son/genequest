@@ -6,6 +6,7 @@ class GameState {
   factory GameState() => _instance;
   GameState._internal();
 
+  int traitState = 0;
   int currentLevel = 0; // depends on game
   int _maxLevelReached = kDebugMode ? 4 : 0; // 4 in debug mode, 0 otherwise
 
@@ -16,15 +17,15 @@ class GameState {
   Future<void> loadState() async {
     final prefs = await SharedPreferences.getInstance();
     _maxLevelReached = prefs.getInt('_maxLevelReached') ?? _maxLevelReached;
+    _maxLevelReached = prefs.getInt('traitState') ?? traitState;
   }
 
   /// Save current state to shared_preferences
   Future<void> saveState() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('_maxLevelReached', _maxLevelReached);
+    await prefs.setInt('traitState', traitState);
   }
-
-  List<Trait> savedTraits = [];
 
   final Map<int, String> _levelNames = {
     0: "Level0.tmx",
@@ -36,35 +37,25 @@ class GameState {
 
   final List<Trait> traits = List.unmodifiable([
     Trait(
-        name: 'gender',
-        traits: ['Male', 'Female'],
-        difficulty: 'peaceful',
-        level: 0,
-        selectedTrait: ""),
+      name: 'Gender',
+      options: ['Male', 'Female'],
+    ),
     Trait(
-        name: 'skin',
-        traits: ['Fair', 'Brown'],
-        difficulty: 'easy',
-        level: 1,
-        selectedTrait: ""),
+      name: 'Skin',
+      options: ['Fair', 'Brown'],
+    ),
     Trait(
-        name: 'eyes',
-        traits: ['Round', 'Almond'],
-        difficulty: 'medium',
-        level: 2,
-        selectedTrait: ""),
+      name: 'Eyes',
+      options: ['Round', 'Almond'],
+    ),
     Trait(
-        name: 'height',
-        traits: ['Average', 'Tall'],
-        difficulty: 'hard',
-        level: 3,
-        selectedTrait: ""),
+      name: 'Height',
+      options: ['Average', 'Tall'],
+    ),
     Trait(
-        name: 'hair',
-        traits: ['Black', 'Blonde'],
-        difficulty: 'expert',
-        level: 4,
-        selectedTrait: ""),
+      name: 'Hair',
+      options: ['Black', 'Blonde'],
+    ),
   ]);
 
   int get level => _maxLevelReached;
@@ -73,40 +64,6 @@ class GameState {
   String getLevelName(int levelNum) {
     return _levelNames[levelNum] ?? "Unknown Level";
   }
-
-  // hard coded for testing purposes
-  final List<Trait> randomTraits = List.unmodifiable([
-    Trait(
-        name: 'gender',
-        traits: ['Male', 'Female'],
-        difficulty: 'peaceful',
-        level: 0,
-        selectedTrait: "Female"),
-    Trait(
-        name: 'skin',
-        traits: ['Fair', 'Brown'],
-        difficulty: 'easy',
-        level: 1,
-        selectedTrait: "Brown"),
-    Trait(
-        name: 'eyes',
-        traits: ['Round', 'Almond'],
-        difficulty: 'medium',
-        level: 2,
-        selectedTrait: "Round"),
-    Trait(
-        name: 'height',
-        traits: ['Average', 'Tall'],
-        difficulty: 'hard',
-        level: 3,
-        selectedTrait: "Average"),
-    Trait(
-        name: 'hair',
-        traits: ['Black', 'Blonde'],
-        difficulty: 'expert',
-        level: 4,
-        selectedTrait: "Black"),
-  ]);
 
   void setLevel(int newLevel) {
     _maxLevelReached =
@@ -119,37 +76,63 @@ class GameState {
       setLevel(_maxLevelReached + 1); // Use the setter method
     }
   }
+
+  void setTraitState({required bool isDominant}) {
+    traitState &= ~(1 << currentLevel); // Clear bit
+    traitState |= (isDominant ? 1 : 0) << currentLevel; // Set new value
+    saveState();
+  }
+
+  String getTrait([int? level]) {
+    int lvl = level ?? currentLevel;
+    String name = traits[lvl].options[(traitState >> lvl) & 1];
+
+    if (lvl != 0) {
+      name += " ${traits[lvl].name}";
+    }
+
+    return name;
+  }
+
+  String getTraitDescription() {
+    String name = "";
+
+    for (int i = 0; i < 5; i++) {
+      name += getTrait(i);
+
+      if (i != 4) {
+        name += ", ";
+      }
+    }
+
+    return name;
+  }
+
+  String getTraitPath() {
+    String path = "";
+
+    for (int i = 0; i < 5; i++) {
+      path += getTrait(i);
+
+      if (i != 4) {
+        path += " ";
+      }
+    }
+
+    path = path.replaceAll(' ', '_');
+
+    return "assets/images/portraits/$path.png";
+  }
 }
 
 class Trait {
   final String name;
-  final List<String> traits;
-  final String difficulty;
-  final int level;
-  String selectedTrait;
+  final List<String> options;
 
-  Trait(
-      {required this.name,
-      required this.traits,
-      required this.difficulty,
-      required this.level,
-      this.selectedTrait = ""});
-
-  // Method to get the default trait
-  String get defaultTrait {
-    if (name == "gender") {
-      return "Male";
-    }
-    return traits.isNotEmpty ? traits.first : "No traits available";
-  }
-
-  @override
-  String toString() {
-    return 'Level: $level, '
-        'Traits: $traits, '
-        'Difficulty: $difficulty,'
-        'selectedTrait: $selectedTrait';
-  }
+  Trait({
+    required this.name,
+    required this.options,
+  });
 }
 
 final gameState = GameState(); // Global instance
