@@ -1,4 +1,5 @@
 import 'dart:async' as async;
+import 'dart:math';
 
 import 'package:flame/camera.dart' as flame_camera;
 import 'package:flutter/services.dart';
@@ -40,12 +41,20 @@ class GenequestGame extends Forge2DGame
   late flameTiled.TiledComponent levelMap;
   late double screenWidth;
   late double screenHeight;
+  late TickerProvider vsync;
 
+  bool isTransitioning = false; // Tracks if the transition is active
+  late AnimationController _finishAnimationController;
+  late Animation<double> _zoomInAnimation;
+  late Animation<double> _zoomOutAnimation;
+  late Animation<double> _shakeAnimation;
+  late Animation<double> _whiteOutAnimation;
   // Constructor
   GenequestGame({
     required this.context,
     required this.levelNum,
     this.levelName,
+    required this.vsync
   }) : super(
           gravity: Vector2(0, 50.0),
           contactListener: MyCollisionListener(),
@@ -61,7 +70,35 @@ class GenequestGame extends Forge2DGame
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
+    await super.onLoad();
+
+    // Initialize animations
+    _finishAnimationController = AnimationController(
+      vsync: vsync,
+      duration: const Duration(seconds: 5),
+    );
+
+    _zoomInAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
+      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.0, 0.25, curve: Curves.easeIn)),
+    );
+
+    _zoomOutAnimation = Tween<double>(begin: 1.5, end: 1.0).animate(
+      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.25, 0.5, curve: Curves.easeOut)),
+    );
+
+    _whiteOutAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
+    );
+
+    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.25, 0.5, curve: Curves.elasticOut)),
+    );
+
+    _finishAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        finishLevel();
+      }
+    });
 
     if (debugMode) {
       add(FpsTextComponent(
@@ -181,8 +218,13 @@ class GenequestGame extends Forge2DGame
 
   @override
   void render(Canvas canvas) {
-    // Draw sky gradient first
+    // If no transition is happening, render normally
+    if (!isTransitioning) {
+      super.render(canvas);
+      return;
+    }
 
+    // Step 1: Draw the sky gradient background
     final rect = Rect.fromLTWH(0, 0, screenWidth, screenHeight);
     final gradient = const LinearGradient(
       begin: Alignment.topCenter,
@@ -192,13 +234,45 @@ class GenequestGame extends Forge2DGame
         Color(0xFF4682B4), // Steel Blue
       ],
     );
+    final gradientPaint = Paint()..shader = gradient.createShader(rect);
+    canvas.drawRect(rect, gradientPaint);
 
-    final paint = Paint()..shader = gradient.createShader(rect);
+    // Step 2: Apply zoom effect
+    final zoomValue = _finishAnimationController.value < 0.5
+        ? _zoomInAnimation.value
+        : _zoomOutAnimation.value;
 
-    canvas.drawRect(rect, paint);
+    canvas.save();
+    canvas.scale(zoomValue);
 
-    // Then let Forge2D render everything else on top
+    if (_finishAnimationController.value >= 0.25 && _finishAnimationController.value < 0.5) {
+      final shakeOffset = _calculateShakeOffset(_shakeAnimation.value);
+      canvas.translate(shakeOffset.x, shakeOffset.y);
+    }
+
+    // Step 3: Render the game world
     super.render(canvas);
+
+    // Step 4: Apply white-out effect
+    final whiteOutOpacity = _whiteOutAnimation.value;
+    if (whiteOutOpacity > 0) {
+      final whiteOutPaint = Paint()
+        ..color = Colors.white.withOpacity(whiteOutOpacity);
+      canvas.drawRect(Rect.fromLTWH(0, 0, screenWidth, screenHeight), whiteOutPaint);
+    }
+
+    canvas.restore();
+  }
+
+
+// Helper method to calculate random shake offsets
+  Vector2 _calculateShakeOffset(double shakeProgress, {double maxOffset = 10.0}) {
+    final random = Random();
+    final offset = maxOffset * shakeProgress;
+    return Vector2(
+      (random.nextDouble() - 0.5) * offset,
+      (random.nextDouble() - 0.5) * offset,
+    );
   }
 
   @override
@@ -233,6 +307,12 @@ class GenequestGame extends Forge2DGame
     }
   }
 
+  @override
+  void onDispose() {
+    _finishAnimationController.dispose();
+    super.onDispose();
+  }
+
   void updateHealth(int newHealth) {
     healthNotifier.value = newHealth;
   }
@@ -252,9 +332,19 @@ class GenequestGame extends Forge2DGame
     avatar.health = 6;
   }
 
-  void finishLevel() {
-    pause();
+  void playFinishAnimation() {
+    if (isTransitioning) return; // Prevent multiple transitions
+    FlameAudio.play('slash.wav');
+    isTransitioning = true; // Start the transition
+    pause(); // Pause the game during the animation
+    _finishAnimationController.forward(); // Start the animation
+  }
 
+
+  void finishLevel() {
+    // pause();
+    // isTransitioning = false; // Reset transition state
+    // _finishAnimationController.reset();
     bool gotDominant = goal.size == goal.regularSize;
 
     // not modified during forge2d migration
@@ -372,7 +462,8 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
-      GenequestGame.instance?.finishLevel();
+      // GenequestGame.instance?.finishLevel();
+      GenequestGame.instance?.playFinishAnimation();
     }
   }
 
@@ -925,6 +1016,7 @@ class Avatar extends BodyComponent {
   void followAvatar() {
     if (!isFollowingAvatar) {
       GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
+      GenequestGame.instance!.playFinishAnimation();
       isFollowingAvatar = true;
     }
   }

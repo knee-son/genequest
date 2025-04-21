@@ -24,7 +24,7 @@ class GameScreen extends StatefulWidget {
 bool isNavigatingToTitleScreen = false;
 bool isDialogShowing = false;
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   final AssetImage forwardButtonImage =
       const AssetImage('assets/images/button_forward.png');
   final AssetImage resetButtonImage =
@@ -115,7 +115,8 @@ class _GameScreenState extends State<GameScreen> {
                 game: GenequestGame(
                     context: context,
                     levelNum: widget.levelNum,
-                    levelName: widget.levelName),
+                    levelName: widget.levelName,
+                    vsync: this),
                 overlayBuilderMap: {
                   'HealthBar': (_, game) => Align(
                         alignment: Alignment
