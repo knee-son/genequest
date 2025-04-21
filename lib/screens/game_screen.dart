@@ -4,6 +4,7 @@ import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 import 'level_selector_screen.dart';
@@ -43,7 +44,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    FlameAudio.bgm.initialize();
+    // FlameAudio.bgm.initialize();
     // gameState.loadState();
     _playMusic();
   }
@@ -55,17 +56,13 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     // Pick a random track
     final String selectedMusic =
         musicTracks[Random().nextInt(musicTracks.length)];
-
+    MusicManager.stop();
     // Play the randomly selected music
-    FlameAudio.bgm.play(
-      selectedMusic,
-      volume: 0.5,
-    );
+    MusicManager.play(selectedMusic);
   }
 
   @override
   void dispose() {
-    FlameAudio.bgm.stop();
     super.dispose();
   }
 
@@ -207,36 +204,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Menu button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LevelSelectorScreen(),
-                          ),
-                        );
-                      },
-                      child: Image(
-                        image: menuButtonImage,
-                        width: 100,
-                        height: 50,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Reset button
-                    GestureDetector(
-                      onTap: () {
-                        GenequestGame.instance?.reset(); // Reset game logic
-                      },
-                      child: Image(
-                        image: resetButtonImage,
-                        width: 100,
-                        height: 50,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Pause button
                     GestureDetector(
                       onTap: () {
                         showDialog(
@@ -252,7 +219,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       },
                       child: Image(
                         image: pauseButtonImage,
-                        width: 50,
+                        width: 100,
                         height: 50,
                       ),
                     ),
@@ -298,6 +265,15 @@ class DialogOverlayModal extends StatelessWidget {
                 onPressed: () => _dismissDialog(context),
                 child: const Text("Resume"),
               ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+                onPressed: ()  {
+                  GenequestGame.instance?.reset();
+                  _dismissDialog(context);
+
+                },
+                child: Text("Reset")
+            ),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => _navigateToLevelSelector(context),
