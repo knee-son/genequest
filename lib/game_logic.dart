@@ -117,8 +117,6 @@ class GenequestGame extends Forge2DGame
     await Flame.images.loadAll(
         ['chromatid7.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
 
-    await FlameAudio.audioCache.load('jump.wav');
-    await FlameAudio.audioCache.load('oof.mp3');
 
     overlays.add('HealthBar');
 
@@ -379,13 +377,10 @@ class GenequestGame extends Forge2DGame
                 onPressed: () {
                   Navigator.of(context).pop(); // Dismiss the dialog
                   gameState.incrementLevel();
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => MiniGameScreenTransition(
-                            levelNum: gameState.currentLevel)),
-                  );
+                  Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                      builder: (context) => LevelSelectorScreen()));
                 },
                 child: const Text('Dismiss'),
               ),
@@ -394,7 +389,7 @@ class GenequestGame extends Forge2DGame
         },
       );
     } else {
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (context) =>
@@ -462,7 +457,6 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
-      // GenequestGame.instance?.finishLevel();
       GenequestGame.instance?.playFinishAnimation();
     }
   }
@@ -602,7 +596,7 @@ class Goal extends BodyComponent {
 
     size = sprite.srcSize;
 
-    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - size.y * 2);
+    spawnPoint = Vector2(spawnPoint.x, spawnPoint.y - 1);
 
     size /= 10;
     spawnPoint /= 10;
@@ -971,7 +965,7 @@ class Avatar extends BodyComponent {
   }
 
   void resetPosition() {
-    body.setTransform(spawnPoint, body.angle);
+    body.setTransform(spawnPoint, 0);
   }
 
   @override
@@ -1016,7 +1010,6 @@ class Avatar extends BodyComponent {
   void followAvatar() {
     if (!isFollowingAvatar) {
       GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
-      GenequestGame.instance!.playFinishAnimation();
       isFollowingAvatar = true;
     }
   }

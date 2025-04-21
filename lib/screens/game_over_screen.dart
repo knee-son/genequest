@@ -12,10 +12,19 @@ class GameOverScreen extends StatefulWidget {
 
 class GameOverScreenState extends State<GameOverScreen> {
   AssetImage fullImagePath = AssetImage(gameState.getTraitPath());
+  AssetImage backgroundImagePath = const AssetImage('assets/images/congratulations_game_over.png');
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // Clear the cached images
+    backgroundImagePath.evict();
+    fullImagePath.evict();
+    super.dispose();
   }
 
   @override
@@ -24,7 +33,7 @@ class GameOverScreenState extends State<GameOverScreen> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/congratulations_game_over.png'),
+            image: backgroundImagePath,
             fit: BoxFit.cover, // Ensures the image covers the entire screen
           ),
         ),
