@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/flame.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 import 'game_screen.dart';
@@ -20,21 +21,17 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
   @override
   void initState() {
     super.initState();
-    FlameAudio.bgm.initialize();
     // gameState.loadState();
+    MusicManager.stop();
     _playMusic();
   }
 
   void _playMusic() {
-    FlameAudio.bgm.play(
-      'music4.mp3',
-      volume: 0.5,
-    );
+    MusicManager.play('music4.mp3');
   }
 
   @override
   void dispose() {
-    FlameAudio.bgm.stop();
     super.dispose();
   }
 

@@ -1,6 +1,7 @@
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
 import 'game_over_transition_screen.dart';
 import 'game_screen.dart';
@@ -47,16 +48,11 @@ class TitleScreenState extends State<TitleScreen>
   }
 
   void _playMusic() {
-    FlameAudio.bgm.initialize();
-    FlameAudio.bgm.play(
-      'music2.mp3',
-      volume: 0.5,
-    );
+    MusicManager.play('music2.mp3');
   }
 
   @override
   void dispose() {
-    FlameAudio.bgm.stop();
     _controller.dispose();
     _growController.dispose();
     super.dispose();
