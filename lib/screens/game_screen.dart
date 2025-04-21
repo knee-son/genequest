@@ -207,36 +207,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Menu button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => LevelSelectorScreen(),
-                          ),
-                        );
-                      },
-                      child: Image(
-                        image: menuButtonImage,
-                        width: 100,
-                        height: 50,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Reset button
-                    GestureDetector(
-                      onTap: () {
-                        GenequestGame.instance?.reset(); // Reset game logic
-                      },
-                      child: Image(
-                        image: resetButtonImage,
-                        width: 100,
-                        height: 50,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    // Pause button
                     GestureDetector(
                       onTap: () {
                         showDialog(
@@ -252,7 +222,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                       },
                       child: Image(
                         image: pauseButtonImage,
-                        width: 50,
+                        width: 100,
                         height: 50,
                       ),
                     ),
@@ -300,9 +270,15 @@ class DialogOverlayModal extends StatelessWidget {
               ),
             const SizedBox(height: 10),
             ElevatedButton(
+                onPressed: () => GenequestGame.instance?.reset(),
+                child: Text("Reset")
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
               onPressed: () => _navigateToLevelSelector(context),
               child: Text(action == "Paused" ? "Level Select" : "Go Back"),
             ),
+
           ],
         ),
       ),

@@ -462,7 +462,6 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.applyDamage();
     } else if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
-      // GenequestGame.instance?.finishLevel();
       GenequestGame.instance?.playFinishAnimation();
     }
   }
@@ -1016,7 +1015,6 @@ class Avatar extends BodyComponent {
   void followAvatar() {
     if (!isFollowingAvatar) {
       GenequestGame.instance!.camera.follow(GenequestGame.instance!.avatar);
-      GenequestGame.instance!.playFinishAnimation();
       isFollowingAvatar = true;
     }
   }
