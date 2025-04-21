@@ -216,13 +216,7 @@ class GenequestGame extends Forge2DGame
 
   @override
   void render(Canvas canvas) {
-    // If no transition is happening, render normally
-    if (!isTransitioning) {
-      super.render(canvas);
-      return;
-    }
-
-    // Step 1: Draw the sky gradient background
+    // Step 1: Draw the sky gradient background (always render this)
     final rect = Rect.fromLTWH(0, 0, screenWidth, screenHeight);
     final gradient = const LinearGradient(
       begin: Alignment.topCenter,
@@ -234,6 +228,12 @@ class GenequestGame extends Forge2DGame
     );
     final gradientPaint = Paint()..shader = gradient.createShader(rect);
     canvas.drawRect(rect, gradientPaint);
+
+    // If no transition is happening, render the rest of the game normally
+    if (!isTransitioning) {
+      super.render(canvas);
+      return;
+    }
 
     // Step 2: Apply zoom effect
     final zoomValue = _finishAnimationController.value < 0.5
@@ -332,7 +332,7 @@ class GenequestGame extends Forge2DGame
 
   void playFinishAnimation() {
     if (isTransitioning) return; // Prevent multiple transitions
-    FlameAudio.play('slash.wav');
+    FlameAudio.play('bubble_up.wav');
     isTransitioning = true; // Start the transition
     pause(); // Pause the game during the animation
     _finishAnimationController.forward(); // Start the animation
@@ -430,7 +430,6 @@ class MyCollisionListener extends ContactListener {
 
     // negative y means fixture A is contacting upwards
     // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
-
     if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
       GenequestGame.instance?.avatar.resetJumps();
     }

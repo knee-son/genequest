@@ -1,7 +1,9 @@
 import 'dart:math';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/game_over_transition_screen.dart';
 import 'level_selector_screen.dart';
 
@@ -130,7 +132,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     gameState.setTraitState(isDominant: blueCount >= redCount);
     final fullImagePath = AssetImage(
         "assets/images/portraits/${gameState.getTrait().replaceAll(' ', '_')}_Trait.png");
-
+    FlameAudio.play('tada.mp3');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -341,6 +343,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateDropZonePositions();
     });
+    MusicManager.stop();
+    MusicManager.play('music5.mp3');
   }
 
   int _currentDialogIndex = 0;

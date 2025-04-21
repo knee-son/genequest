@@ -9,8 +9,9 @@ class MusicManager {
         'music1.mp3',
         'jump.wav',
         'oof.mp3',
-        'slash.wav',
-        'tada.mp3'
+        'bubble_up.wav',
+        'tada.mp3',
+        'walking.wav'
       ]);
       _isAudioInitialized = true;
     }
