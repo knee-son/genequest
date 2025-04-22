@@ -41,7 +41,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 207, 173, 153),
+        backgroundColor: const Color.fromARGB(255, 242, 212, 185),
         appBar: AppBar(
           title: const Text("Back to menu"),
           backgroundColor: const Color.fromARGB(255, 191, 93, 42),
@@ -55,86 +55,103 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
             },
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Left Side: "Select a Level" vertically centered
-              Expanded(
-                flex: 1,
-                child: Center(
-                  child: Text(
-                    'Select a Level:',
-                    style: TextStyle(
-                      color: const Color.fromARGB(255, 47, 9, 2),
-                      fontSize: 25,
-                      fontFamily: 'WinkySans',
-                      letterSpacing: 2,
+        body: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/backdrop_levelselect.png'),
+              fit: BoxFit.cover, // Ensures the image covers the screen
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Left Side: "Select a Level" vertically centered
+                Expanded(
+                  flex: 1,
+                  child: Center(
+                    child: Container(
+                      padding:
+                          const EdgeInsets.all(8.0), // Adjust padding if needed
+                      decoration: BoxDecoration(
+                        color: Color.fromRGBO(247, 167, 44, 1), // RGBA color
+                        borderRadius: BorderRadius.circular(
+                            8), // Optional: rounded corners
+                      ),
+                      child: Text(
+                        'Select a Level:',
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 47, 9, 2),
+                          fontSize: 25,
+                          fontFamily: 'WinkySans',
+                          letterSpacing: 2,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Right Side: Levels Column with reduced spacing
-              Expanded(
-                flex: 2,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      LevelButton(
-                        title: "Peaceful",
-                        iconPath: 'assets/images/peaceful_level.png',
-                        level: 0,
-                        buttonWidth: screenWidth * 0.6,
-                        buttonHeight:
-                            screenHeight * 0.2, // Responsive button height
-                        enabled: gameState.level >= 0,
-                      ),
-                      const SizedBox(
-                          height: 5), // Reduced spacing between buttons
-                      LevelButton(
-                        title: "Easy",
-                        iconPath: 'assets/images/easy_level.png',
-                        level: 1,
-                        buttonWidth: screenWidth * 0.6,
-                        buttonHeight:
-                            screenHeight * 0.2, // Responsive button height
-                        enabled: gameState.level >= 1,
-                      ),
-                      const SizedBox(height: 5),
-                      LevelButton(
-                        title: "Medium",
-                        iconPath: 'assets/images/medium_level.png',
-                        level: 2,
-                        buttonWidth: screenWidth * 0.6,
-                        buttonHeight: screenHeight * 0.2,
-                        enabled: gameState.level >= 2,
-                      ),
-                      const SizedBox(height: 5),
-                      LevelButton(
-                        title: "Hard",
-                        iconPath: 'assets/images/hard_level.png',
-                        level: 3,
-                        buttonWidth: screenWidth * 0.6,
-                        buttonHeight: screenHeight * 0.2,
-                        enabled: gameState.level >= 3,
-                      ),
-                      const SizedBox(height: 5),
-                      LevelButton(
-                        title: "Expert",
-                        iconPath: 'assets/images/expert_level.png',
-                        level: 4,
-                        buttonWidth: screenWidth * 0.6,
-                        buttonHeight: screenHeight * 0.2,
-                        enabled: gameState.level >= 4,
-                      ),
-                    ],
+                // Right Side: Levels Column with reduced spacing
+                Expanded(
+                  flex: 2,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        LevelButton(
+                          title: "Peaceful",
+                          iconPath: 'assets/images/peaceful_level.png',
+                          level: 0,
+                          buttonWidth: screenWidth * 0.6,
+                          buttonHeight:
+                              screenHeight * 0.2, // Responsive button height
+                          enabled: gameState.level >= 0,
+                        ),
+                        const SizedBox(
+                            height: 5), // Reduced spacing between buttons
+                        LevelButton(
+                          title: "Easy",
+                          iconPath: 'assets/images/easy_level.png',
+                          level: 1,
+                          buttonWidth: screenWidth * 0.6,
+                          buttonHeight:
+                              screenHeight * 0.2, // Responsive button height
+                          enabled: gameState.level >= 1,
+                        ),
+                        const SizedBox(height: 5),
+                        LevelButton(
+                          title: "Medium",
+                          iconPath: 'assets/images/medium_level.png',
+                          level: 2,
+                          buttonWidth: screenWidth * 0.6,
+                          buttonHeight: screenHeight * 0.2,
+                          enabled: gameState.level >= 2,
+                        ),
+                        const SizedBox(height: 5),
+                        LevelButton(
+                          title: "Hard",
+                          iconPath: 'assets/images/hard_level.png',
+                          level: 3,
+                          buttonWidth: screenWidth * 0.6,
+                          buttonHeight: screenHeight * 0.2,
+                          enabled: gameState.level >= 3,
+                        ),
+                        const SizedBox(height: 5),
+                        LevelButton(
+                          title: "Expert",
+                          iconPath: 'assets/images/expert_level.png',
+                          level: 4,
+                          buttonWidth: screenWidth * 0.6,
+                          buttonHeight: screenHeight * 0.2,
+                          enabled: gameState.level >= 4,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
