@@ -2,6 +2,8 @@ import 'dart:async' as async;
 import 'dart:math';
 
 import 'package:flame/camera.dart' as flame_camera;
+import 'package:flame/extensions.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -42,12 +44,13 @@ class GenequestGame extends Forge2DGame
   late flameTiled.TiledComponent levelMap;
   late double screenWidth;
   late double screenHeight;
+  late Vector2 cameraViewportSize;
   late TickerProvider vsync;
 
   bool isTransitioning = false; // Tracks if the transition is active
   late AnimationController _finishAnimationController;
   late Animation<double> _zoomInAnimation;
-  late Animation<double> _zoomOutAnimation;
+  late Animation<double> _particleAnimation;
   late Animation<double> _shakeAnimation;
   late Animation<double> _whiteOutAnimation;
 
@@ -84,28 +87,28 @@ class GenequestGame extends Forge2DGame
       duration: const Duration(seconds: 5),
     );
 
-    _zoomInAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
+    _zoomInAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
       CurvedAnimation(
           parent: _finishAnimationController,
-          curve: const Interval(0.0, 0.25, curve: Curves.easeIn)),
+          curve: const Interval(0.0, 1.0, curve: Curves.easeIn)),
     );
 
-    _zoomOutAnimation = Tween<double>(begin: 1.5, end: 1.0).animate(
+    _particleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
           parent: _finishAnimationController,
-          curve: const Interval(0.25, 0.5, curve: Curves.easeOut)),
+          curve: const Interval(0, 0.7, curve: Curves.easeIn)),
     );
 
     _whiteOutAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
           parent: _finishAnimationController,
-          curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
+          curve: const Interval(0.5, 0.9, curve: Curves.easeIn)),
     );
 
-    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+    _shakeAnimation = Tween<double>(begin: .5, end: 1.5).animate(
       CurvedAnimation(
           parent: _finishAnimationController,
-          curve: const Interval(0.1, 0.2, curve: Curves.elasticOut)),
+          curve: const Interval(0, 1.0, curve: Curves.elasticIn)),
     );
 
     _finishAnimationController.addStatusListener((status) {
@@ -220,13 +223,13 @@ class GenequestGame extends Forge2DGame
         width: screenWidth / 10 * 1.4,
         height: screenHeight / 10 * 1.4,
         world: world,
-        viewfinder: flame_camera.Viewfinder()..position = avatar.body.position);
-    // camera.viewport.size =
-    //     Vector2(screenWidth / 10 * 1.4, screenWidth / 10 * 1.4);
-    // camera.snap();
+        viewfinder: flame_camera.Viewfinder()..position = avatar.body.position)
+      ..viewport.anchor = Anchor.center;
+
+    cameraViewportSize = camera.viewport.size;
 
     world.add(avatar);
-    camera.moveTo(goal.position, speed: 200);
+    camera.moveTo(goal.position, speed: 150);
   }
 
   @override
@@ -251,19 +254,24 @@ class GenequestGame extends Forge2DGame
     }
 
     // Step 2: Apply zoom effect
-    final zoomValue = _finishAnimationController.value < 0.5
-        ? _zoomInAnimation.value
-        : _zoomOutAnimation.value;
+    final zoomValue = _zoomInAnimation.value;
 
     canvas.save();
-    // canvas.scale(zoomValue);
-    camera.viewport.zoom = zoomValue;
 
-    if (_finishAnimationController.value >= 0.25 &&
-        _finishAnimationController.value < 0.5) {
-      final shakeOffset = _calculateShakeOffset(_shakeAnimation.value);
-      canvas.translate(shakeOffset.x, shakeOffset.y);
-    }
+    Transform2D transform2D = Transform2D();
+
+    // Set scale factor (zoom)
+    transform2D.scale.setValues(zoomValue, zoomValue); // zoomFactor = 1.0–1.2
+
+    // Optional: apply pivot-based zoom (zoom toward center)
+    transform2D.offset.setValues(-screenWidth / 2, -screenHeight / 2);
+    transform2D.position.setValues(screenWidth / 2, screenHeight / 2);
+
+    // Apply to canvas
+    canvas.transform2D(transform2D);
+
+    final shakeOffset = _calculateShakeOffset(_shakeAnimation.value);
+    canvas.translate(shakeOffset.x, shakeOffset.y);
 
     // Step 3: Render the game world
     super.render(canvas);
@@ -277,16 +285,22 @@ class GenequestGame extends Forge2DGame
           Rect.fromLTWH(0, 0, screenWidth, screenHeight), whiteOutPaint);
     }
 
-    // Draw light rays image on top with optional opacity
-    if (lightRaysSprite != null) {
-      lightRaysSprite.render(
-        canvas,
-        position: Vector2.zero(),
-        size: Vector2(screenWidth, screenHeight),
-        overridePaint: Paint()
-          ..color = Colors.white.withOpacity(whiteOutOpacity),
-      );
-    }
+    // canvas.translate(screenWidth / 2, screenHeight / 2);
+
+    // // Rotate
+    // canvas.rotate(whiteOutOpacity); // in radians
+
+    // // Move back so the sprite draws from top-left relative to the pivot
+    // canvas.translate(-screenWidth / 2, -screenHeight / 2);
+
+    // Draw light rays image on top with opacity
+    lightRaysSprite.render(
+      canvas,
+      position: Vector2.zero(),
+      size: Vector2(screenWidth, screenHeight),
+      overridePaint: Paint()
+        ..color = Colors.white.withOpacity(_particleAnimation.value),
+    );
 
     canvas.restore();
   }
@@ -375,6 +389,8 @@ class GenequestGame extends Forge2DGame
 
     // not modified during forge2d migration
     if (gameState.currentLevel == 0) {
+      MusicManager.tadaSound.start();
+
       gameState.setTraitState(isDominant: gotDominant);
 
       showDialog(
@@ -451,6 +467,7 @@ class MyCollisionListener extends ContactListener {
     // negative y means fixture A is contacting upwards
     // y at -1.0 means it's flat faced down. y at ~ -0.7 is facing around 45°
     if (userDataB == 'avatar' && normalY >= -1.0 && normalY <= -0.7) {
+      // MusicManager.thudSound.start();
       GenequestGame.instance?.avatar.resetJumps();
     }
 
@@ -754,7 +771,7 @@ class Enemy extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    final distance = body.position.x - spawnPoint.x;
+    double distance = body.position.x - spawnPoint.x;
 
     if (distance.abs() > _maxDistance) {
       body.linearVelocity.x = -body.linearVelocity.x;
@@ -775,7 +792,7 @@ class Fire extends BodyComponent {
   final int framesPerFlip = 5;
 
   final int _maxDistance = 30; // tile size is 6.4 meters
-  final double _walkSpeed = 120;
+  final double _walkSpeed = 12;
 
   Fire({required this.spawnPoint});
 
@@ -802,8 +819,9 @@ class Fire extends BodyComponent {
     final bodyDef = BodyDef()
       ..type = BodyType.dynamic
       ..position = spawnPoint
-      ..linearDamping = 1.2
-      ..gravityOverride = Vector2.all(0);
+      ..linearDamping = 0.1
+      ..gravityOverride = Vector2.all(0)
+      ..linearVelocity.y = -_walkSpeed;
 
     final body = world.createBody(bodyDef);
     final shape = CircleShape();
@@ -826,12 +844,15 @@ class Fire extends BodyComponent {
   void update(double dt) {
     super.update(dt);
 
-    final distance = body.position.y - spawnPoint.y;
+    double distance = spawnPoint.y - body.position.y;
 
-    if (distance.abs() > _maxDistance) {
+    if (distance > _maxDistance) {
       resetPosition();
-      body.applyLinearImpulse(Vector2(0, 5.0));
+      body.linearVelocity.y = -_walkSpeed;
     }
+
+    spriteComponent.opacity =
+        min(1, (_maxDistance - distance) / _maxDistance + 0.3);
 
     _framesElapsed++;
     if (_framesElapsed > framesPerFlip) {

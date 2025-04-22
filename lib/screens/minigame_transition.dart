@@ -17,7 +17,6 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _zoomAnimation;
-  late Animation<double> _shakeAnimation;
   late Animation<double> _whiteOutAnimation;
 
   @override
@@ -33,11 +32,6 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
     // Zoom-in effect
     _zoomAnimation = Tween<double>(begin: 1.0, end: 2.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-
-    // Shake effect (oscillating position offset)
-    _shakeAnimation = Tween<double>(begin: 0.0, end: 10.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
     );
 
     // White-out effect
@@ -75,46 +69,57 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
       backgroundColor: const Color.fromARGB(0, 0, 0, 0),
       body: Center(
         child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Stack(
-                children: [
-                  // Zoom & Shake
-                  Transform.scale(
-                    scale: _zoomAnimation.value,
-                    child: Transform.translate(
-                      offset: Offset(
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                        (0.5 - _zoomAnimation.value) * _shakeAnimation.value,
-                      ),
-                      child: child,
-                    ),
-                  ),
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // Zoom & Shake
+                Transform.scale(
+                  scale: _zoomAnimation.value,
+                  child: child,
+                ),
 
-                  // White-Out Overlay
-                  Opacity(
-                    opacity: _whiteOutAnimation.value,
-                    child: Container(color: Colors.white),
+                // White-Out Overlay
+                Opacity(
+                  opacity: _whiteOutAnimation.value,
+                  child: Container(color: Colors.white),
+                ),
+              ],
+            );
+          },
+          child: Center(
+            child: Container(
+              padding:
+                  const EdgeInsets.all(16), // Adds some spacing around the text
+              color: Colors.white, // White background
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "Allele",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'WinkySans',
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(
+                    "Mix and Match!",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'WinkySans',
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
-              );
-            },
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.all(
-                    16), // Adds some spacing around the text
-                color: Colors.white, // White background
-                child: const Text(
-                  "Minigame Time!",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black, // Black text
-                  ),
-                  textAlign: TextAlign.center, // Ensures text is centered
-                ),
               ),
-            )),
+            ),
+          ),
+        ),
       ),
     );
   }

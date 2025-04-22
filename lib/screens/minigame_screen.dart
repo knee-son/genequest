@@ -68,6 +68,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   }
 
   void onButtonPressed() {
+    MusicManager.clickSound.start();
     setState(() {
       _blockColor = Random().nextBool() ? 'blue' : 'red';
     });
@@ -190,19 +191,32 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: kDebugMode
-              ? Text('Mini Game - ${gameState.levelName}')
-              : const SizedBox(),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              onPressed: () => _showMultiStepDialog(context),
-            ),
-          ],
-        ),
+        // backgroundColor: const Color.fromARGB(255, 255, 198, 217),
+        // appBar: AppBar(
+        //   title: kDebugMode
+        //       ? Text('Mini Game - ${gameState.levelName}')
+        //       : const SizedBox(),
+        //   actions: [
+        //     IconButton(
+        //       icon: const Icon(Icons.help_outline),
+        //       onPressed: () => _showMultiStepDialog(context),
+        //     ),
+        //   ],
+        // ),
         body: Stack(
           children: [
+            AppBar(
+              backgroundColor: const Color.fromARGB(255, 255, 198, 217),
+              title: kDebugMode
+                  ? Text('Mini Game - ${gameState.levelName}')
+                  : const SizedBox(),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.help_outline),
+                  onPressed: () => _showMultiStepDialog(context),
+                ),
+              ],
+            ),
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -303,6 +317,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
         top: dropZonePositions[index].dy,
         child: DragTarget<String>(
           onAccept: (data) {
+            MusicManager.confirmSound.start();
             setState(() {
               if (_droppedBlocks[index].length < 2) {
                 final count = gameState.currentLevel == 1 ? 2 : 1;
@@ -346,6 +361,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateDropZonePositions();
     });
+    MusicManager.initializeForMinigame();
     MusicManager.stop();
     MusicManager.play('music5.mp3');
   }

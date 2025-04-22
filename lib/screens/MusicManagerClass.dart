@@ -9,6 +9,8 @@ class MusicManager {
   static late AudioPool bubbleUpSound;
   static late AudioPool tadaSound;
   static late AudioPool slashSound;
+  static late AudioPool thudSound;
+
   static late AudioPool clickSound;
   static late AudioPool confirmSound;
 
@@ -44,6 +46,11 @@ class MusicManager {
 
       slashSound = await AudioPool.create(
         source: AssetSource('audio/slash.wav'),
+        maxPlayers: 3,
+      );
+
+      thudSound = await AudioPool.create(
+        source: AssetSource('audio/thud.wav'),
         maxPlayers: 3,
       );
 
