@@ -145,11 +145,14 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               const SizedBox(height: 10),
               Flexible(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30), // Apply rounded corners with a radius of 30
+                  borderRadius: BorderRadius.circular(
+                      30), // Apply rounded corners with a radius of 30
                   child: Image(
                     image: fullImagePath,
-                    fit: BoxFit.cover, // Ensures the image scales properly within the available space
-                    errorBuilder: (_, __, ___) => const Text('Image not available'),
+                    fit: BoxFit
+                        .cover, // Ensures the image scales properly within the available space
+                    errorBuilder: (_, __, ___) =>
+                        const Text('Image not available'),
                   ),
                 ),
               ),
@@ -384,7 +387,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   if (_imageContent[_currentDialogIndex].isNotEmpty)
                     Flexible(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30), // Rounded corners
+                        borderRadius:
+                            BorderRadius.circular(30), // Rounded corners
                         child: Image.asset(
                           _imageContent[_currentDialogIndex],
                           fit: BoxFit.cover, // Ensures proper scaling

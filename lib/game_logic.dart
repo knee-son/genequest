@@ -50,12 +50,12 @@ class GenequestGame extends Forge2DGame
   late Animation<double> _shakeAnimation;
   late Animation<double> _whiteOutAnimation;
   // Constructor
-  GenequestGame({
-    required this.context,
-    required this.levelNum,
-    this.levelName,
-    required this.vsync
-  }) : super(
+  GenequestGame(
+      {required this.context,
+      required this.levelNum,
+      this.levelName,
+      required this.vsync})
+      : super(
           gravity: Vector2(0, 50.0),
           contactListener: MyCollisionListener(),
         ) {
@@ -79,19 +79,27 @@ class GenequestGame extends Forge2DGame
     );
 
     _zoomInAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
-      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.0, 0.25, curve: Curves.easeIn)),
+      CurvedAnimation(
+          parent: _finishAnimationController,
+          curve: const Interval(0.0, 0.25, curve: Curves.easeIn)),
     );
 
     _zoomOutAnimation = Tween<double>(begin: 1.5, end: 1.0).animate(
-      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.25, 0.5, curve: Curves.easeOut)),
+      CurvedAnimation(
+          parent: _finishAnimationController,
+          curve: const Interval(0.25, 0.5, curve: Curves.easeOut)),
     );
 
     _whiteOutAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
+      CurvedAnimation(
+          parent: _finishAnimationController,
+          curve: const Interval(0.5, 1.0, curve: Curves.easeIn)),
     );
 
     _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _finishAnimationController, curve: const Interval(0.25, 0.5, curve: Curves.elasticOut)),
+      CurvedAnimation(
+          parent: _finishAnimationController,
+          curve: const Interval(0.25, 0.5, curve: Curves.elasticOut)),
     );
 
     _finishAnimationController.addStatusListener((status) {
@@ -116,7 +124,6 @@ class GenequestGame extends Forge2DGame
 
     await Flame.images.loadAll(
         ['chromatid7.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
-
 
     overlays.add('HealthBar');
 
@@ -243,7 +250,8 @@ class GenequestGame extends Forge2DGame
     canvas.save();
     canvas.scale(zoomValue);
 
-    if (_finishAnimationController.value >= 0.25 && _finishAnimationController.value < 0.5) {
+    if (_finishAnimationController.value >= 0.25 &&
+        _finishAnimationController.value < 0.5) {
       final shakeOffset = _calculateShakeOffset(_shakeAnimation.value);
       canvas.translate(shakeOffset.x, shakeOffset.y);
     }
@@ -256,15 +264,16 @@ class GenequestGame extends Forge2DGame
     if (whiteOutOpacity > 0) {
       final whiteOutPaint = Paint()
         ..color = Colors.white.withOpacity(whiteOutOpacity);
-      canvas.drawRect(Rect.fromLTWH(0, 0, screenWidth, screenHeight), whiteOutPaint);
+      canvas.drawRect(
+          Rect.fromLTWH(0, 0, screenWidth, screenHeight), whiteOutPaint);
     }
 
     canvas.restore();
   }
 
-
 // Helper method to calculate random shake offsets
-  Vector2 _calculateShakeOffset(double shakeProgress, {double maxOffset = 10.0}) {
+  Vector2 _calculateShakeOffset(double shakeProgress,
+      {double maxOffset = 10.0}) {
     final random = Random();
     final offset = maxOffset * shakeProgress;
     return Vector2(
@@ -332,12 +341,11 @@ class GenequestGame extends Forge2DGame
 
   void playFinishAnimation() {
     if (isTransitioning) return; // Prevent multiple transitions
-    FlameAudio.play('bubble_up.wav');
+    // FlameAudio.play('bubble_up.wav');
     isTransitioning = true; // Start the transition
     pause(); // Pause the game during the animation
     _finishAnimationController.forward(); // Start the animation
   }
-
 
   void finishLevel() {
     // pause();
@@ -358,10 +366,12 @@ class GenequestGame extends Forge2DGame
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('Congratulations, you are: ${gameState.getTrait()}'),
-                const SizedBox(height: 10), // Add some spacing between text and image
+                const SizedBox(
+                    height: 10), // Add some spacing between text and image
                 Flexible(
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30), // Apply rounded corners with a radius of 30
+                    borderRadius: BorderRadius.circular(
+                        30), // Apply rounded corners with a radius of 30
                     child: Image.asset(
                       gotDominant
                           ? 'assets/images/portraits/Female_Trait.png'
@@ -380,7 +390,7 @@ class GenequestGame extends Forge2DGame
                   Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                      builder: (context) => LevelSelectorScreen()));
+                          builder: (context) => LevelSelectorScreen()));
                 },
                 child: const Text('Dismiss'),
               ),
@@ -918,7 +928,7 @@ class Avatar extends BodyComponent {
         spriteComponent.opacity = 1.0; // Fully visible again
       } else {
         if (blinkCount == 0) {
-          FlameAudio.play('oof.mp3');
+          // FlameAudio.play('oof.mp3');
         }
 
         // Alternate between 0.5 and 0.0 opacity
@@ -1016,7 +1026,7 @@ class Avatar extends BodyComponent {
   void jump() {
     followAvatar();
     if (jumpsRemaining > 0) {
-      FlameAudio.play('jump.wav');
+      // FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
       jumpsRemaining -= 1;
       if (body.linearDamping > 1.2) {
