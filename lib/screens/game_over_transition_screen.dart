@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/game_over_screen.dart';
 
 class GameOverTransitionScreen extends StatefulWidget {
@@ -12,7 +13,8 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
 
   final List<String> stages = [
     'The chromatid has now finally been merged with its sister.',
-    'The chromatid\'s great adventure has come to an end. All its traits have been acquired.',
+    'The chromatid\'s great adventure has come to an end.',
+    'All its traits have been acquired.',
     'You are now born!'
   ];
 
@@ -32,6 +34,15 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    MusicManager.initialize();
+    MusicManager.stop();
+    MusicManager.play('music6.mp3');
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
@@ -45,20 +56,11 @@ class _GameOverTransitionScreenState extends State<GameOverTransitionScreen> {
           alignment: Alignment.center,
           child: Text(
             stages[currentStage],
-            style: const TextStyle(
-              fontSize: 36,
-              fontFamily: 'OpenSans'
-            ),
+            style: const TextStyle(fontSize: 36, fontFamily: 'OpenSans'),
             textAlign: TextAlign.center,
           ),
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: GameOverTransitionScreen(),
-  ));
 }
