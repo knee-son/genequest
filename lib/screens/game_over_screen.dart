@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/title_screen.dart';
@@ -12,7 +11,8 @@ class GameOverScreen extends StatefulWidget {
 
 class GameOverScreenState extends State<GameOverScreen> {
   AssetImage fullImagePath = AssetImage(gameState.getTraitPath());
-  AssetImage backgroundImagePath = const AssetImage('assets/images/congratulations_game_over.png');
+  AssetImage backgroundImagePath =
+      const AssetImage('assets/images/congratulations_game_over.png');
 
   @override
   void initState() {
@@ -46,22 +46,17 @@ class GameOverScreenState extends State<GameOverScreen> {
                 alignment: Alignment.center,
                 children: [
                   // The image background
-                  fullImagePath != null
-                      ? ClipRRect(
-                    borderRadius: BorderRadius.circular(30), // Adjust the value for desired roundness
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                        30), // Adjust the value for desired roundness
                     child: Image(
                       image: fullImagePath,
                       width: 200,
                       height: 200,
-                      fit: BoxFit.cover, // Ensures the image fits within the rounded area
+                      fit: BoxFit
+                          .cover, // Ensures the image fits within the rounded area
                     ),
                   )
-                      : const Center(
-                    child: Text(
-                      'Error: Image not available',
-                      style: TextStyle(fontSize: 16, color: Colors.red),
-                    ),
-                  ),
                 ],
               ),
               const Text(
