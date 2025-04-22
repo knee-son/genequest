@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 
 class GameOverScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class GameOverScreenState extends State<GameOverScreen> {
   @override
   void initState() {
     super.initState();
+    MusicManager.tadaSound.start();
   }
 
   @override
