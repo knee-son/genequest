@@ -341,7 +341,7 @@ class GenequestGame extends Forge2DGame
 
   void playFinishAnimation() {
     if (isTransitioning) return; // Prevent multiple transitions
-    // FlameAudio.play('bubble_up.wav');
+    FlameAudio.play('bubble_up.wav');
     isTransitioning = true; // Start the transition
     pause(); // Pause the game during the animation
     _finishAnimationController.forward(); // Start the animation
@@ -928,7 +928,7 @@ class Avatar extends BodyComponent {
         spriteComponent.opacity = 1.0; // Fully visible again
       } else {
         if (blinkCount == 0) {
-          // FlameAudio.play('oof.mp3');
+          FlameAudio.play('oof.mp3');
         }
 
         // Alternate between 0.5 and 0.0 opacity
@@ -1026,7 +1026,7 @@ class Avatar extends BodyComponent {
   void jump() {
     followAvatar();
     if (jumpsRemaining > 0) {
-      // FlameAudio.play('jump.wav');
+      FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
       jumpsRemaining -= 1;
       if (body.linearDamping > 1.2) {
