@@ -66,7 +66,7 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(0, 0, 0, 0),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 0),
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,

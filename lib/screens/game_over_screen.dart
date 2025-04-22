@@ -39,59 +39,62 @@ class GameOverScreenState extends State<GameOverScreen> {
             fit: BoxFit.cover, // Ensures the image covers the entire screen
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Stack to layer the image and the overlay text
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  // The image background
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                        30), // Adjust the value for desired roundness
-                    child: Image(
-                      image: fullImagePath,
-                      width: 200,
-                      height: 200,
-                      fit: BoxFit
-                          .cover, // Ensures the image fits within the rounded area
-                    ),
-                  )
-                ],
-              ),
-              const Text(
-                'Congratulations!',
-                style: TextStyle(
-                  fontSize: 46,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontFamily: 'Ribeye',
-                  // Adding a shadow or background will improve readability if needed:
-                  // shadows: [Shadow(blurRadius: 3, color: Colors.black45, offset: Offset(2, 2))],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Stack to layer the image and the overlay text
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // The image background
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                          30), // Adjust the value for desired roundness
+                      child: Image(
+                        image: fullImagePath,
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit
+                            .cover, // Ensures the image fits within the rounded area
+                      ),
+                    )
+                  ],
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 5), // Adds spacing between texts
-              Text(
-                'Acquired Traits: ${gameState.getTraitDescription()}', // Converts list into comma-separated string
-                style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
+                const Text(
+                  'Congratulations!',
+                  style: TextStyle(
+                    fontSize: 46,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontFamily: 'Ribeye',
+                    // Adding a shadow or background will improve readability if needed:
+                    // shadows: [Shadow(blurRadius: 3, color: Colors.black45, offset: Offset(2, 2))],
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => TitleScreen()),
-                  );
-                },
-                child: const Text('Back to Main Menu'),
-              ),
-            ],
+                const SizedBox(height: 5), // Adds spacing between texts
+                Text(
+                  'Acquired Traits: ${gameState.getTraitDescription()}', // Converts list into comma-separated string
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => TitleScreen()),
+                    );
+                  },
+                  child: const Text('Back to Main Menu'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
