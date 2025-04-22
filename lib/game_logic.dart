@@ -446,9 +446,9 @@ class MyCollisionListener extends ContactListener {
 
     if (userDataA == 'chasm' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'chasm') {
+      Future.microtask(() => GenequestGame.instance!.avatar.resetPosition());
       GenequestGame.instance!.avatar.applyDamage();
-      GenequestGame.instance!.avatar.resetPosition();
-      GenequestGame.instance!.avatar.stopDamage();
+      Future.microtask(() => GenequestGame.instance!.avatar.stopDamage());
     }
 
     if (userDataA == 'lava' && userDataB == 'avatar' ||
@@ -1035,7 +1035,7 @@ class Avatar extends BodyComponent {
   void jump() {
     followAvatar();
     if (jumpsRemaining > 0) {
-      FlameAudio.play('jump.wav');
+      // FlameAudio.play('jump.wav');
       jumpFuel = 6; // will jump for n frames
       jumpsRemaining -= 1;
       if (body.linearDamping > 1.2) {
