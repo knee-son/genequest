@@ -414,16 +414,6 @@ class GenequestGame extends Forge2DGame
   }
 }
 
-/*
-collision objects are now migrated to Forge2D's BodyComponent.
-it has collision detection dictated by our ContactListener.
-the avatar's movements are all in the Avatar object. tweak it to
-your liking.
-
-TODO:
-- the animation is bugged and needs fixing
-*/
-
 // ---------------- COLLISION DETECTION ---------------
 
 class MyCollisionListener extends ContactListener {
