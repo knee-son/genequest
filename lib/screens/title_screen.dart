@@ -1,8 +1,6 @@
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/screens/MusicManagerClass.dart';
-import 'package:genequest_app/screens/game_over_screen.dart';
 import 'game_over_transition_screen.dart';
 import 'game_screen.dart';
 import 'level_selector_screen.dart';

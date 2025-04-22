@@ -1,7 +1,4 @@
-import 'package:flame/game.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
-import 'package:flame/flame.dart';
 import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/title_screen.dart';
 

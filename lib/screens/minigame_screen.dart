@@ -1,7 +1,9 @@
 import 'dart:math';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/game_over_transition_screen.dart';
 import 'level_selector_screen.dart';
 
@@ -130,7 +132,7 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     gameState.setTraitState(isDominant: blueCount >= redCount);
     final fullImagePath = AssetImage(
         "assets/images/portraits/${gameState.getTrait().replaceAll(' ', '_')}_Trait.png");
-
+    FlameAudio.play('tada.mp3');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -143,11 +145,14 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
               const SizedBox(height: 10),
               Flexible(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30), // Apply rounded corners with a radius of 30
+                  borderRadius: BorderRadius.circular(
+                      30), // Apply rounded corners with a radius of 30
                   child: Image(
                     image: fullImagePath,
-                    fit: BoxFit.cover, // Ensures the image scales properly within the available space
-                    errorBuilder: (_, __, ___) => const Text('Image not available'),
+                    fit: BoxFit
+                        .cover, // Ensures the image scales properly within the available space
+                    errorBuilder: (_, __, ___) =>
+                        const Text('Image not available'),
                   ),
                 ),
               ),
@@ -341,6 +346,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateDropZonePositions();
     });
+    MusicManager.stop();
+    MusicManager.play('music5.mp3');
   }
 
   int _currentDialogIndex = 0;
@@ -380,7 +387,8 @@ class _MiniGameScreenState extends State<MiniGameScreen> {
                   if (_imageContent[_currentDialogIndex].isNotEmpty)
                     Flexible(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(30), // Rounded corners
+                        borderRadius:
+                            BorderRadius.circular(30), // Rounded corners
                         child: Image.asset(
                           _imageContent[_currentDialogIndex],
                           fit: BoxFit.cover, // Ensures proper scaling

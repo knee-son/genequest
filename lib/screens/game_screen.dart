@@ -1,11 +1,9 @@
 import 'dart:math';
 
 import 'package:flame/game.dart';
-import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
 import 'package:genequest_app/screens/MusicManagerClass.dart';
-import 'package:genequest_app/screens/title_screen.dart';
 
 import 'level_selector_screen.dart';
 import '../game_logic.dart';
@@ -100,8 +98,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final double containerHeight = MediaQuery.of(context).size.height * 0.2;
-
     return Scaffold(
       body: Stack(
         children: [
@@ -267,13 +263,11 @@ class DialogOverlayModal extends StatelessWidget {
               ),
             const SizedBox(height: 10),
             ElevatedButton(
-                onPressed: ()  {
+                onPressed: () {
                   GenequestGame.instance?.reset();
                   _dismissDialog(context);
-
                 },
-                child: Text("Reset")
-            ),
+                child: Text("Reset")),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () => _navigateToLevelSelector(context),

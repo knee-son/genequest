@@ -51,8 +51,6 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
     // Start animation
     _controller.forward().then((_) {
       // Play transition sound and navigate
-      FlameAudio.play('tada.mp3');
-      print(widget.levelNum);
       if (widget.levelNum == 0) {
         Navigator.pushReplacement(
           context,
