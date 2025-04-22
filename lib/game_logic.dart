@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 // Other imports
 import 'package:flutter/material.dart';
 import 'package:genequest_app/globals.dart';
+import 'package:genequest_app/screens/MusicManagerClass.dart';
 import 'package:genequest_app/screens/game_screen.dart';
 import 'package:genequest_app/screens/level_selector_screen.dart';
 import 'package:genequest_app/screens/minigame_transition.dart';
@@ -49,6 +50,9 @@ class GenequestGame extends Forge2DGame
   late Animation<double> _zoomOutAnimation;
   late Animation<double> _shakeAnimation;
   late Animation<double> _whiteOutAnimation;
+
+  late final Sprite lightRaysSprite;
+
   // Constructor
   GenequestGame(
       {required this.context,
@@ -71,6 +75,8 @@ class GenequestGame extends Forge2DGame
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+
+    await MusicManager.initialize();
 
     // Initialize animations
     _finishAnimationController = AnimationController(
@@ -99,7 +105,7 @@ class GenequestGame extends Forge2DGame
     _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
           parent: _finishAnimationController,
-          curve: const Interval(0.25, 0.5, curve: Curves.elasticOut)),
+          curve: const Interval(0.1, 0.2, curve: Curves.elasticOut)),
     );
 
     _finishAnimationController.addStatusListener((status) {
@@ -107,6 +113,8 @@ class GenequestGame extends Forge2DGame
         finishLevel();
       }
     });
+
+    lightRaysSprite = await Sprite.load('light_rays.png');
 
     if (debugMode) {
       add(FpsTextComponent(
@@ -248,7 +256,8 @@ class GenequestGame extends Forge2DGame
         : _zoomOutAnimation.value;
 
     canvas.save();
-    canvas.scale(zoomValue);
+    // canvas.scale(zoomValue);
+    camera.viewport.zoom = zoomValue;
 
     if (_finishAnimationController.value >= 0.25 &&
         _finishAnimationController.value < 0.5) {
@@ -266,6 +275,17 @@ class GenequestGame extends Forge2DGame
         ..color = Colors.white.withOpacity(whiteOutOpacity);
       canvas.drawRect(
           Rect.fromLTWH(0, 0, screenWidth, screenHeight), whiteOutPaint);
+    }
+
+    // Draw light rays image on top with optional opacity
+    if (lightRaysSprite != null) {
+      lightRaysSprite.render(
+        canvas,
+        position: Vector2.zero(),
+        size: Vector2(screenWidth, screenHeight),
+        overridePaint: Paint()
+          ..color = Colors.white.withOpacity(whiteOutOpacity),
+      );
     }
 
     canvas.restore();
@@ -447,14 +467,23 @@ class MyCollisionListener extends ContactListener {
       GenequestGame.instance!.avatar.body.linearDamping = 10.0;
     }
 
-    if ((userDataA == 'enemy' || userDataA == 'spike' || userDataA == 'fire') &&
-            userDataB == 'avatar' ||
-        userDataA == 'avatar' &&
-            (userDataB == 'enemy' ||
-                userDataB == 'spike' ||
-                userDataB == 'fire')) {
+    if (userDataA == 'fire' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'fire') {
       GenequestGame.instance!.avatar.applyDamage();
-    } else if (userDataA == 'goal' && userDataB == 'avatar' ||
+    }
+
+    if (userDataA == 'enemy' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'enemy') {
+      GenequestGame.instance!.avatar.applyDamage();
+    }
+
+    if (userDataA == 'spike' && userDataB == 'avatar' ||
+        userDataA == 'avatar' && userDataB == 'spike') {
+      MusicManager.slashSound.start();
+      GenequestGame.instance!.avatar.applyDamage();
+    }
+
+    if (userDataA == 'goal' && userDataB == 'avatar' ||
         userDataA == 'avatar' && userDataB == 'goal') {
       GenequestGame.instance?.playFinishAnimation();
     }
@@ -734,7 +763,7 @@ class Enemy extends BodyComponent {
   }
 }
 
-// ------------------- ENEMY LOGIC --------------------
+// ------------------- FIRE LOGIC ---------------------
 
 class Fire extends BodyComponent {
   Vector2 spawnPoint;
@@ -745,7 +774,7 @@ class Fire extends BodyComponent {
   int _framesElapsed = 0;
   final int framesPerFlip = 5;
 
-  final int _maxDistance = 50;
+  final int _maxDistance = 30; // tile size is 6.4 meters
   final double _walkSpeed = 120;
 
   Fire({required this.spawnPoint});
@@ -771,10 +800,10 @@ class Fire extends BodyComponent {
     add(spriteComponent);
 
     final bodyDef = BodyDef()
-      ..type = BodyType.kinematic
+      ..type = BodyType.dynamic
       ..position = spawnPoint
       ..linearDamping = 1.2
-      ..linearVelocity.y = _walkSpeed;
+      ..gravityOverride = Vector2.all(0);
 
     final body = world.createBody(bodyDef);
     final shape = CircleShape();
@@ -790,7 +819,7 @@ class Fire extends BodyComponent {
   }
 
   void resetPosition() {
-    body.position.setFrom(spawnPoint);
+    body.setTransform(spawnPoint, 0);
   }
 
   @override
@@ -801,6 +830,7 @@ class Fire extends BodyComponent {
 
     if (distance.abs() > _maxDistance) {
       resetPosition();
+      body.applyLinearImpulse(Vector2(0, 5.0));
     }
 
     _framesElapsed++;
@@ -927,7 +957,7 @@ class Avatar extends BodyComponent {
         spriteComponent.opacity = 1.0; // Fully visible again
       } else {
         if (blinkCount == 0) {
-          FlameAudio.play('oof.mp3');
+          MusicManager.oofSound.start();
         }
 
         // Alternate between 0.5 and 0.0 opacity
@@ -1025,7 +1055,7 @@ class Avatar extends BodyComponent {
   void jump() {
     followAvatar();
     if (jumpsRemaining > 0) {
-      // FlameAudio.play('jump.wav');
+      MusicManager.jumpSound.start();
       jumpFuel = 6; // will jump for n frames
       jumpsRemaining -= 1;
       if (body.linearDamping > 1.2) {

@@ -24,9 +24,6 @@ class _MiniGameScreenTransitionState extends State<MiniGameScreenTransition>
   void initState() {
     super.initState();
 
-    // Play 'woosh.wav' as the animation starts
-    FlameAudio.play('bubble_up.wav');
-
     // Animation Controller
     _controller = AnimationController(
       duration: const Duration(seconds: 2),

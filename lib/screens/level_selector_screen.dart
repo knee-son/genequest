@@ -41,7 +41,7 @@ class LevelSelectorScreenState extends State<LevelSelectorScreen> {
 
     return MaterialApp(
       home: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 206, 129, 87),
+        backgroundColor: const Color.fromARGB(255, 207, 173, 153),
         appBar: AppBar(
           title: const Text("Back to menu"),
           backgroundColor: const Color.fromARGB(255, 191, 93, 42),
