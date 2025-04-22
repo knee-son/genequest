@@ -123,7 +123,7 @@ class GenequestGame extends Forge2DGame
     }
 
     await Flame.images.loadAll(
-        ['chromatid7.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
+        ['chromatid.png', 'sister_chromatid.png', 'mob.png', 'flame.png']);
 
     overlays.add('HealthBar');
 
@@ -752,6 +752,9 @@ class Fire extends BodyComponent {
   late Sprite sprite;
   late SpriteComponent spriteComponent;
 
+  int _framesElapsed = 0;
+  final int framesPerFlip = 5;
+
   final int _maxDistance = 50;
   final double _walkSpeed = 120;
 
@@ -807,7 +810,13 @@ class Fire extends BodyComponent {
     final distance = body.position.y - spawnPoint.y;
 
     if (distance.abs() > _maxDistance) {
-      body.linearVelocity.y = -body.linearVelocity.y;
+      resetPosition();
+    }
+
+    _framesElapsed++;
+    if (_framesElapsed > framesPerFlip) {
+      _framesElapsed = 0;
+      spriteComponent.flipHorizontally();
     }
   }
 }
@@ -872,7 +881,7 @@ class Avatar extends BodyComponent {
     // remove default white paint
     paint = Paint()..color = Colors.transparent;
 
-    sprite = Sprite(Flame.images.fromCache('chromatid7.png'));
+    sprite = Sprite(Flame.images.fromCache('chromatid.png'));
 
     size = sprite.srcSize;
     size /= 10;
